@@ -1,12 +1,15 @@
-const defaultState = {
-  value: 'yeas'
+const defState = {
+  value: 'yeas',
+  dir: 'none'
 }
 
-export default (state = defaultState, action) => {
-  switch (action.type) {
+export default (state = defState, action) => {
+  const { type, payload } = action
+  switch (type) {
     case 'MOVE': {
       return {
-        ...state
+        ...state,
+        dir: payload
       }
     }
     default: {
