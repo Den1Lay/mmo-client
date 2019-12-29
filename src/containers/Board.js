@@ -1,15 +1,13 @@
 import React from 'react';
+import { connect } from 'react-redux'
 
 import './timeScss.scss'
 
-import { 
-//Board as BoardBase,
-  Square
-} from '../layout'
+import  Square from './Square'
 
-const Board = () => {
+const Board = ({me, inAir}) => {
   let topPart = [];
-  let board = 4
+  let board = 4;
   for(let y = 0; y < 9; y++) {
     let line = [];
     
@@ -35,7 +33,7 @@ const Board = () => {
   let mainRes = res.map((arr, i) => {
     return [
       <div className='line' key={i}>
-        {arr.map(({y,x}) => <Square y={y} x={x} />)}
+        {arr.map(({y,x}) => <Square y={y} x={x} me={me} inAir={inAir}/>)}
       </div>
     ]
   })
@@ -46,4 +44,4 @@ const Board = () => {
   )
 }
 
-export default Board
+export default connect(({me, inAir}) => ({me, inAir}))(Board)

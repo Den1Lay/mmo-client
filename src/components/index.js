@@ -1,1 +1,2 @@
-export {default as App} from './app'
+export {default as Square} from './Square'
+export {default as Knight} from './Knight'

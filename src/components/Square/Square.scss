@@ -1,0 +1,19 @@
+.square {
+  width: 52px;
+  height: 52px;
+  border: 2px solid gold;
+  background: #00BFFF;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  &__red {
+    border: 2px solid red;
+  }
+  &__yellow {
+    border: 2px solid rgb(250, 246, 39);
+  }
+  &__green {
+    border: 2px solid green;
+  }
+}
