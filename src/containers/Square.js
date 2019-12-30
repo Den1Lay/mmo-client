@@ -7,35 +7,20 @@ import {
  } from '@/components'
 
 
-const checkMove = (me, inAir, y, x) => {
-  console.log('inAir', inAir)
-  const {id, Y, X} = inAir
-  const dy = Math.abs(Y - y)
-  const dx = Math.abs(X - x)
-  if(me.some(({Y, X}) => Y === y && X === x)) {
-    return false
-  }
-  switch(id.substr(1, 4)) {
-    case 'Pawn':
-    case 'Knig':
-    return (
-      (dy === 1 && dx === 1) ||
-      (dy === 0 && dx === 1) ||
-      (dy === 1 && dx === 0)
-    )
-  }
-}
 
-const Square = ({y, x, me, inAir}) => {
-  const [{isOver, canDrop, ...another}, drop] = useDrop({
+
+const Square = ({y, x, me}) => {
+  const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
     drop: () => ({y, x}), //knight will take it,
-    canDrop: () => checkMove(me, inAir, y, x),
+    canDrop: () => true,
     collect: monitor => ({
       isOver: monitor.isOver(),
-      canDrop: monitor.canDrop()  
+      canDrop: y > 16 ? monitor.canDrop() : null
+      //canDrop: monitor.canDrop()  
     })
   })
+
   let place = null;
   console.log('ME',me)
   const preparePlace = ({array}) => {
