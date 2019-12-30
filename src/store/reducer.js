@@ -1,6 +1,6 @@
 const defState = {
   me: [
-    {id: 'WKnight1', Y: 17, X: 9}
+    {id: 'WKnight1', Y: 17, X: 9} //17, 9
   ],
   inAir: null
 }

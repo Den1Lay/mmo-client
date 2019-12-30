@@ -29,14 +29,14 @@ const Knight = ({id, simbol, y, x, addToAir, deleteFromAir, moveTo}) => {
   })
 
   return (
-    <span 
+    <div 
     ref={drag}
     className={
       classNames('knight',
         
     )}
     >{simbol}
-    </span>
+    </div>
   )
 }
 

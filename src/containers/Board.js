@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { connect } from 'react-redux'
 
 import './timeScss.scss'
@@ -7,12 +7,12 @@ import  Square from './Square'
 
 const Board = ({me, inAir}) => {
   let topPart = [];
-  let board = 4;
-  for(let y = 0; y < 9; y++) {
+  let board = 4;  //4
+  for(let y = 0; y < 9; y++) { //9
     let line = [];
     
-    for(let x = 0; x < 18; x++) {
-      if(x > board && x < 17-board) {
+    for(let x = 0; x < 18; x++) {  //18
+      if(x > board && x < 17-board) { //17
         line.push({y, x})
       }
     }

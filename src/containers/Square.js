@@ -49,7 +49,6 @@ const Square = ({y, x, me, inAir}) => {
     })
   }
   preparePlace({array: me})
-  console.log('Params', another)
   let backColor = isOver && !canDrop
   ? "red" : !isOver && canDrop
   ? "yellow" : isOver && canDrop
