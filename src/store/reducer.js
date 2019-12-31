@@ -18,22 +18,23 @@ export default (state = defState, action) => {
       }
     }
     case 'KNIGHT:MOVE_TO_AIR':
-      console.log('try do this', payload)
+      //console.log('try do this', payload)
       return {
         ...state,
         canMove: checkMove(state.me, state.partner, payload),
-        inAir: payload, //{id, y, x}  
+        inAir: payload, //{y, x}  
         updateSign: 'C'+Math.random()
       }
     case 'KNIGHT:DELETE_FROM_AIR':
+      //console.log('TRYYYYYYY DO CLEAR')
       return {
         ...state,
-        //canMove: [],
+        updateSign: 'D'+Math.random()
       }
     case 'KNIGHT:MOVE_TO':
       return {
         ...state, 
-        me: getNewStaff(state.me, payload),
+        me: getNewStaff(state.me, state.inAir, payload),
         updateSign: 'M'+Math.random()
       }
     default: {
@@ -60,7 +61,7 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
         {xDir:0, yDir: 1},
         {xDir:0, yDir: -1}
       ]
-    pathLenght = 1
+    pathLenght = 5
   }
   const pathBuilder = (yDir, xDir, pathLenght) => {
     let counter = pathLenght
@@ -109,7 +110,7 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
   return realPath
 }
 
-const getNewStaff = (staff, {id, y, x}) => {
+const getNewStaff = (staff, {id}, {y, x}) => {
   let index = null;
   staff.forEach(({id: checkId}, a) => {
     if(checkId === id) {

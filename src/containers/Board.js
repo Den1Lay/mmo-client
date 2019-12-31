@@ -5,13 +5,12 @@ import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = ({me, updateSign, canMove, uselessCanMove}) => { // canMove: [{y, x}, {y, x}]
+const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
   const [mainMemoPlant, setMainMemoPlant] = useState([])
   const [updateId, setUpdateId] = useState(null)
-  console.log('CANMOVE:', canMove)
   useEffect(() => {
     if(mainRes.length === 0) {
       let topPart = [];
@@ -47,7 +46,7 @@ const Board = ({me, updateSign, canMove, uselessCanMove}) => { // canMove: [{y, 
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} moveTo={moveTo}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -65,40 +64,44 @@ const Board = ({me, updateSign, canMove, uselessCanMove}) => { // canMove: [{y, 
       //console.log('GREAT SIGN_IND:',updateSign.substr(0,1))
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
-      if(updateSign.substr(0,1) === 'M') {
-        canMove.forEach(({newY, newX}) => { //cleaner
+      const cleaner = () => {
+        canMove.forEach(({newY, newX}) => { //cleaner вот оно
           let deathIndex = null;
           resSchema[newY].forEach(({x}, i) => {
             if(newX === x) {
               deathIndex = i
             }
           })
-          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false} />
+          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false} moveTo={moveTo}/>
         })
+      }
+      const mover = () => {
         me.forEach(({id, Y, X, pY, pX}) => {
           //console.log(`PPPPPPY: ${pY}, ${pX} `)
-         // if(pY+''  pX+'') { ----------------
-            //console.log('CLONE',cloneMainMemoPlant)
-            //console.log('pY', pY)
-            let index = null; 
-            let deleteIndex = null;
-            resSchema[pY].forEach(({x}, di) => {
-              if(x === pX) {
-                deleteIndex = di
-              }
-            })
-            resSchema[Y].forEach(({x}, i) => {
-              if(x === X) { 
-                index = i
-              }
-            })
-            //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
-            cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={true}/>
-            cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false}/>
-         // } --------------
-        })
-      } else if (updateSign.substr(0,1) === 'C') {
-        //console.log('Aliiiiiiiiiiive CHECKER')
+          // if(pY+''  pX+'') { ----------------
+          //console.log('CLONE',cloneMainMemoPlant)
+          //console.log('pY', pY)
+          let index = null; 
+          let deleteIndex = null;
+          resSchema[pY].forEach(({x}, di) => {
+            if(x === pX) {
+              deleteIndex = di
+            }
+          })
+          resSchema[Y].forEach(({x}, i) => {
+            if(x === X) { 
+              index = i
+            }
+          })
+          //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
+          cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={false} moveTo={moveTo}/>
+          cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false} moveTo={moveTo}/>
+       // } --------------
+      })
+      }
+      const setter = () => {
+        console.log('Aliiiiiiiiiiive CHECKER')
+        console.log('CANMOVE:', canMove)
         let checkIndex = null;
         canMove.forEach(({newY, newX}) => {
           resSchema[newY].forEach(({x}, i) => {
@@ -106,8 +109,24 @@ const Board = ({me, updateSign, canMove, uselessCanMove}) => { // canMove: [{y, 
               checkIndex = i
             }
           })
+          console.log('Do your work')
           cloneMainMemoPlant[newY][checkIndex] = <Square y={newY} x={newX} me={me} canMove={true}/> 
         })
+      }
+      switch(updateSign.substr(0,1)) {
+        case 'M':
+          cleaner()
+          mover()
+          break
+        case 'C':
+          setter()
+          break
+        case 'D':
+          //console.log('TRY CLEAR IT')
+          cleaner()
+          break
+        default:
+          console.log('START') // do something with this...
       }
       
       let midMainRes = cloneMainMemoPlant.map((arr, a) => {
@@ -133,6 +152,6 @@ export default connect((
     me, 
     updateSign, 
     canMove, 
-    uselessCanMove
+    uselessCanMove,
   }
   ) => ({me, updateSign, canMove, uselessCanMove}))(Board)

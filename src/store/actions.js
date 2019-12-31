@@ -7,7 +7,11 @@ export const deleteFromAir = () => ({
   type: 'KNIGHT:DELETE_FROM_AIR'
 })
 
-export const moveTo = ({id, y, x}) => ({
+export const moveTo = ({y, x}) => ({
   type: 'KNIGHT:MOVE_TO',
-  payload: {id, y, x}
+  payload: {y, x}
 })
+
+// export const moveToUseClick = ({}) => ({ ///DAAVVAAY
+//   type: 'KNIGHT:MOVE_TO_USE_CLICK'
+// })
