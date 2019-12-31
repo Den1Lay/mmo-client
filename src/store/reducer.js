@@ -5,7 +5,8 @@ const defState = {
   partner: [],
   inAir: null,
   canMove: [],
-  updateSign: ''+Math.random()
+  updateSign: ''+Math.random(),
+  animeMove: null
 }
 
 export default (state = defState, action) => {
@@ -23,7 +24,7 @@ export default (state = defState, action) => {
         ...state,
         canMove: checkMove(state.me, state.partner, payload),
         inAir: payload, //{y, x}  
-        updateSign: 'C'+Math.random()
+        updateSign: 'C'+Math.random(),
       }
     case 'KNIGHT:DELETE_FROM_AIR':
       //console.log('TRYYYYYYY DO CLEAR')
@@ -35,7 +36,14 @@ export default (state = defState, action) => {
       return {
         ...state, 
         me: getNewStaff(state.me, state.inAir, payload),
-        updateSign: 'M'+Math.random()
+        updateSign: 'M'+Math.random(),
+        animeMove: null // for what, i don't know
+      }
+    case 'KNIGHT:ANIME_MOVE':
+      return {
+        ...state,
+        animeMove: {id:state.inAir.id, y: payload.y, x: payload.x},
+        updateSign: 'D'+Math.random()
       }
     default: {
       return {
@@ -61,7 +69,7 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
         {xDir:0, yDir: 1},
         {xDir:0, yDir: -1}
       ]
-    pathLenght = 5
+    pathLenght = 4
   }
   const pathBuilder = (yDir, xDir, pathLenght) => {
     let counter = pathLenght
@@ -74,24 +82,25 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
       } else if(me.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
         ripFlag = false
       } else {
-        console.log('PUSH', newPlace)
+        //console.log('PUSH', newPlace)
         realPath.push(newPlace) 
-        console.log('RESULT',realPath)
+        //console.log('RESULT',realPath)
       }
     }
-    console.log('SIGNALL',ripFlag && counter)
+    //console.log('SIGNALL',ripFlag && counter)
     while(ripFlag && counter) {
-      console.log('do THIS', counter)
-      counter-- 
+      //console.log('do THIS', counter)
+      counter--  // Здесь обитает баг, если counter больше 4, то можем уйти на пративоположную сторону, где происходит ужасные вещи...
       newPlace = {newY: newPlace.newY + yDir, newX: newPlace.newX + xDir}
       if(newPlace.newY <= 17 && newPlace.newX > -1 && newPlace.newY > -1 && newPlace.newX <= 17) {
-        console.log('Alive')
+        //console.log('Alive')
         if(Y <= 8 && X <= 8 && Math.abs(newPlace.newY + newPlace.newX) >= 5) {
           pusher(newPlace)
         } else if(Y >= 9 && X <= 8 && Math.abs(newPlace.newY - newPlace.newX) <= 12) {
+          console.log('SRABOTAL')
           pusher(newPlace)
         } else if(Y >= 9 && X >= 9 && Math.abs(newPlace.newY + newPlace.newX) <= 29) {
-          console.log('Insa Alive')
+          //console.log('Insa Alive')
           pusher(newPlace)  
         } else if(Y <= 8 && X >= 9 && Math.abs(newPlace.newX - newPlace.newY) <= 12) {
           pusher(newPlace)

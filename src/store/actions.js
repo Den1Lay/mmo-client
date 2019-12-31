@@ -12,6 +12,10 @@ export const moveTo = ({y, x}) => ({
   payload: {y, x}
 })
 
+export const animeMove = ({y, x}) => ({
+  type: 'KNIGHT:ANIME_MOVE',
+  payload: {y, x}
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

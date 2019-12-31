@@ -107,7 +107,7 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
           resSchema[newY].forEach(({x}, i) => {
             if(newX === x) {
               checkIndex = i
-            }
+            } 
           })
           console.log('Do your work')
           cloneMainMemoPlant[newY][checkIndex] = <Square y={newY} x={newX} me={me} canMove={true}/> 

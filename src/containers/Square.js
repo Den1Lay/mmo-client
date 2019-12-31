@@ -2,7 +2,7 @@ import React from 'react';
 import { useDrop } from 'react-dnd'
 import store from '@/store'
 
-import { moveTo } from '@/store/actions'
+import { moveTo, animeMove } from '@/store/actions'
 
 import { 
   Square as SquareBase,
@@ -42,7 +42,8 @@ const Square = ({y, x, me, canMove}) => {
 
   const clickHandler = () => {
     if( canMove ) {
-      store.dispatch(moveTo({y, x}))
+      store.dispatch(animeMove({y, x}))
+      //store.dispatch(moveTo({y, x}))
     }
   }
   return (
