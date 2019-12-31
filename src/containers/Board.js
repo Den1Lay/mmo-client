@@ -5,13 +5,13 @@ import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = ({me, inAir, updateSign}) => { // canMove: [{y, x}, {y, x}]
+const Board = ({me, updateSign, canMove, uselessCanMove}) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
   const [mainMemoPlant, setMainMemoPlant] = useState([])
   const [updateId, setUpdateId] = useState(null)
-
+  console.log('CANMOVE:', canMove)
   useEffect(() => {
     if(mainRes.length === 0) {
       let topPart = [];
@@ -47,7 +47,7 @@ const Board = ({me, inAir, updateSign}) => { // canMove: [{y, x}, {y, x}]
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} inAir={true}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -61,29 +61,55 @@ const Board = ({me, inAir, updateSign}) => { // canMove: [{y, x}, {y, x}]
       })
       setMainRes(midMainRes)
     } else if(updateSign !== updateId) {
+      //console.log('GREAT SIGN:',updateSign)
+      //console.log('GREAT SIGN_IND:',updateSign.substr(0,1))
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
-      me.forEach(({id, Y, X, pY, pX}) => {
-        if(pY && pX) {
-          console.log('CLONE',cloneMainMemoPlant)
-          console.log('pY', pY)
-          let index = null; 
-          let deleteIndex = null;
-          resSchema[pY].forEach(({x}, di) => {
-            if(x === pX) {
-              deleteIndex = di
+      if(updateSign.substr(0,1) === 'M') {
+        canMove.forEach(({newY, newX}) => { //cleaner
+          let deathIndex = null;
+          resSchema[newY].forEach(({x}, i) => {
+            if(newX === x) {
+              deathIndex = i
             }
           })
-          resSchema[Y].forEach(({x}, i) => {
-            if(x === X) { 
-              index = i
+          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false} />
+        })
+        me.forEach(({id, Y, X, pY, pX}) => {
+          //console.log(`PPPPPPY: ${pY}, ${pX} `)
+         // if(pY+''  pX+'') { ----------------
+            //console.log('CLONE',cloneMainMemoPlant)
+            //console.log('pY', pY)
+            let index = null; 
+            let deleteIndex = null;
+            resSchema[pY].forEach(({x}, di) => {
+              if(x === pX) {
+                deleteIndex = di
+              }
+            })
+            resSchema[Y].forEach(({x}, i) => {
+              if(x === X) { 
+                index = i
+              }
+            })
+            //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
+            cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={true}/>
+            cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false}/>
+         // } --------------
+        })
+      } else if (updateSign.substr(0,1) === 'C') {
+        //console.log('Aliiiiiiiiiiive CHECKER')
+        let checkIndex = null;
+        canMove.forEach(({newY, newX}) => {
+          resSchema[newY].forEach(({x}, i) => {
+            if(newX === x) {
+              checkIndex = i
             }
           })
-        
-          cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me}/>
-          cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me}/>
-        }
-      })
+          cloneMainMemoPlant[newY][checkIndex] = <Square y={newY} x={newX} me={me} canMove={true}/> 
+        })
+      }
+      
       let midMainRes = cloneMainMemoPlant.map((arr, a) => {
         return (
           <div className='line' key={a}>
@@ -102,4 +128,11 @@ const Board = ({me, inAir, updateSign}) => { // canMove: [{y, x}, {y, x}]
   )
 }
 
-export default connect(({me, inAir, updateSign}) => ({me, inAir, updateSign}))(Board)
+export default connect((
+  {
+    me, 
+    updateSign, 
+    canMove, 
+    uselessCanMove
+  }
+  ) => ({me, updateSign, canMove, uselessCanMove}))(Board)

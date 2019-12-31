@@ -4,8 +4,8 @@ const defState = {
   ],
   partner: [],
   inAir: null,
-  canDrop: [],
-  updateSign: Math.random()
+  canMove: [],
+  updateSign: ''+Math.random()
 }
 
 export default (state = defState, action) => {
@@ -21,19 +21,20 @@ export default (state = defState, action) => {
       console.log('try do this', payload)
       return {
         ...state,
-        canDrop: checkMove(state.me, state.partner, payload),
+        canMove: checkMove(state.me, state.partner, payload),
         inAir: payload, //{id, y, x}  
+        updateSign: 'C'+Math.random()
       }
     case 'KNIGHT:DELETE_FROM_AIR':
       return {
         ...state,
-        inAir: null
+        //canMove: [],
       }
     case 'KNIGHT:MOVE_TO':
       return {
         ...state, 
         me: getNewStaff(state.me, payload),
-        updateSign: Math.random()
+        updateSign: 'M'+Math.random()
       }
     default: {
       return {
@@ -61,36 +62,51 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
       ]
     pathLenght = 1
   }
-  const PathBuilder = (yDir, xDir) => {
+  const pathBuilder = (yDir, xDir, pathLenght) => {
+    let counter = pathLenght
     let ripFlag = true;
     let newPlace = {newY: Y, newX: X}
-    while(ripFlag) {
+    const pusher = (newPlace) => {
+      if(partner.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
+        realPath.push(newPlace)
+        ripFlag = false
+      } else if(me.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
+        ripFlag = false
+      } else {
+        console.log('PUSH', newPlace)
+        realPath.push(newPlace) 
+        console.log('RESULT',realPath)
+      }
+    }
+    console.log('SIGNALL',ripFlag && counter)
+    while(ripFlag && counter) {
+      console.log('do THIS', counter)
+      counter-- 
       newPlace = {newY: newPlace.newY + yDir, newX: newPlace.newX + xDir}
       if(newPlace.newY <= 17 && newPlace.newX > -1 && newPlace.newY > -1 && newPlace.newX <= 17) {
+        console.log('Alive')
         if(Y <= 8 && X <= 8 && Math.abs(newPlace.newY + newPlace.newX) >= 5) {
-          if(partner.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-            realPath.push(newPlace)
-            ripFlag = false
-          }
-          if(me.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-            ripFlag = false
-          } else {
-            realPath.push(newPlace)
-          }
-        } else if(Y >= 9 && X <= 8 && Math.abs(newPlace.newY - newPlace.newX) >= 12) {
-
-        } else if(Y >= 9 && X >= 9 && Math.abs(newPlace.newY + newPlace.newX) >= 29) {
-
+          pusher(newPlace)
+        } else if(Y >= 9 && X <= 8 && Math.abs(newPlace.newY - newPlace.newX) <= 12) {
+          pusher(newPlace)
+        } else if(Y >= 9 && X >= 9 && Math.abs(newPlace.newY + newPlace.newX) <= 29) {
+          console.log('Insa Alive')
+          pusher(newPlace)  
         } else if(Y <= 8 && X >= 9 && Math.abs(newPlace.newX - newPlace.newY) <= 12) {
-
+          pusher(newPlace)
         } else {
-
+          ripFlag = false
         }
       } else {
         ripFlag = false
       }
     }
+    console.log('Down Counter', counter)
   }
+  
+  console.log('WHERE:',realPath)
+  direction.forEach(({yDir, xDir}) => pathBuilder(yDir, xDir, pathLenght))
+  return realPath
 }
 
 const getNewStaff = (staff, {id, y, x}) => {

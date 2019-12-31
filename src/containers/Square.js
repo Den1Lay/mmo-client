@@ -9,14 +9,14 @@ import {
 
 
 
-const Square = ({y, x, me}) => {
+const Square = ({y, x, me, canMove}) => {
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
     drop: () => ({y, x}), //knight will take it,
-    canDrop: () => true,
+    canDrop: () => canMove,
     collect: monitor => ({
       isOver: monitor.isOver(),
-      canDrop: y > 16 ? monitor.canDrop() : null
+      canDrop:monitor.canDrop()
       //canDrop: monitor.canDrop()  
     })
   })
