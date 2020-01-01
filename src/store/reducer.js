@@ -136,6 +136,7 @@ const checkMove = (me, partner, {id, Y, X}) => { // через PathBuilder
 const getLightPosition = (me, partner) => {
   let realPath = [];
   me.forEach(({id, Y, X}) => {
+    realPath.push({newY:Y, newX:X})
     switch(id.substr(1,4)) {
       case 'Knig':
         [ // Take it from server and save at localStore || Redux

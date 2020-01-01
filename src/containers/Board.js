@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from 'react';
+import React, {useEffect, useState, cloneElement as setState} from 'react';
 import { connect } from 'react-redux'
 
 import { lastPreparation } from '@/store/actions'
@@ -68,15 +68,24 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
       //console.log('GREAT SIGN_IND:',updateSign.substr(0,1))
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
+      const indexFinder = (workIndex, newY, newX) => {
+        resSchema[newY].forEach(({x}, i) => {
+          if(newX === x) {
+            workIndex.push(i)
+          }
+        })
+      }
       const cleaner = () => {
         canMove.forEach(({newY, newX}) => { //cleaner вот оно
-          let deathIndex = null;
-          resSchema[newY].forEach(({x}, i) => {
-            if(newX === x) {
-              deathIndex = i
-            }
-          })
-          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false}/>
+          let deathIndex = []
+          indexFinder(deathIndex, newY, newX)
+          // resSchema[newY].forEach(({x}, i) => {
+          //   if(newX === x) {
+          //     deathIndex = i
+          //   }
+          // })
+          cloneMainMemoPlant[newY][deathIndex[0]] = setState(cloneMainMemoPlant[newY][deathIndex[0]], {me, canMove:false})
+          deathIndex.pop()
         })
       }
       const mover = () => {
@@ -85,36 +94,42 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           // if(pY+''  pX+'') { ----------------
           //console.log('CLONE',cloneMainMemoPlant)
           //console.log('pY', pY)
-          let index = null; 
-          let deleteIndex = null;
-          resSchema[pY].forEach(({x}, di) => {
-            if(x === pX) {
-              deleteIndex = di
-            }
-          })
-          resSchema[Y].forEach(({x}, i) => {
-            if(x === X) { 
-              index = i
-            }
-          })
+          let index = [] 
+          let deleteIndex = []
+          indexFinder(index, Y, X)
+          indexFinder(deleteIndex, pY, pX)
+          // resSchema[pY].forEach(({x}, di) => {
+          //   if(x === pX) {
+          //     deleteIndex = di
+          //   }
+          // })
+          // resSchema[Y].forEach(({x}, i) => {
+          //   if(x === X) { 
+          //     index = i
+          //   }
+          // })
           //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
-          cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={false} isLight={true}/>
-          cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false}/>
+          cloneMainMemoPlant[Y][index[0]] = setState(cloneMainMemoPlant[Y][index[0]], {me, canMove: false})
+          cloneMainMemoPlant[pY][deleteIndex[0]] = setState(cloneMainMemoPlant[pY][deleteIndex[0]], {me, canMove: false})
+          index.pop()
+          deleteIndex.pop()
        // } --------------
       })
       } // СДЕЛАТЬ ОГРОМНЫЙ РЕФАКТОРИНГ
       const setter = () => {
         console.log('Aliiiiiiiiiiive CHECKER')
         console.log('CANMOVE:', canMove)
-        let checkIndex = null;
+        let checkIndex = [];
         canMove.forEach(({newY, newX}) => {
-          resSchema[newY].forEach(({x}, i) => {
-            if(newX === x) {
-              checkIndex = i
-            } 
-          })
-          console.log('Do your work')
-          cloneMainMemoPlant[newY][checkIndex] = <Square y={newY} x={newX} me={me} canMove={true}/> 
+          // resSchema[newY].forEach(({x}, i) => {
+          //   if(newX === x) {
+          //     checkIndex = i
+          //   } 
+          // })
+          indexFinder(checkIndex, newY, newX)
+          //console.log('Do your work')
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {me, canMove: true})
+          checkIndex.pop()
         })
       }
       // const lightCleaner = () => {
@@ -129,14 +144,16 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
       //   })
       // }
       const lightSetter = (workArr, pass) => {
-        let checkIndex = null;
+        let checkIndex = [];
         workArr.forEach(({newY, newX}) => {
-          resSchema[newY].forEach(({x}, i) => {
-            if(newX === x) {
-              checkIndex = i
-            }
-          })
-          cloneMainMemoPlant[newY][checkIndex] = React.cloneElement(cloneMainMemoPlant[newY][checkIndex], {isLight: pass})
+          // resSchema[newY].forEach(({x}, i) => {
+          //   if(newX === x) {
+          //     checkIndex = i
+          //   }
+          // })
+          indexFinder(checkIndex, newY, newX)
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {isLight: pass})
+          checkIndex.pop()
         })
       }
       switch(updateSign.substr(0,1)) {
@@ -150,7 +167,6 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           setter()
           break
         case 'D':
-          //console.log('TRY CLEAR IT')
           cleaner()
           break
         case 'P':
