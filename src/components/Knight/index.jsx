@@ -11,6 +11,7 @@ import './Knight.scss'
 const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove}) => {
   const [flag, setFlag] = useState(false)
   const mainRef = useRef(null)
+  console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
 
   console.log('React.ClonePass:', `${Y}, ${X}`)
   const [{isDragging, ...another}, drag] = useDrag({

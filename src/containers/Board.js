@@ -1,11 +1,13 @@
 import React, {useEffect, useState, useMemo} from 'react';
 import { connect } from 'react-redux'
 
+import { lastPreparation } from '@/store/actions'
+
 import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMove: [{y, x}, {y, x}]
+const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, oldInLight}) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
@@ -46,7 +48,7 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} moveTo={moveTo}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -59,6 +61,8 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
         )
       })
       setMainRes(midMainRes)
+      console.log('AFTER PREPARE EVENT, mainMemoPlant:', mainMemoPlant)
+      lastPreparation()
     } else if(updateSign !== updateId) {
       //console.log('GREAT SIGN:',updateSign)
       //console.log('GREAT SIGN_IND:',updateSign.substr(0,1))
@@ -72,7 +76,7 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
               deathIndex = i
             }
           })
-          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false} moveTo={moveTo}/>
+          cloneMainMemoPlant[newY][deathIndex] = <Square y={newY} x={newX} me={me} canMove={false}/>
         })
       }
       const mover = () => {
@@ -94,11 +98,11 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
             }
           })
           //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
-          cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={false} moveTo={moveTo}/>
-          cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false} moveTo={moveTo}/>
+          cloneMainMemoPlant[Y][index] = <Square y={Y} x={X} me={me} canMove={false} isLight={true}/>
+          cloneMainMemoPlant[pY][deleteIndex] = <Square y={pY} x={pX} me={me} canMove={false}/>
        // } --------------
       })
-      }
+      } // СДЕЛАТЬ ОГРОМНЫЙ РЕФАКТОРИНГ
       const setter = () => {
         console.log('Aliiiiiiiiiiive CHECKER')
         console.log('CANMOVE:', canMove)
@@ -113,10 +117,34 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
           cloneMainMemoPlant[newY][checkIndex] = <Square y={newY} x={newX} me={me} canMove={true}/> 
         })
       }
+      // const lightCleaner = () => {
+      //   let checkIndex = null;
+      //   oldInLight.forEach(({newY, newX}) => {
+      //     resSchema[newY].forEach(({x}, i) => {
+      //       if(newX === x) {
+      //         checkIndex = i
+      //       }
+      //     })
+      //     cloneMainMemoPlant[newY][checkIndex] = React.cloneElement(cloneMainMemoPlant[newY][checkIndex], {isLight: false})
+      //   })
+      // }
+      const lightSetter = (workArr, pass) => {
+        let checkIndex = null;
+        workArr.forEach(({newY, newX}) => {
+          resSchema[newY].forEach(({x}, i) => {
+            if(newX === x) {
+              checkIndex = i
+            }
+          })
+          cloneMainMemoPlant[newY][checkIndex] = React.cloneElement(cloneMainMemoPlant[newY][checkIndex], {isLight: pass})
+        })
+      }
       switch(updateSign.substr(0,1)) {
         case 'M':
           cleaner()
           mover()
+          lightSetter(oldInLight, false)
+          lightSetter(newInLight, true)
           break
         case 'C':
           setter()
@@ -125,6 +153,9 @@ const Board = ({me, updateSign, canMove, moveTo, uselessCanMove}) => { // canMov
           //console.log('TRY CLEAR IT')
           cleaner()
           break
+        case 'P':
+          lightSetter(newInLight, true)
+          break;
         default:
           console.log('START') // do something with this...
       }
@@ -153,5 +184,9 @@ export default connect((
     updateSign, 
     canMove, 
     uselessCanMove,
+    newInLight,
+    oldInLight
   }
-  ) => ({me, updateSign, canMove, uselessCanMove}))(Board)
+  ) => ({me, updateSign, canMove, uselessCanMove, newInLight, oldInLight}), {
+    lastPreparation
+  })(Board)

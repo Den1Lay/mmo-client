@@ -9,8 +9,8 @@ import {
   Knight
  } from '@/components'
 
-const Square = ({y, x, me, canMove}) => {
-  console.log('CANNNNNN MOOOOOOOOOVE:', canMove)
+const Square = ({y, x, me, canMove, isLight}) => {
+  //console.log('CANNNNNN MOOOOOOOOOVE:', canMove)
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
     drop: () => ({y, x}), //knight will take it,
@@ -23,13 +23,14 @@ const Square = ({y, x, me, canMove}) => {
   })
 
   let place = null;
-  console.log('ME',me)
+  //console.log('ME',me)
   const preparePlace = ({array}) => {
     array.forEach(({Y, X, id}) => {
       if(y === Y && x === X) {
+        console.log(`Inside Pass: y: ${y}, x: ${x}`)
         switch(id.substr(1, 4)) {
           case 'Knig': 
-            place = <Knight id={id} simbol={'♞'} /> //name of picture to use React.lazy
+            place = <Knight id={id} simbol={'♞'} y={y} x={x} /> //name of picture to use React.lazy
         }
       }
     })
@@ -50,7 +51,7 @@ const Square = ({y, x, me, canMove}) => {
     <div 
       ref={drop}
       onClick={clickHandler}>
-      <SquareBase y={y} x={x} overlay={backColor}>
+      <SquareBase y={y} x={x} overlay={backColor} isLight={isLight}>
         {place}
       </SquareBase>
     </div>
