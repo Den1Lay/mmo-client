@@ -49,7 +49,7 @@ const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeM
       translateX: [0, (x-X)*52],
       duration: 1200,
       easing: 'easeInOutExpo',
-      complete: anim => {
+      complete: anim => {  // may take 90% event
         if(anim.completed) {
           console.log('ISTIME')
           moveTo({y, x})

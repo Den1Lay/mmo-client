@@ -9,7 +9,7 @@ import {
   Knight
  } from '@/components'
 
-const Square = ({y, x, me, canMove, isLight}) => {
+const Square = ({y, x, me, canMove, isLight, isRock}) => {
   //console.log('CANNNNNN MOOOOOOOOOVE:', canMove)
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
@@ -51,7 +51,7 @@ const Square = ({y, x, me, canMove, isLight}) => {
     <div 
       ref={drop}
       onClick={clickHandler}>
-      <SquareBase y={y} x={x} overlay={backColor} isLight={isLight}>
+      <SquareBase y={y} x={x} overlay={backColor} isLight={isLight} isRock={isRock}>
         {place}
       </SquareBase>
     </div>

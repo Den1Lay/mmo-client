@@ -7,7 +7,7 @@ import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, oldInLight}) => { // canMove: [{y, x}, {y, x}]
+const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight, rocks}) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
@@ -48,7 +48,7 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -69,9 +69,10 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
       const indexFinder = (workIndex, newY, newX) => {
+        console.log(`NEWY: ${newY}, NEWX: ${newX}`)
         resSchema[newY].forEach(({x}, i) => {
           if(newX === x) {
-            workIndex.push(i)
+            workIndex[0] = i
           }
         })
       }
@@ -83,9 +84,9 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           //   if(newX === x) {
           //     deathIndex = i
           //   }
-          // })
+          // setState === React.cloneElement()
           cloneMainMemoPlant[newY][deathIndex[0]] = setState(cloneMainMemoPlant[newY][deathIndex[0]], {me, canMove:false})
-          deathIndex.pop()
+          //deathIndex.pop()
         })
       }
       const mover = () => {
@@ -93,7 +94,7 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           //console.log(`PPPPPPY: ${pY}, ${pX} `)
           // if(pY+''  pX+'') { ----------------
           //console.log('CLONE',cloneMainMemoPlant)
-          //console.log('pY', pY)
+          console.log(`MOOOOOOOOOOOOOOOV_pY: ${pY}, pX: ${pX}`)
           let index = [] 
           let deleteIndex = []
           indexFinder(index, Y, X)
@@ -108,11 +109,11 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           //     index = i
           //   }
           // })
-          //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
+          console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
           cloneMainMemoPlant[Y][index[0]] = setState(cloneMainMemoPlant[Y][index[0]], {me, canMove: false})
           cloneMainMemoPlant[pY][deleteIndex[0]] = setState(cloneMainMemoPlant[pY][deleteIndex[0]], {me, canMove: false})
-          index.pop()
-          deleteIndex.pop()
+          //index.pop()
+          //deleteIndex.pop()
        // } --------------
       })
       } // СДЕЛАТЬ ОГРОМНЫЙ РЕФАКТОРИНГ
@@ -129,7 +130,7 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           indexFinder(checkIndex, newY, newX)
           //console.log('Do your work')
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {me, canMove: true})
-          checkIndex.pop()
+          //checkIndex.pop()
         })
       }
       // const lightCleaner = () => {
@@ -153,7 +154,14 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           // })
           indexFinder(checkIndex, newY, newX)
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {isLight: pass})
-          checkIndex.pop()
+          //  checkIndex.pop()
+        })
+      }
+      const rockSetter = () => {
+        let checkIndex = []
+        rocks.forEach(({Y, X}) => {
+          indexFinder(checkIndex, Y, X)
+          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isRock: true})
         })
       }
       switch(updateSign.substr(0,1)) {
@@ -171,6 +179,7 @@ const Board = ({me, updateSign, canMove, moveTo, lastPreparation, newInLight, ol
           break
         case 'P':
           lightSetter(newInLight, true)
+          rockSetter()
           break;
         default:
           console.log('START') // do something with this...
@@ -201,8 +210,11 @@ export default connect((
     canMove, 
     uselessCanMove,
     newInLight,
-    oldInLight
+    oldInLight,
+    rocks
   }
-  ) => ({me, updateSign, canMove, uselessCanMove, newInLight, oldInLight}), {
+  ) => ({me, updateSign, canMove, uselessCanMove, newInLight, oldInLight, rocks}), 
+  {
     lastPreparation
-  })(Board)
+  }
+  )(Board)
