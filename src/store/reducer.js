@@ -1,7 +1,16 @@
+import store from './index'
+
 const defaultState = {
   me: [
     {id: 'WKnight1', Y: 17, X: 9, pY: 17, pX: 9},
-    {id: 'WKnight2', Y: 1, X: 7, pY: 1, pX: 7}  //17, 9
+    {
+      id: 'WKnight2', 
+      Y: 1, X: 7, 
+      pY: 1, pX: 7,
+      visibility: [],
+      move: [],
+      attack: [],
+    }  //17, 9
   ],
   partner: [],
   inAir: null,
@@ -11,6 +20,9 @@ const defaultState = {
   newInLight: [],
   oldInLight: [],
   rocks: [],
+  treasures: [],
+  deletedTreasures: [],
+  myTreasures: []
 }
 
 export default (state = defaultState, action) => {
@@ -31,9 +43,10 @@ export default (state = defaultState, action) => {
         updateSign: 'C'+Math.random(),
       }
     case 'KNIGHT:DELETE_FROM_AIR':
-      //console.log('TRYYYYYYY DO CLEAR')
+      console.log('TRYYYYYYY DO CLEAR')
       return {
         ...state,
+        inAir: null,
         updateSign: 'D'+Math.random()
       }
     case 'KNIGHT:MOVE_TO':
@@ -42,10 +55,11 @@ export default (state = defaultState, action) => {
       return {
         ...state, 
         me: newMe,
-        updateSign: 'M'+Math.random(),
+        inAir: null,
         newInLight: getLightPosition(newMe, state.partner, state.rocks),
         oldInLight: state.newInLight,
-        animeMove: null // for what, i don't know
+        animeMove: null,  // for what, i don't know
+        updateSign: 'M'+Math.random(), 
       }
     case 'KNIGHT:ANIME_MOVE':
       return {
@@ -59,7 +73,17 @@ export default (state = defaultState, action) => {
         ...state,
         newInLight: getLightPosition(state.me, state.partner, state.rocks),  //добавить сдесь скало креатор
         rocks: rocksCreator(),
-        updateSign: 'P'+Math.random() // добавить небольшой прелоад и рипать его тут
+        treasures: treasuresCreator(),
+        updateSign: 'P'+Math.random(), // добавить небольшой прелоад и рипать его тут
+      }
+    case 'KNIGHT:TAKE_TREASURE': 
+      console.log("PAYLOOOOOOOOOAD", payload)
+      return {
+        ...state, // нижней строчки может и не быть.
+        treasures: state.treasures.filter(({Y, X}) => !( Y === payload.Y && X === payload.X)),
+        deletedTreasures: [payload],
+        myTreasures: [...state.myTreasures].concat(state.treasures.filter(({Y, X}) => Y === payload.Y && X === payload.X)),
+        updateSign: 'T'+Math.random()
       }
     default: {
       return {
@@ -68,24 +92,23 @@ export default (state = defaultState, action) => {
     }
   }
 }
-
+//SPELS IT's a functions, which we import, and use destruct as arg or switch
 
 const rocksCreator = () => {
   return [
-    {Y: 6, X: 3},
-    {Y: 8, X: 4},
-    {Y: 9, X: 5},
-    {Y: 10, X: 5},
-    {Y: 11, X: 4},
-    {Y: 8, X: 8},
-    {Y: 7, X: 9},
-    {Y: 8, X: 10},
-    {Y: 9, X: 11},
-    {Y: 10, X: 11},
-    {Y: 7, X: 13},
-    {Y: 7, X: 14},
-    {Y: 6, X: 15},
-    {Y: 10, X: 14},
+    {Y: 6, X: 3},{Y: 8, X: 4},
+    {Y: 9, X: 5},{Y: 10, X: 5},
+    {Y: 11, X: 4},{Y: 8, X: 8},
+    {Y: 7, X: 9},{Y: 8, X: 10},
+    {Y: 9, X: 11},{Y: 10, X: 11},
+    {Y: 7, X: 13},{Y: 7, X: 14},
+    {Y: 6, X: 15},{Y: 10, X: 14},
+  ]
+}
+
+const treasuresCreator = () => {
+  return [
+    {Y: 7, X: 4, id: 'VisualBooster'}, {Y: 8, X: 9, id: 'DammageIncreaser'}
   ]
 }
 
@@ -117,7 +140,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X,
   //console.log('SIGNALL',ripFlag && counter)
   while(ripFlag && counter) {
     //console.log('do THIS', counter)
-    counter--  // Здесь обитает баг, если counter больше 4, то можем уйти на пративоположную сторону, где происходит ужасные вещи...
+    counter--  // Здесь обитает баг, если counter больше 4, то можем уйти на пративоположную сторону, где происходят ужасные вещи...
     newPlace = {newY: newPlace.newY + yDir, newX: newPlace.newX + xDir}
     if(newPlace.newY <= 17 && newPlace.newX > -1 && newPlace.newY > -1 && newPlace.newX <= 17) {
       //console.log('Alive')
@@ -143,7 +166,9 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X,
 
 const checkMove = (me, partner, rocks, {id, Y, X}) => { // через PathBuilder
   let realPath = []
+  let misses = []
   let direction = []
+  let missesDirs = []
   switch(id.substr(1, 4)) {
     case 'Knig':
       direction = [
@@ -154,12 +179,31 @@ const checkMove = (me, partner, rocks, {id, Y, X}) => { // через PathBuilde
         {xDir:-1, yDir:1, pathLenght:3},
         {xDir:-1, yDir: 0, pathLenght:4},
         {xDir:0, yDir: 1, pathLenght:4},
-        {xDir:0, yDir: -1, pathLenght:4}
-      ]
+        {xDir:0, yDir: -1, pathLenght:4},
+        {xDir:-2, yDir: -1, pathLenght:1},
+        {xDir:-2, yDir: 1, pathLenght:1},
+        {xDir: 2, yDir: -1, pathLenght:1},
+        {xDir: 2, yDir: 1, pathLenght:1},
+        {xDir:-1, yDir: -2, pathLenght:1},
+        {xDir:1, yDir: -2, pathLenght:1},
+        {xDir:-1, yDir: 2, pathLenght:1},
+        {xDir:1, yDir: 2, pathLenght:1},
+      ];
+      missesDirs = [
+        {xDir:-2, yDir: -1, pathLenght:1},
+        {xDir:-2, yDir: 1, pathLenght:1},
+        {xDir: 2, yDir: -1, pathLenght:1},
+        {xDir: 2, yDir: 1, pathLenght:1},
+        {xDir:-1, yDir: -2, pathLenght:1},
+        {xDir:1, yDir: -2, pathLenght:1},
+        {xDir:-1, yDir: 2, pathLenght:1},
+        {xDir:1, yDir: 2, pathLenght:1},
+      ];
     break;
   }
   console.log('WHERE:',realPath)
-  direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X, []))
+  direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X, misses))
+  missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
   return realPath
 }
 
@@ -170,9 +214,9 @@ const fillTheGaps = (yDir, xDir, realPath, Y, X, misses) => {
   let incX = realPath.some(({newY, newX}) => newY === Y && newX === X+xDir);
   let midY = realPath.some(({newY, newX}) => newY === Y+yDir*0.5 && newX === X+xDir)
   let midX = realPath.some(({newY, newX}) => newY === Y+yDir && newX === X+xDir*0.5)
-  
+
   if(misses.some(({newY, newX}) => newY === res.newY && newX === res.newX)) {
-    if( Math.abs(xDir) === 1 && ((incY && midY) || (incX && midY))) 
+    if( Math.abs(xDir) === 1 && ((incY && midY) || (incX && midY)))
     { realPath.push(res)} 
     else if ((incX && midX) || (incY && midX)) 
     { realPath.push(res)}

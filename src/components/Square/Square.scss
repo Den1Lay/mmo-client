@@ -7,6 +7,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  &__isTreasure {
+    background: goldenrod;
+    color: red;
+    font-weight: bold;
+  }
   &__isRock {
     background: rgb(160, 160, 160);
   }

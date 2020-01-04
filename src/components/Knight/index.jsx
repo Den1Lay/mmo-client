@@ -4,14 +4,16 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo } from '@/store/actions'
+import { addToAir, deleteFromAir, moveTo, takeTreasure } from '@/store/actions'
 
 import './Knight.scss'
 
-const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove}) => {
-  const [flag, setFlag] = useState(false)
+const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt}) => {
+  takeIt && takeTreasure({y:Y, x:X})
+  
   const mainRef = useRef(null)
   console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
+  let moveOnTreasure = false;
 
   console.log('React.ClonePass:', `${Y}, ${X}`)
   const [{isDragging, ...another}, drag] = useDrag({
@@ -23,9 +25,13 @@ const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeM
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult()
       if(item && dropResult) {
-        const {y, x} = dropResult
+        const {y, x, isTreasure} = dropResult
         if(!(y === Y && x === X )) {
           moveTo({y, x})
+          if(isTreasure) {
+            takeTreasure({y, x})
+            moveOnTreasure = true
+          }
         }
         // 
       }
@@ -35,9 +41,15 @@ const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeM
     })
   })
   const clickHandler = () => {
-    console.log('CLIIIIIIIIIIICK HANDLER')
-    flag ? deleteFromAir() : addToAir({id, Y, X})
-    setFlag(!flag)
+    console.log('CLIIIIIIIIIIICK HANDLER');
+    console.log(inAir);
+    console.log(inAir && (inAir.id !== id));
+    if(inAir && (inAir.id !== id)) {
+      deleteFromAir()
+      setTimeout(() => addToAir({id, Y, X}), 0) //
+    } else {
+      inAir && inAir.id === id ? deleteFromAir() : addToAir({id, Y, X})
+    }
   }
 
   if(animeMove && animeMove.id === id) {
@@ -53,6 +65,7 @@ const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeM
         if(anim.completed) {
           console.log('ISTIME')
           moveTo({y, x})
+          
         }
       }
     });
@@ -74,4 +87,4 @@ const Knight = ({id, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeM
   )
 }
 
-export default connect(({inAir, animeMove}) => ({animeMove}), {addToAir, deleteFromAir, moveTo})(Knight)
+export default connect(({inAir, animeMove}) => ({inAir, animeMove}), {addToAir, deleteFromAir, moveTo, takeTreasure})(Knight)

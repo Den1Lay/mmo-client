@@ -7,7 +7,18 @@ import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight, rocks}) => { // canMove: [{y, x}, {y, x}]
+const Board = (
+  {
+    me, 
+    updateSign, 
+    canMove, 
+    lastPreparation, 
+    newInLight, 
+    oldInLight, 
+    rocks, 
+    treasures,
+    deletedTreasures
+  }) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
@@ -48,7 +59,7 @@ const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false} isTreasure={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -77,6 +88,7 @@ const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight
         })
       }
       const cleaner = () => {
+        console.log('INNNNNNNNNN WOOOOOOOOOORK,', canMove)
         canMove.forEach(({newY, newX}) => { //cleaner вот оно
           let deathIndex = []
           indexFinder(deathIndex, newY, newX)
@@ -164,6 +176,15 @@ const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight
           cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isRock: true})
         })
       }
+      const treasureSetter = (workArr, pass) => {
+        console.log(`TREEEEEEAAASURE:`,workArr)
+        let checkIndex = []
+        workArr.forEach(({Y, X}) => {
+          indexFinder(checkIndex, Y, X)
+          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isTreasure: pass})
+        })
+      }
+      console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
       switch(updateSign.substr(0,1)) {
         case 'M':
           cleaner()
@@ -175,12 +196,16 @@ const Board = ({me, updateSign, canMove, lastPreparation, newInLight, oldInLight
           setter()
           break
         case 'D':
+          console.log('ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLIVE')
           cleaner()
           break
         case 'P':
           lightSetter(newInLight, true)
           rockSetter()
+          treasureSetter(treasures, true)
           break;
+        case 'T': 
+          treasureSetter(deletedTreasures, false)
         default:
           console.log('START') // do something with this...
       }
@@ -211,9 +236,23 @@ export default connect((
     uselessCanMove,
     newInLight,
     oldInLight,
-    rocks
+    rocks,
+    treasures,
+    deletedTreasures
   }
-  ) => ({me, updateSign, canMove, uselessCanMove, newInLight, oldInLight, rocks}), 
+  ) => (
+    {
+      me, 
+      updateSign, 
+      canMove, 
+      uselessCanMove, 
+      newInLight, 
+      oldInLight, 
+      rocks,
+      treasures,
+      deletedTreasures
+    }
+    ), 
   {
     lastPreparation
   }

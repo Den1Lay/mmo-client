@@ -20,6 +20,11 @@ export const animeMove = ({y, x}) => ({
 export const lastPreparation = () => ({
   type: 'KNIGHT:LAST_PREPARATION'
 })
+
+export const takeTreasure = ({y, x}) => ({
+  type: 'KNIGHT:TAKE_TREASURE',
+  payload: {Y:y, X:x}
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })
