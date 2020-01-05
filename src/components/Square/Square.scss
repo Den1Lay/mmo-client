@@ -7,6 +7,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  &__isAttacked {
+    background: rgb(182, 0, 0);
+    color: black;
+  }
   &__isTreasure {
     background: goldenrod;
     color: red;

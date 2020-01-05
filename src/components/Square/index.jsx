@@ -3,13 +3,15 @@ import classNames from 'classnames'
 
 import './Square.scss'
 
-const Square = ({x, y, children, overlay, isLight, isRock, isTreasure}) => {
-  console.log(`X:${x}, Y:${y}, isTreasure: ${isTreasure}`)
+const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked}) => {
+  console.log(`X:${x}, Y:${y}, isAttacked: ${isAttacked}`)
   return (
     <div className={classNames(
       'square',
       overlay && `square__${overlay}`,
-      isTreasure && isLight
+      isAttacked
+      ? 'square__isAttacked'
+      : isTreasure && isLight
       ? 'square__isTreasure'
       : isRock 
         ? 'square__isRock'

@@ -4,13 +4,14 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo, takeTreasure } from '@/store/actions'
+import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo } from '@/store/actions'
 
 import './Knight.scss'
 
-const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt}) => {
+const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo}) => {
   takeIt && takeTreasure({y:Y, x:X})
   
+  const [action, setAction] = useState(true)
   const mainRef = useRef(null)
   console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
   let moveOnTreasure = false;
@@ -42,8 +43,8 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
   })
   const clickHandler = () => {
     console.log('CLIIIIIIIIIIICK HANDLER');
-    console.log(inAir);
-    console.log(inAir && (inAir.id !== id));
+    // console.log(inAir);
+    // console.log(inAir && (inAir.id !== id));
     if(inAir && (inAir.id !== id)) {
       deleteFromAir()
       setTimeout(() => addToAir({id, Y, X}), 0) //
@@ -71,6 +72,13 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
     });
   }
 
+  const controlHandler = (e) => {
+    e.stopPropagation()
+    action ? prepareTo('ATTACK') : prepareTo('MOVE')
+    setAction(!action)
+    console.log('LOOOOK')
+  }
+
   return (
     <div 
     onClick={clickHandler}
@@ -83,9 +91,9 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
       <div ref={mainRef}>
       {simbol}
       </div>
-      {inAir && inAir.id == id ? <div className='knight__attackButton'/> : null}
+      {inAir && inAir.id == id ? <div className='knight__attackButton' onClick={controlHandler}/> : null}
     </div>
   )
 }
 
-export default connect(({inAir, animeMove}) => ({inAir, animeMove}), {addToAir, deleteFromAir, moveTo, takeTreasure})(Knight)
+export default connect(({inAir, animeMove}) => ({inAir, animeMove}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)

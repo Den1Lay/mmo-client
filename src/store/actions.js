@@ -25,6 +25,18 @@ export const takeTreasure = ({y, x}) => ({
   type: 'KNIGHT:TAKE_TREASURE',
   payload: {Y:y, X:x}
 })
+
+export const prepareTo = (pass) => ({
+  type: 'KNIGHT:PREPARE_TO',
+  payload: {pass}
+})
+
+export const attackTo = ({y, x, cause}) => ({
+  type: 'KNIGHT:ATTACK_TO',
+  payload: {y, x, cause}
+})
+
+
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

@@ -9,15 +9,20 @@ import  Square from './Square'
 
 const Board = (
   {
-    me, 
+    me,
+    oldPatners,
     updateSign, 
-    canMove, 
+    canMove,
+    oldCanMove,
     lastPreparation, 
     newInLight, 
     oldInLight, 
-    rocks, 
+    rocks,
+    oldRocks,
     treasures,
-    deletedTreasures
+    deletedTreasures,
+    canAttack,
+    oldCanAttack
   }) => { // canMove: [{y, x}, {y, x}]
 
   const [mainRes, setMainRes] = useState([])
@@ -59,7 +64,7 @@ const Board = (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false} isTreasure={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -88,8 +93,8 @@ const Board = (
         })
       }
       const cleaner = () => {
-        console.log('INNNNNNNNNN WOOOOOOOOOORK,', canMove)
-        canMove.forEach(({newY, newX}) => { //cleaner вот оно
+        console.log('INNNNNNNNNN WOOOOOOOOOORK,', oldCanMove)
+        oldCanMove.forEach(({newY, newX}) => { //cleaner вот оно
           let deathIndex = []
           indexFinder(deathIndex, newY, newX)
           // resSchema[newY].forEach(({x}, i) => {
@@ -169,11 +174,11 @@ const Board = (
           //  checkIndex.pop()
         })
       }
-      const rockSetter = () => {
+      const rockSetter = (workArr, pass) => {
         let checkIndex = []
-        rocks.forEach(({Y, X}) => {
+        workArr.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
-          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isRock: true})
+          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isRock: pass})
         })
       }
       const treasureSetter = (workArr, pass) => {
@@ -182,6 +187,13 @@ const Board = (
         workArr.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
           cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], {isTreasure: pass})
+        })
+      }
+      const attackSetter = (workArr, pass) => {
+        let checkIndex = []
+        workArr.forEach(({newY, newX}) => {
+          indexFinder(checkIndex, newY, newX)
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {isAttacked: pass})
         })
       }
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
@@ -197,15 +209,28 @@ const Board = (
           break
         case 'D':
           console.log('ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLIVE')
-          cleaner()
+          oldCanMove.length > 0 && cleaner()
+          oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
           break
         case 'P':
           lightSetter(newInLight, true)
-          rockSetter()
+          rockSetter(rocks, true)
           treasureSetter(treasures, true)
           break;
         case 'T': 
           treasureSetter(deletedTreasures, false)
+        case 'U':
+          if(!(canMove.length > 0) && canAttack.length > 0) {
+            cleaner()
+            //spellSetter(, false)
+            attackSetter(canAttack, true)
+          } else if(canMove.length > 0 && !(canAttack.length > 0)) {
+            attackSetter(oldCanAttack, false)
+            setter()
+          }
+        case 'A':
+          oldRocks && rockSetter([oldRocks], false);
+          //oldPatners && 'DOBAVIL PARTNEROV'
         default:
           console.log('START') // do something with this...
       }
@@ -230,27 +255,37 @@ const Board = (
 
 export default connect((
   {
-    me, 
+    me,
+    oldPatners,
     updateSign, 
-    canMove, 
+    canMove,
+    oldCanMove,
     uselessCanMove,
     newInLight,
     oldInLight,
     rocks,
+    oldRocks,
     treasures,
-    deletedTreasures
+    deletedTreasures,
+    canAttack,
+    oldCanAttack
   }
   ) => (
     {
-      me, 
+      me,
+      oldPatners,
       updateSign, 
-      canMove, 
+      canMove,
+      oldCanMove,
       uselessCanMove, 
       newInLight, 
       oldInLight, 
       rocks,
+      oldRocks,
       treasures,
-      deletedTreasures
+      deletedTreasures,
+      canAttack,
+      oldCanAttack
     }
     ), 
   {
