@@ -1,4 +1,13 @@
 .knight {
+  position: relative;
   font-size: 25px;
   cursor: pointer;
+  &__attackButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: red;
+  }
 }

@@ -83,6 +83,7 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
       <div ref={mainRef}>
       {simbol}
       </div>
+      {inAir && inAir.id == id ? <div className='knight__attackButton'/> : null}
     </div>
   )
 }

@@ -2,14 +2,115 @@ import store from './index'
 
 const defaultState = {
   me: [
-    {id: 'WKnight1', Y: 17, X: 9, pY: 17, pX: 9},
+    // {
+    //   id: 'WKnight1', 
+    //   Y: 17, X: 9, 
+    //   pY: 17, pX: 9,
+    //   attack: {
+    //     dop: ['partner', 'rocks'],  // stop on this block
+    //     blocks: ['me'], // stop before this block
+    //     dirs: [
+    //       {xDir:1, yDir:1, pathLenght:3},
+    //       {xDir:1, yDir:-1, pathLenght:3},
+    //       {xDir:1, yDir: 0, pathLenght:4},
+    //       {xDir:-1, yDir:-1, pathLenght:3},
+    //       {xDir:-1, yDir:1, pathLenght:3},
+    //       {xDir:-1, yDir: 0, pathLenght:4},
+    //       {xDir:0, yDir: 1, pathLenght:4},
+    //       {xDir:0, yDir: -1, pathLenght:4},
+    //     ]
+    //   },
+    // },
     {
       id: 'WKnight2', 
-      Y: 1, X: 7, 
+      Y: 1, X: 7,
       pY: 1, pX: 7,
-      visibility: [],
-      move: [],
-      attack: [],
+      visibility: {
+        dopDirs: ['partner'], // mustBe in future
+        blockDirs: ['me', 'rocks'],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:2},
+          {xDir:1, yDir:-1, pathLenght:2},
+          {xDir:1, yDir: 0, pathLenght:3},
+          {xDir:-1, yDir:-1, pathLenght:2},
+          {xDir:-1, yDir:1, pathLenght:2},
+          {xDir:-1, yDir: 0, pathLenght:3},
+          {xDir:0, yDir: 1, pathLenght:3},
+          {xDir:0, yDir: -1, pathLenght:3},
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      }, // обзор
+      move: {
+        dopDirs: ['partner'],
+        blockDirs: ['me', 'rocks'],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:3},
+          {xDir:1, yDir:-1, pathLenght:3},
+          {xDir:1, yDir: 0, pathLenght:4},
+          {xDir:-1, yDir:-1, pathLenght:3},
+          {xDir:-1, yDir:1, pathLenght:3},
+          {xDir:-1, yDir: 0, pathLenght:4},
+          {xDir:0, yDir: 1, pathLenght:4},
+          {xDir:0, yDir: -1, pathLenght:4},
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      },
+      attack: {
+        dopDirs: ['partner', 'rocks'],
+        blocksDirs: ['me'],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:3},
+          {xDir:1, yDir:-1, pathLenght:3},
+          {xDir:1, yDir: 0, pathLenght:4},
+          {xDir:-1, yDir:-1, pathLenght:3},
+          {xDir:-1, yDir:1, pathLenght:3},
+          {xDir:-1, yDir: 0, pathLenght:4},
+          {xDir:0, yDir: 1, pathLenght:4},
+          {xDir:0, yDir: -1, pathLenght:4},
+        ]
+      },
+      spels: [
+        {
+          id: 'PoisonLine', 
+          type: '',
+          area: [],
+          func: () => {}
+        }
+      ]
     }  //17, 9
   ],
   partner: [],
@@ -22,7 +123,8 @@ const defaultState = {
   rocks: [],
   treasures: [],
   deletedTreasures: [],
-  myTreasures: []
+  myTreasures: [],
+  attacks: []
 }
 
 export default (state = defaultState, action) => {
@@ -112,30 +214,35 @@ const treasuresCreator = () => {
   ]
 }
 
-const pathBuilder = (yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X, misses) => {
+
+const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses) => {
   let counter = pathLenght
   let ripFlag = true;
   let newPlace = {newY: Y, newX: X}
-  const rockInclude = ({y, x}) => rocks.some(({Y, X}) => y === Y && x === X)
+  const rockInclude = ({y, x}) => mainSource['rocks'].some(({Y, X}) => y === Y && x === X)
   const pusher = (newPlace) => {
     let modYDir = Math.abs(yDir);
-    let modXDir = Math.abs(xDir)
-    if(modYDir === modXDir
-    && (rockInclude({y:newPlace.newY-yDir, x:newPlace.newX}) 
-      && rockInclude({y:newPlace.newY, x:newPlace.newX-xDir}))) {
-      ripFlag = false
-    } else if(partner.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-      modYDir+modXDir <=2 ? realPath.push(newPlace) : misses.push(newPlace)
-      ripFlag = false
-    } else if(me.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-      ripFlag = false
-    } else if(rocks.some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-      //console.log('PUSH', newPlace)
-      ripFlag = false
-      //console.log('RESULT',realPath)
-    } else {
-      modYDir+modXDir <=2 ? realPath.push(newPlace) : misses.push(newPlace)
+    let modXDir = Math.abs(xDir);
+    let isEmptyPlace = [true]
+    const passFunc = () => modYDir+modXDir <=2 ? realPath.push(newPlace) : misses.push(newPlace)
+    const checkPaths = (workArr, permit) => {
+      workArr.forEach((name) => {
+        if(modYDir === modXDir
+          && (rockInclude({y:newPlace.newY-yDir, x:newPlace.newX}) 
+            && rockInclude({y:newPlace.newY, x:newPlace.newX-xDir}))) {
+              ripFlag = false
+              isEmptyPlace[0] = false
+        } else if(mainSource[name].some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
+          permit && passFunc()
+          ripFlag = false
+          isEmptyPlace[0] = false
+        }
+      })
     }
+    checkPaths(dop, true)
+    checkPaths(block, false)
+    isEmptyPlace[0] && passFunc()
+   
   }
   //console.log('SIGNALL',ripFlag && counter)
   while(ripFlag && counter) {
@@ -169,40 +276,20 @@ const checkMove = (me, partner, rocks, {id, Y, X}) => { // через PathBuilde
   let misses = []
   let direction = []
   let missesDirs = []
-  switch(id.substr(1, 4)) {
-    case 'Knig':
-      direction = [
-        {xDir:1, yDir:1, pathLenght:3},
-        {xDir:1, yDir:-1, pathLenght:3},
-        {xDir:1, yDir: 0, pathLenght:4},
-        {xDir:-1, yDir:-1, pathLenght:3},
-        {xDir:-1, yDir:1, pathLenght:3},
-        {xDir:-1, yDir: 0, pathLenght:4},
-        {xDir:0, yDir: 1, pathLenght:4},
-        {xDir:0, yDir: -1, pathLenght:4},
-        {xDir:-2, yDir: -1, pathLenght:1},
-        {xDir:-2, yDir: 1, pathLenght:1},
-        {xDir: 2, yDir: -1, pathLenght:1},
-        {xDir: 2, yDir: 1, pathLenght:1},
-        {xDir:-1, yDir: -2, pathLenght:1},
-        {xDir:1, yDir: -2, pathLenght:1},
-        {xDir:-1, yDir: 2, pathLenght:1},
-        {xDir:1, yDir: 2, pathLenght:1},
-      ];
-      missesDirs = [
-        {xDir:-2, yDir: -1, pathLenght:1},
-        {xDir:-2, yDir: 1, pathLenght:1},
-        {xDir: 2, yDir: -1, pathLenght:1},
-        {xDir: 2, yDir: 1, pathLenght:1},
-        {xDir:-1, yDir: -2, pathLenght:1},
-        {xDir:1, yDir: -2, pathLenght:1},
-        {xDir:-1, yDir: 2, pathLenght:1},
-        {xDir:1, yDir: 2, pathLenght:1},
-      ];
-    break;
-  }
+  let dop = []
+  let block = []
+  let mainSource = {me, partner, rocks}
+  me.forEach(({id: ID, move}) => {
+    const {dirs, dopDirs, blockDirs, missesDirs: missesDirsRest} = move
+    if(ID === id) {
+      direction = dirs
+      missesDirs = missesDirsRest
+      dop = dopDirs
+      block = blockDirs
+    }
+  })
   console.log('WHERE:',realPath)
-  direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, me, partner, rocks, Y, X, misses))
+  direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses))
   missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
   return realPath
 }
@@ -224,45 +311,18 @@ const fillTheGaps = (yDir, xDir, realPath, Y, X, misses) => {
 }
 
 const getLightPosition = (me, partner, rocks) => {
-  let realPath = [];
+  let realPath = []
   let misses = []
-  //МАНИПУЛЯЦИИ С МАССИВАМИ: Отдельный массив на каждого перса, с последующей передачей в metFunc и проверкой значимых позиций. --> Модификация исходника. --> склеивание массивов
-  me.forEach(({id, Y, X}, i) => {
+  let mainSource = {me, partner, rocks}  // можно сыграть от последовательности...
+  me.forEach(({Y, X, visibility}, i) => {
+    console.log('VISIBILITY', visibility)
     realPath.push([])
     realPath[i].push({newY:Y, newX:X})
-    switch(id.substr(1,4)) {
-      case 'Knig':
-        [ // Take it from server and save at localStore || Redux
-        {xDir:1, yDir:1, pathLenght:2}, // можно сыграть от последовательности...
-        {xDir:1, yDir:-1, pathLenght:2},
-        {xDir:1, yDir: 0, pathLenght:3},
-        {xDir:-1, yDir:-1, pathLenght:2},
-        {xDir:-1, yDir:1, pathLenght:2},
-        {xDir:-1, yDir: 0, pathLenght:3},
-        {xDir:0, yDir: 1, pathLenght:3},
-        {xDir:0, yDir: -1, pathLenght:3},
-        {xDir:-2, yDir: -1, pathLenght:1},
-        {xDir:-2, yDir: 1, pathLenght:1},
-        {xDir: 2, yDir: -1, pathLenght:1},
-        {xDir: 2, yDir: 1, pathLenght:1},
-        {xDir:-1, yDir: -2, pathLenght:1},
-        {xDir:1, yDir: -2, pathLenght:1},
-        {xDir:-1, yDir: 2, pathLenght:1},
-        {xDir:1, yDir: 2, pathLenght:1},
-        ].forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath[i], me, partner, rocks, Y, X, misses));
-        [
-        {xDir:-2, yDir:-1, pathLenght:1},
-        {xDir:-2, yDir:1, pathLenght:1},
-        {xDir: 2, yDir:-1, pathLenght:1},
-        {xDir: 2, yDir:1, pathLenght:1},
-        {xDir:-1, yDir:-2, pathLenght:1},
-        {xDir:1, yDir:-2, pathLenght:1},
-        {xDir:-1, yDir:2, pathLenght:1},
-        {xDir:1, yDir: 2, pathLenght:1}
-        ].forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath[i], Y, X, misses))
-        break;
-    }
+    const {dirs, dopDirs, blockDirs, missesDirs} = visibility;
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath[i], mainSource, dopDirs, blockDirs, Y, X, misses));
+    missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath[i], Y, X, misses))
   })
+  //МАНИПУЛЯЦИИ С МАССИВАМИ: Отдельный массив на каждого перса, с последующей передачей в metFunc и проверкой значимых позиций. --> Модификация исходника. --> склеивание массивов
   return realPath.flat()
 }
 
@@ -274,7 +334,7 @@ const getNewStaff = (staff, {id}, {y, x}) => {
     }
   })
   console.log(`REDUCER INNNNNNNNNNNNNNSA_index: ${index}, Staff:`,staff)
-  staff[index] = {id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X}
+  staff[index] = {...staff[index], id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X}
   console.log({id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X})
   console.log(staff)
   return staff
