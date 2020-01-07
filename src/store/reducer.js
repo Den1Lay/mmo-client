@@ -6,6 +6,10 @@ const defaultState = {
       id: 'WKnight1', 
       Y: 17, X: 9,
       pY: 17, pX: 9,
+      xp: 12,
+      maxXp: 12,
+      silensed: false,
+      stunned: false,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -71,25 +75,29 @@ const defaultState = {
         ]
       },
       attack: {
-        dammage: 2,
-        type: 'melee', //range and magic
-        dopDirs: ['partner', 'rocks'],
-        blockDirs: ['me'],
+        dammage: 1,
+        type: 'magic', //range and magic
+        dopDirs: ['partner'],
+        blockDirs: ['me', 'rocks'],
         dirs: [
-          {xDir:1, yDir:1, pathLenght:1},
-          {xDir:1, yDir:-1, pathLenght:1},
-          {xDir:1, yDir: 0, pathLenght:1},
-          {xDir:-1, yDir:-1, pathLenght:1},
-          {xDir:-1, yDir:1, pathLenght:1},
-          {xDir:-1, yDir: 0, pathLenght:1},
-          {xDir:0, yDir: 1, pathLenght:1},
-          {xDir:0, yDir: -1, pathLenght:1},
+          {xDir:0, yDir:-2, pathLenght:1},
+          {xDir:1, yDir:-2, pathLenght:1},
+          {xDir:-1, yDir:-2, pathLenght:1},
+          {xDir:0, yDir:2, pathLenght:1},
+          {xDir:1, yDir:2, pathLenght:1},
+          {xDir:-1, yDir:2, pathLenght:1},
+          {xDir:-2, yDir:0, pathLenght:1},
+          {xDir:-2, yDir:1, pathLenght:1},
+          {xDir:-2, yDir:-1, pathLenght:1},
+          {xDir:2, yDir:0, pathLenght:1},
+          {xDir:2, yDir:1, pathLenght:1},
+          {xDir:2, yDir:-1, pathLenght:1},
         ],
         missesDirs: []
       },
       spels: [
         {
-          id: 'PoisonLine', 
+          id: 'PoisonLine',
           type: '',
           area: [],
           func: () => {}
@@ -100,6 +108,10 @@ const defaultState = {
       id: 'WKnight2', 
       Y: 1, X: 7,
       pY: 1, pX: 7,
+      xp: 12,
+      maxXp: 12,
+      silensed: false,
+      stunned: false,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -191,8 +203,112 @@ const defaultState = {
       ]
     }  //17, 9
   ],
-  partner: [],
-  oldPatners: null, // массив если будут ауе спелы
+  partner: [
+    {
+      id: 'DKnight1',
+      Y:8, X:0,
+      pY: 8, pX: 0,
+      xp: 12,
+      maxXp: 12,
+      silensed: false,
+      stunned: false,
+      visibility: {
+        dopDirs: ['partner'], // mustBe in future
+        blockDirs: ['me', 'rocks'],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:2},
+          {xDir:1, yDir:-1, pathLenght:2},
+          {xDir:1, yDir: 0, pathLenght:3},
+          {xDir:-1, yDir:-1, pathLenght:2},
+          {xDir:-1, yDir:1, pathLenght:2},
+          {xDir:-1, yDir: 0, pathLenght:3},
+          {xDir:0, yDir: 1, pathLenght:3},
+          {xDir:0, yDir: -1, pathLenght:3},
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      }, // обзор
+      move: {
+        dopDirs: ['partner'],
+        blockDirs: ['me', 'rocks'],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:3},
+          {xDir:1, yDir:-1, pathLenght:3},
+          {xDir:1, yDir: 0, pathLenght:4},
+          {xDir:-1, yDir:-1, pathLenght:3},
+          {xDir:-1, yDir:1, pathLenght:3},
+          {xDir:-1, yDir: 0, pathLenght:4},
+          {xDir:0, yDir: 1, pathLenght:4},
+          {xDir:0, yDir: -1, pathLenght:4},
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      },
+      attack: {
+        dammage: 1,
+        type: 'magic', //range and magic
+        dopDirs: ['partner'],
+        blockDirs: ['me', 'rocks'],
+        dirs: [
+          {xDir:0, yDir:-2, pathLenght:1},
+          {xDir:1, yDir:-2, pathLenght:1},
+          {xDir:-1, yDir:-2, pathLenght:1},
+          {xDir:0, yDir:2, pathLenght:1},
+          {xDir:1, yDir:2, pathLenght:1},
+          {xDir:-1, yDir:2, pathLenght:1},
+          {xDir:-2, yDir:0, pathLenght:1},
+          {xDir:-2, yDir:1, pathLenght:1},
+          {xDir:-2, yDir:-1, pathLenght:1},
+          {xDir:2, yDir:0, pathLenght:1},
+          {xDir:2, yDir:1, pathLenght:1},
+          {xDir:2, yDir:-1, pathLenght:1},
+        ],
+        missesDirs: []
+      },
+      spels: [
+        {
+          id: 'PoisonLine',
+          type: '',
+          area: [],
+          func: () => {}
+        }
+      ]
+    }
+  ],
+  oldMe: null,
+  oldPartner: null, // массив если будут ауе спелы
   inAir: null,
   canMove: [],
   oldCanMove: [],
@@ -220,10 +336,11 @@ export default (state = defaultState, action) => {
     }
     case 'KNIGHT:MOVE_TO_AIR':
       //console.log('try do this', payload)
+      let inAirPerson = state.me.filter(({id}) => id === payload.id )[0]
       return {
         ...state,
-        canMove: checkMove(state.me, state.partner, state.rocks, payload),
-        inAir: state.me.filter(({id}) => id === payload.id )[0], //{id, y, x}  
+        canMove: checkMove(state.me, state.partner, state.rocks, inAirPerson),
+        inAir: inAirPerson, //{id, y, x}  
         updateSign: 'C'+Math.random(),
       }
     case 'KNIGHT:DELETE_FROM_AIR':
@@ -247,7 +364,7 @@ export default (state = defaultState, action) => {
         canMove: [],
         oldCanMove: state.canMove,
         newInLight: getLightPosition(newMe, state.partner, state.rocks),
-        oldInLight: state.newInLight,
+        oldInLight: state.newInLight, // точечная перерисовка, если траблы с опти
         animeMove: null,  // for what, i don't know
         updateSign: 'M'+Math.random(), 
       }
@@ -279,6 +396,7 @@ export default (state = defaultState, action) => {
       }
     case 'KNIGHT:PREPARE_TO':
       const {pass} = payload
+      console.log('BIIIIIIIIIIIIIIIG PREPARE:', pass)
       return {
         ...state,
         canMove: state.canMove.length === 0 && pass === 'MOVE' ? checkMove(state.me, state.partner, state.rocks, state.inAir) : [],
@@ -287,17 +405,37 @@ export default (state = defaultState, action) => {
         oldCanAttack: state.canAttack.length !== 0 && pass !== 'ATTACK' ? state.canAttack : [], // spell will here
         updateSign: 'U'+Math.random()
       }
-    case 'KNIGHT:ATTACK_TO':
-      const {y, x, cause} = payload
-      let partnerRes = cause === 'partner' ? findAndKill(state.partner, y, x, state.inAir) : null
-      let rocksRes = cause === 'rocks' ? findAndKill(state.rocks, y, x, state.inAir) : null
+    case 'KNIGHT:ATTACK_TO': //будет вызываться нескольколько раЗ, если необходимо, АУЕ
+      const {y, x, cause} = payload //refactory this
+      let partnerRes =  findAndKill(state.partner, y, x, cause, 'partner', state.inAir)
+      let rocksRes =  findAndKill(state.rocks, y, x, cause, 'rocks', state.inAir)
       return {
         ...state,
-        partner: cause === 'partner' ? partnerRes.res : state.partner,
-        rocks: cause === 'rocks' ? rocksRes.res : state.rocks,
-        oldPatners: cause === 'partner' ? partnerRes.target : null,
-        oldRocks: cause === 'rocks' ? rocksRes.target : null,
+        partner: partnerRes.res,
+        rocks: rocksRes.res,
+        oldPartner: partnerRes.target,
+        oldRocks: rocksRes.target,
+        canAttack: [],
+        oldCanAttack: state.canAttack,
+        newInLight: partnerRes.target || rocksRes.target ? getLightPosition(state.me, partnerRes.res, rocksRes.res) : state.newInLight,
+        //oldInLight: partnerRes.target || rocksRes.targetgetLigh ? state.newInLight : [],
         updateSign: 'A'+Math.random()
+      }
+    case 'KNIGHT:KAMICK_ATTACK':
+      const {me, partner, deadM, deadP} = payload
+      console.log('DEEEEEEBBAG_PAYLOAD:',payload)
+      let updatedMe = deadM ? state.me.filter(({id}) => id !== deadM.id) : getNewStaffAfterKamick(state.me, me)
+      let updatedPartner = deadP ? state.partner.filter(({id}) => id !== deadP.id) : getNewStaffAfterKamick(state.partner, partner)
+
+      return {
+        ...state,
+        me: updatedMe,
+        partner:  updatedPartner,
+        oldPartner: deadP ? deadP : null,
+        oldMe: deadM ? deadM : null,
+        newInLight: getLightPosition(updatedMe, updatedPartner, state.rocks),
+        oldInLight: state.newInLight,
+        updateSign: 'K'+Math.random()
       }
     default: {
       return {
@@ -306,26 +444,43 @@ export default (state = defaultState, action) => {
     }
   }
 }
-//SPELS IT's a functions, which we import, and use destruct as arg or switch
-const findAndKill = (aim, y, x, {attack}) => {
-  let aimIndex = 0;
-  let res = aim.slice()
-  aim.forEach(({Y, X}, i) => { // dependence from type of dammage
-    if(Y === y && X === x) {
-      aimIndex = i
+
+const getNewStaffAfterKamick = (defArr, {id:ID, xp, Y, X, pY, pX}) => {
+  let checkIndex = null
+  let workArr = defArr.slice()
+  defArr.forEach(({id}, i) => {
+    if(id === ID) {
+      checkIndex = i
     }
   })
+  workArr[checkIndex] = {...workArr[checkIndex], xp, Y, X, pY, pX}
+  return workArr
+}
+
+//SPELS IT's a functions, which we import, and use destruct as arg or switch
+const findAndKill = (aim, y, x, cause, label, {attack}) => {
+  let aimIndex = 0;
+  let res = aim.slice()
   let target = null;
-  console.log(`Y: ${y}, X: ${x}, aimIndex: ${aimIndex}`, aim)
-  let result = aim[aimIndex].xp - attack.dammage
-  if(result <=0) {
-    res.splice(aimIndex, 1)
-    target = aim[aimIndex]
-  } else {
-    res[aimIndex] = {Y: res[aimIndex].Y, X: res[aimIndex].X, xp: result}
+  if( cause === label ) {
+    aim.forEach(({Y, X}, i) => { // dependence from type of dammage
+      if(Y === y && X === x) {
+        aimIndex = i
+      }
+    })
+    
+    console.log(`Y: ${y}, X: ${x}, aimIndex: ${aimIndex}`, aim)
+    let result = aim[aimIndex].xp - attack.dammage
+    if(result <=0) {
+      res.splice(aimIndex, 1)
+      target = aim[aimIndex]
+    } else {
+      res[aimIndex] = {...res[aimIndex], Y: res[aimIndex].Y, X: res[aimIndex].X, xp: result}
+    }
   }
   return {res, target}
 }
+
 const rocksCreator = () => {
   return [
     {Y: 6, X: 3, xp: 8},{Y: 8, X: 4, xp: 8},
@@ -402,25 +557,23 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y
   //console.log('Down Counter', counter)
 }
 
-const checkMove = (me, partner, rocks, {id, Y, X}) => { // через PathBuilder
+const checkMove = (me, partner, rocks, {id, Y, X, move}) => { // через PathBuilder
+  console.log(move)
+  const {dirs, dopDirs, blockDirs, missesDirs} = move
   let realPath = []
   let misses = []
-  let direction = []
-  let missesDirs = []
-  let dop = []
-  let block = []
   let mainSource = {me, partner, rocks}
-  me.forEach(({id: ID, move}) => {
-    const {dirs, dopDirs, blockDirs, missesDirs: missesDirsRest} = move
-    if(ID === id) {
-      direction = dirs
-      missesDirs = missesDirsRest
-      dop = dopDirs
-      block = blockDirs
-    }
-  })
+  // me.forEach(({id: ID, move}) => {
+  //   const {dirs, dopDirs, blockDirs, missesDirs: missesDirsRest} = move
+  //   if(ID === id) {
+  //     direction = dirs
+  //     missesDirs = missesDirsRest
+  //     dop = dopDirs
+  //     block = blockDirs
+  //   }
+  // })
   //console.log('WHERE:',realPath)
-  direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses))
+  dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
   missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
   return realPath
 }
@@ -471,37 +624,24 @@ const getNewStaff = (staff, {id}, {y, x}) => {
   return staff
 }
 
-const checkAttack = (me, partner, rocks, {id, Y, X}) => {
+const checkAttack = (me, partner, rocks, {id, Y, X, attack: {dirs, dopDirs, blockDirs, missesDirs, type}}) => {
   let realPath = []
   let misses = []
-  let direction = []
-  let missesDirs = []
-  let dop = []
-  let block = []
-  let type = ''
+
   let mainSource = {me, partner, rocks}
-  me.forEach(({id: ID, attack}) => {
-    const {dirs, dopDirs, blockDirs, missesDirs: missesDirsRest, type: typeRest} = attack
-    if(ID === id) {
-      direction = dirs
-      missesDirs = missesDirsRest
-      dop = dopDirs
-      block = blockDirs
-      type = typeRest
-    }
-  })
+
   switch(type) {
     case 'melee': 
     //console.log('DEEEEEEEEEEEEEEEEEEEEEBAAAAAAAAAAG', block)
-    direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, []))
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, []))
     break
     case 'range': 
-    direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses))
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
     missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
     break
     case 'magic':
-    direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses))
-    realPath.concat(misses)
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
+    realPath = realPath.concat(misses) // right way
   }
   return realPath
 }

@@ -8,10 +8,12 @@ import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo } from '@/stor
 
 import './Knight.scss'
 
-const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo}) => {
+const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo, canAttack}) => {
   takeIt && takeTreasure({y:Y, x:X})
-  
-  const [action, setAction] = useState(true)
+  if(isPartner){
+    //console.log('ISSSSSSSSSPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAAAARRRRRRRRT')
+  }
+  //const [action, setAction] = useState(true)
   const mainRef = useRef(null)
   console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
   let moveOnTreasure = false;
@@ -42,7 +44,7 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
     })
   })
   const clickHandler = () => {
-    console.log('CLIIIIIIIIIIICK HANDLER');
+    //onsole.log('CLIIIIIIIIIIICK HANDLER');
     // console.log(inAir);
     // console.log(inAir && (inAir.id !== id));
     if(inAir && (inAir.id !== id)) {
@@ -57,7 +59,7 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
     const {y, x} = animeMove
     console.log('IS HAPPENED')
     anime({
-      targets: mainRef.current,
+      targets: mainRef.current, //transition on timeline to zero in 60%
       translateY: [0, (y-Y)*52],
       translateX: [0, (x-X)*52],
       duration: 1200,
@@ -74,18 +76,18 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
 
   const controlHandler = (e) => {
     e.stopPropagation()
-    action ? prepareTo('ATTACK') : prepareTo('MOVE')
-    setAction(!action)
+    canAttack.length === 0 ? prepareTo('ATTACK') : prepareTo('MOVE')
+    //setAction(!action)
     console.log('LOOOOK')
   }
 
   return (
     <div 
-    onClick={clickHandler}
-    ref={drag}
+    onClick={!isPartner ? clickHandler : () => ({})}
+    ref={!isPartner ? drag : () => ({})}
     className={
       classNames('knight',
-        
+        isPartner && 'knight__isPartner'
     )}
     >
       <div ref={mainRef}>
@@ -96,4 +98,4 @@ const Knight = ({id, inAir, simbol, y: Y, x: X, addToAir, deleteFromAir, moveTo,
   )
 }
 
-export default connect(({inAir, animeMove}) => ({inAir, animeMove}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)
+export default connect(({inAir, animeMove, canAttack}) => ({inAir, animeMove, canAttack}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)

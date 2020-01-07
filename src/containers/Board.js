@@ -10,7 +10,9 @@ import  Square from './Square'
 const Board = (
   {
     me,
-    oldPatners,
+    oldMe,
+    partner,
+    oldPartner,
     updateSign, 
     canMove,
     oldCanMove,
@@ -24,7 +26,7 @@ const Board = (
     canAttack,
     oldCanAttack
   }) => { // canMove: [{y, x}, {y, x}]
-
+  console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
   const [mainMemoPlant, setMainMemoPlant] = useState([])
@@ -64,7 +66,7 @@ const Board = (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -93,7 +95,7 @@ const Board = (
         })
       }
       const cleaner = () => {
-        console.log('INNNNNNNNNN WOOOOOOOOOORK,', oldCanMove)
+        //console.log('INNNNNNNNNN WOOOOOOOOOORK,', oldCanMove)
         oldCanMove.forEach(({newY, newX}) => { //cleaner вот оно
           let deathIndex = []
           indexFinder(deathIndex, newY, newX)
@@ -111,7 +113,7 @@ const Board = (
           //console.log(`PPPPPPY: ${pY}, ${pX} `)
           // if(pY+''  pX+'') { ----------------
           //console.log('CLONE',cloneMainMemoPlant)
-          console.log(`MOOOOOOOOOOOOOOOV_pY: ${pY}, pX: ${pX}`)
+         // console.log(`MOOOOOOOOOOOOOOOV_pY: ${pY}, pX: ${pX}`)
           let index = [] 
           let deleteIndex = []
           indexFinder(index, Y, X)
@@ -126,7 +128,7 @@ const Board = (
           //     index = i
           //   }
           // })
-          console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
+          //console.log(`MAIN DATA CHANGE Y: ${Y}, X:${X} and pY:${pY}, delIndx: ${pX}`)
           cloneMainMemoPlant[Y][index[0]] = setState(cloneMainMemoPlant[Y][index[0]], {me, canMove: false})
           cloneMainMemoPlant[pY][deleteIndex[0]] = setState(cloneMainMemoPlant[pY][deleteIndex[0]], {me, canMove: false})
           //index.pop()
@@ -135,8 +137,8 @@ const Board = (
       })
       } // СДЕЛАТЬ ОГРОМНЫЙ РЕФАКТОРИНГ
       const setter = () => {
-        console.log('Aliiiiiiiiiiive CHECKER')
-        console.log('CANMOVE:', canMove)
+        //console.log('Aliiiiiiiiiiive CHECKER')
+        //console.log('CANMOVE:', canMove)
         let checkIndex = [];
         canMove.forEach(({newY, newX}) => {
           // resSchema[newY].forEach(({x}, i) => {
@@ -182,7 +184,7 @@ const Board = (
         })
       }
       const treasureSetter = (workArr, pass) => {
-        console.log(`TREEEEEEAAASURE:`,workArr)
+        //console.log(`TREEEEEEAAASURE:`,workArr)
         let checkIndex = []
         workArr.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
@@ -194,6 +196,32 @@ const Board = (
         workArr.forEach(({newY, newX}) => {
           indexFinder(checkIndex, newY, newX)
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {isAttacked: pass})
+        })
+      }
+      const persenSetter = (person, who, me, partner) => {
+        //console.log('PERSONSEETTTTTEEEEEEEEEER',person)
+        let checkIndex = []
+        person.forEach(({Y, X}) => {
+          indexFinder(checkIndex, Y, X)
+          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], who === 'me' ? {me} : {partner})
+        })
+      }
+      const updateDefState = (workArr, pass) => {
+        let checkIndex = []
+        workArr.forEach(({Y, X}) => {
+          console.log(`INSIDE UPDATEDEFSTATE: PASS:${pass}`, workArr)
+          let res = pass ? {me: workArr} : {partner: workArr}
+          console.log('CONTINUE', res)
+          indexFinder(checkIndex, Y, X)
+          cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], res)
+        })
+      }
+      const cleanProps = (workArr, pass) => {
+        let checkIndex = []
+        workArr.forEach(({pY,pX}) => {
+          indexFinder(checkIndex, pY, pX)
+          let res = pass ? {me: workArr} : {partner: workArr}
+          cloneMainMemoPlant[pY][checkIndex[0]] = setState(cloneMainMemoPlant[pY][checkIndex[0]], res)
         })
       }
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
@@ -228,9 +256,26 @@ const Board = (
             attackSetter(oldCanAttack, false)
             setter()
           }
+          break
         case 'A':
+          console.log('A HANDLERRRRRRRRRRRRRRRRRRR', oldPartner)
           oldRocks && rockSetter([oldRocks], false);
-          //oldPatners && 'DOBAVIL PARTNEROV'
+          attackSetter(oldCanAttack, false)
+          lightSetter(newInLight, true)
+          updateDefState(partner, false)
+          oldPartner && persenSetter([oldPartner], 'partner', me, partner)
+          break
+        case 'K': 
+          console.log('K-FIIIIIIIIIIIIILTER:', me)
+          cleanProps(me, true)
+          cleanProps(partner, false)
+          updateDefState(me, true)
+          updateDefState(partner, false)
+          oldPartner && persenSetter([oldPartner], 'partner', me, partner)
+          oldMe && persenSetter([oldMe], 'me', me, partner)
+          lightSetter(oldInLight, false)
+          lightSetter(newInLight, true)
+          break
         default:
           console.log('START') // do something with this...
       }
@@ -256,7 +301,9 @@ const Board = (
 export default connect((
   {
     me,
-    oldPatners,
+    oldMe,
+    partner,
+    oldPartner,
     updateSign, 
     canMove,
     oldCanMove,
@@ -273,7 +320,9 @@ export default connect((
   ) => (
     {
       me,
-      oldPatners,
+      oldMe,
+      partner,
+      oldPartner,
       updateSign, 
       canMove,
       oldCanMove,

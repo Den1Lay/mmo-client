@@ -36,6 +36,10 @@ export const attackTo = ({y, x, cause}) => ({
   payload: {y, x, cause}
 })
 
+export const kamickAttack = ({me, partner, deadM, deadP}) => ({
+  type: 'KNIGHT:KAMICK_ATTACK',
+  payload: {me, partner, deadM, deadP}
+})
 
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'

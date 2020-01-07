@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import './Square.scss'
 
-const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked}) => {
+const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked, herePartner}) => {
   console.log(`X:${x}, Y:${y}, isAttacked: ${isAttacked}`)
   return (
     <div className={classNames(
@@ -18,9 +18,11 @@ const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacke
         : isLight && 'square__isLight')
       }>
       {
-        children 
+        children && !herePartner
         ? children // React.createElement is the best
-        : `${y}, ${x}`
+        : herePartner && isLight
+          ? children
+          : `${y}, ${x}`
       }
     </div>
   )
