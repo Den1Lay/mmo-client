@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import './Square.scss'
 
 const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked, herePartner}) => {
-  console.log(`X:${x}, Y:${y}, isAttacked: ${isAttacked}`)
+  //console.log(`X:${x}, Y:${y}, isAttacked: ${isAttacked}`)
   return (
     <div className={classNames(
       'square',

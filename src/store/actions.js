@@ -26,9 +26,9 @@ export const takeTreasure = ({y, x}) => ({
   payload: {Y:y, X:x}
 })
 
-export const prepareTo = (pass) => ({
+export const prepareTo = (pass, dls) => ({
   type: 'KNIGHT:PREPARE_TO',
-  payload: {pass}
+  payload: {pass, dls}
 })
 
 export const attackTo = ({y, x, cause}) => ({
@@ -39,6 +39,11 @@ export const attackTo = ({y, x, cause}) => ({
 export const kamickAttack = ({me, partner, deadM, deadP}) => ({
   type: 'KNIGHT:KAMICK_ATTACK',
   payload: {me, partner, deadM, deadP}
+})
+
+export const spellTo = ({y, x}) => ({
+  type: 'KNIGHT:SPELL_TO',
+  payload: {y, x}
 })
 
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY

@@ -8,12 +8,14 @@ import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo } from '@/stor
 
 import './Knight.scss'
 
-const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo, canAttack}) => {
+const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo, canAttack, canSpell}) => {
+  console.log(inAir)
   takeIt && takeTreasure({y:Y, x:X})
   if(isPartner){
     //console.log('ISSSSSSSSSPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAAAARRRRRRRRT')
   }
   //const [action, setAction] = useState(true)
+  const [prevSpell, setPrevSpell] = useState(null)
   const mainRef = useRef(null)
   console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
   let moveOnTreasure = false;
@@ -76,9 +78,28 @@ const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromA
 
   const controlHandler = (e) => {
     e.stopPropagation()
-    canAttack.length === 0 ? prepareTo('ATTACK') : prepareTo('MOVE')
+    canAttack.length === 0 ? prepareTo('ATTACK', null) : prepareTo('MOVE', null)
     //setAction(!action)
     console.log('LOOOOK')
+  }
+
+  const spellHandler = (e, ind) => {
+    e.stopPropagation()
+    console.log(canSpell)
+    canSpell.length === 0 
+    ? prepareTo('SPELL', ind) : prevSpell !== ind 
+    ? prepareTo('SPELL', ind) : prepareTo('SPELL', null)  // removeSpell
+    console.log('PREPATE_TO_SPELL: ',id)
+    setPrevSpell(ind)
+  }
+
+  let spells = null
+  if(inAir) {
+    spells = inAir.spells.map(({icon}, ind) => {
+      return (
+      <div className={classNames('buttleButton', 'buttleButton__spell')} onClick={(e) => spellHandler(e, ind)}>{icon}</div>
+      )
+    })
   }
 
   return (
@@ -93,9 +114,10 @@ const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromA
       <div ref={mainRef}>
       {simbol}
       </div>
-      {inAir && inAir.id == id ? <div className='knight__attackButton' onClick={controlHandler}/> : null}
+      {inAir && inAir.id == id ? <div className={classNames('buttleButton','buttleButton__attack' )} onClick={controlHandler}/> : null}
+      {spells && inAir.id == id ? <div className='spellArea'>{spells}</div> : null}
     </div>
   )
 }
 
-export default connect(({inAir, animeMove, canAttack}) => ({inAir, animeMove, canAttack}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)
+export default connect(({inAir, animeMove, canAttack, canSpell}) => ({inAir, animeMove, canAttack, canSpell}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)

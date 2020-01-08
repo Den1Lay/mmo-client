@@ -16,6 +16,8 @@ const Board = (
     updateSign, 
     canMove,
     oldCanMove,
+    canSpell,
+    oldCanSpell,
     lastPreparation, 
     newInLight, 
     oldInLight, 
@@ -24,7 +26,8 @@ const Board = (
     treasures,
     deletedTreasures,
     canAttack,
-    oldCanAttack
+    oldCanAttack,
+    spellMap
   }) => { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
@@ -66,7 +69,7 @@ const Board = (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -87,7 +90,7 @@ const Board = (
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
       const indexFinder = (workIndex, newY, newX) => {
-        console.log(`NEWY: ${newY}, NEWX: ${newX}`)
+       // console.log(`NEWY: ${newY}, NEWX: ${newX}`)
         resSchema[newY].forEach(({x}, i) => {
           if(newX === x) {
             workIndex[0] = i
@@ -224,6 +227,13 @@ const Board = (
           cloneMainMemoPlant[pY][checkIndex[0]] = setState(cloneMainMemoPlant[pY][checkIndex[0]], res)
         })
       }
+      const spellSetter = (workArr, pass) => {
+        let checkIndex = []
+        workArr.forEach(({newY, newX}) => {
+          indexFinder(checkIndex, newY, newX)
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {canSpell: pass})
+        })
+      }
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
       switch(updateSign.substr(0,1)) {
         case 'M':
@@ -239,6 +249,7 @@ const Board = (
           console.log('ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLIVE')
           oldCanMove.length > 0 && cleaner()
           oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
+          oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
           break
         case 'P':
           lightSetter(newInLight, true)
@@ -249,12 +260,19 @@ const Board = (
           treasureSetter(deletedTreasures, false)
         case 'U':
           if(!(canMove.length > 0) && canAttack.length > 0) {
+            spellSetter(oldCanSpell, false)
             cleaner()
             //spellSetter(, false)
             attackSetter(canAttack, true)
           } else if(canMove.length > 0 && !(canAttack.length > 0)) {
-            attackSetter(oldCanAttack, false)
+            oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
+            oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
             setter()
+          } else if(canSpell.length > 0 || oldCanSpell.length > 0) {
+            oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
+            cleaner()
+            oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
+            spellSetter(canSpell, true)
           }
           break
         case 'A':
@@ -276,6 +294,16 @@ const Board = (
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
           break
+        case 'S':
+          let sources = {partner, me, rocks, oldMe, oldPartner}
+          spellMap.forEach(propsName => {
+            switch(propsName){
+              case 'partner':
+                cleanProps(partner, false)
+                updateDefState(partner, false)
+                break
+            }
+          })
         default:
           console.log('START') // do something with this...
       }
@@ -307,6 +335,8 @@ export default connect((
     updateSign, 
     canMove,
     oldCanMove,
+    canSpell,
+    oldCanSpell,
     uselessCanMove,
     newInLight,
     oldInLight,
@@ -315,7 +345,8 @@ export default connect((
     treasures,
     deletedTreasures,
     canAttack,
-    oldCanAttack
+    oldCanAttack,
+    spellMap
   }
   ) => (
     {
@@ -326,6 +357,8 @@ export default connect((
       updateSign, 
       canMove,
       oldCanMove,
+      canSpell,
+      oldCanSpell,
       uselessCanMove, 
       newInLight, 
       oldInLight, 
@@ -334,7 +367,8 @@ export default connect((
       treasures,
       deletedTreasures,
       canAttack,
-      oldCanAttack
+      oldCanAttack,
+      spellMap
     }
     ), 
   {

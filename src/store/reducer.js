@@ -1,4 +1,5 @@
 import store from './index'
+import { indexFinderModel } from '@/helpers'
 
 const defaultState = {
   me: [
@@ -13,6 +14,7 @@ const defaultState = {
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:2},
           {xDir:1, yDir:-1, pathLenght:2},
@@ -45,6 +47,7 @@ const defaultState = {
       move: {
         dopDirs: ['partner'],
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:3},
           {xDir:1, yDir:-1, pathLenght:3},
@@ -77,8 +80,9 @@ const defaultState = {
       attack: {
         dammage: 1,
         type: 'magic', //range and magic
-        dopDirs: ['partner'],
+        dopDirs: [],
         blockDirs: ['me', 'rocks'],
+        ignore: ['partner'],
         dirs: [
           {xDir:0, yDir:-2, pathLenght:1},
           {xDir:1, yDir:-2, pathLenght:1},
@@ -95,13 +99,74 @@ const defaultState = {
         ],
         missesDirs: []
       },
-      spels: [
+      spells: [
         {
-          id: 'PoisonLine',
-          type: '',
-          area: [],
-          func: () => {}
-        }
+          id: 'Teleport',
+          icon: 'T',
+          target: 'partner',
+          dopDirs: [],
+          blockDirs: ['me'],
+          ignore: [],
+          dirs: [
+            {xDir:1, yDir:1, pathLenght:2},
+            {xDir:1, yDir:-1, pathLenght:2},
+            {xDir:1, yDir: 0, pathLenght:3},
+            {xDir:-1, yDir:-1, pathLenght:2},
+            {xDir:-1, yDir:1, pathLenght:2},
+            {xDir:-1, yDir: 0, pathLenght:3},
+            {xDir:0, yDir: 1, pathLenght:3},
+            {xDir:0, yDir: -1, pathLenght:3},
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          missesDirs: [
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          func: ({payload: {y, x}, sources, target, who}) => {
+            if(who === 'me') {
+              let aimIndex = null
+              let workArr = sources[target].slice()
+              workArr.forEach(({Y, X}, i) => {
+                if(Y === y && X === x) {
+                  aimIndex = i
+                }
+              })
+              const {Y, X} = workArr[aimIndex]
+              let newY = Y+5
+              if(newY - X > 12 && X <= 4) {
+                newY = 12 + X
+              } else if (newY - (17 - X) > 12 && X >= 13) {
+                newY = 12 + (17 - X)
+              } else if (newY > 17 && X <= 12 && X >= 5) {
+                newY = 17
+              }
+              workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              return {
+                me: sources.me,
+                partner: workArr,
+                rocks: sources.rocks,
+                oldMe: null,
+                oldPartner: null,
+                spellMap: ['partner']
+              } 
+            } else {
+
+            }
+          }   // Новые lightPos.. 
+        }     // Спелы противника это просто спел в другую сторону
       ]
     },
     {
@@ -115,6 +180,7 @@ const defaultState = {
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:2},
           {xDir:1, yDir:-1, pathLenght:2},
@@ -147,6 +213,7 @@ const defaultState = {
       move: {
         dopDirs: ['partner'],
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:3},
           {xDir:1, yDir:-1, pathLenght:3},
@@ -181,6 +248,7 @@ const defaultState = {
         type: 'melee', //range and magic
         dopDirs: ['partner', 'rocks'],
         blockDirs: ['me'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:1},
           {xDir:1, yDir:-1, pathLenght:1},
@@ -193,28 +261,90 @@ const defaultState = {
         ],
         missesDirs: []
       },
-      spels: [
+      spells: [
         {
-          id: 'PoisonLine', 
-          type: '',
-          area: [],
-          func: () => {}
-        }
+          id: 'Teleport',
+          icon: 'T',
+          target: 'partner',
+          dopDirs: [],
+          blockDirs: ['me'],
+          ignore: [],
+          dirs: [
+            {xDir:1, yDir:1, pathLenght:2},
+            {xDir:1, yDir:-1, pathLenght:2},
+            {xDir:1, yDir: 0, pathLenght:3},
+            {xDir:-1, yDir:-1, pathLenght:2},
+            {xDir:-1, yDir:1, pathLenght:2},
+            {xDir:-1, yDir: 0, pathLenght:3},
+            {xDir:0, yDir: 1, pathLenght:3},
+            {xDir:0, yDir: -1, pathLenght:3},
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          missesDirs: [
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          func: ({payload: {y, x}, sources, target, who}) => {
+            if(who === 'me') {
+              let aimIndex = null
+              let workArr = sources[target].slice()
+              workArr.forEach(({Y, X}, i) => {
+                if(Y === y && X === x) {
+                  aimIndex = i
+                }
+              })
+              const {Y, X} = workArr[aimIndex]
+              let newY = Y+5
+              if(newY - X > 12 && X <= 4) {
+                newY = 12 + X
+              } else if (newY - (17 - X) > 12 && X >= 13) {
+                newY = 12 + (17 - X)
+              } else if (newY > 17 && X <= 12 && X >= 5) {
+                newY = 17
+              }
+              workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              return {
+                me: sources.me,
+                partner: workArr,
+                rocks: sources.rocks,
+                oldMe: null,
+                oldPartner: null,
+                spellMap: ['partner']
+              } 
+            } else {
+
+            }
+          }   // Новые lightPos.. 
+        }     // Спелы противника это просто спел в другую сторону
       ]
     }  //17, 9
   ],
   partner: [
     {
       id: 'DKnight1',
-      Y:8, X:0,
-      pY: 8, pX: 0,
-      xp: 12,
+      Y:0, X:12,
+      pY: 0, pX: 12,
+      xp: 14,
       maxXp: 12,
       silensed: false,
       stunned: false,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:2},
           {xDir:1, yDir:-1, pathLenght:2},
@@ -247,6 +377,7 @@ const defaultState = {
       move: {
         dopDirs: ['partner'],
         blockDirs: ['me', 'rocks'],
+        ignore: [],
         dirs: [
           {xDir:1, yDir:1, pathLenght:3},
           {xDir:1, yDir:-1, pathLenght:3},
@@ -279,8 +410,9 @@ const defaultState = {
       attack: {
         dammage: 1,
         type: 'magic', //range and magic
-        dopDirs: ['partner'],
+        dopDirs: [],
         blockDirs: ['me', 'rocks'],
+        ignore: ['partner'],
         dirs: [
           {xDir:0, yDir:-2, pathLenght:1},
           {xDir:1, yDir:-2, pathLenght:1},
@@ -311,7 +443,10 @@ const defaultState = {
   oldPartner: null, // массив если будут ауе спелы
   inAir: null,
   canMove: [],
+  canSpell: [],
+  spellInd: null,
   oldCanMove: [],
+  oldCanSpell: [],
   updateSign: ''+Math.random(),
   animeMove: null,
   newInLight: [],
@@ -322,7 +457,8 @@ const defaultState = {
   deletedTreasures: [],
   myTreasures: [],
   canAttack: [],
-  oldCanAttack: []
+  oldCanAttack: [],
+  spellMap: []
 }
 
 export default (state = defaultState, action) => {
@@ -352,6 +488,9 @@ export default (state = defaultState, action) => {
         oldCanMove: state.canMove.length !== 0 ? state.canMove : [],
         canAttack: [],
         oldCanAttack: state.canAttack.length !== 0 ? state.canAttack : [],
+        canSpell: [],
+        spellInd: null,
+        oldCanSpell: state.canSpell.length !== 0 ? state.canSpell : [],
         updateSign: 'D'+Math.random()
       }
     case 'KNIGHT:MOVE_TO':
@@ -395,14 +534,18 @@ export default (state = defaultState, action) => {
         updateSign: 'T'+Math.random()
       }
     case 'KNIGHT:PREPARE_TO':
-      const {pass} = payload
-      console.log('BIIIIIIIIIIIIIIIG PREPARE:', pass)
+      const {pass, dls} = payload
+      console.log(`BIIIIIIIIIIIIIIIG PREPARE DLS: ${dls} PASS:`, pass)
+      console.log(state.canSpell.length === 0 && pass === 'SPELL')
       return {
         ...state,
         canMove: state.canMove.length === 0 && pass === 'MOVE' ? checkMove(state.me, state.partner, state.rocks, state.inAir) : [],
         oldCanMove: state.canMove.length !== 0 && pass !== 'MOVE' ? state.canMove : [],
         canAttack: state.canAttack.length === 0 && pass === 'ATTACK' ? checkAttack(state.me, state.partner, state.rocks, state.inAir) : [],
-        oldCanAttack: state.canAttack.length !== 0 && pass !== 'ATTACK' ? state.canAttack : [], // spell will here
+        oldCanAttack: state.canAttack.length !== 0 && pass !== 'ATTACK' ? state.canAttack : [],
+        canSpell: pass === 'SPELL' ? checkSpell(state.me, state.partner, state.rocks, state.inAir, dls) : [],
+        oldCanSpell: state.canSpell.length !== 0 ? state.canSpell : [], // spell will here
+        spellInd: dls, 
         updateSign: 'U'+Math.random()
       }
     case 'KNIGHT:ATTACK_TO': //будет вызываться нескольколько раЗ, если необходимо, АУЕ
@@ -430,12 +573,26 @@ export default (state = defaultState, action) => {
       return {
         ...state,
         me: updatedMe,
-        partner:  updatedPartner,
+        partner: updatedPartner,
         oldPartner: deadP ? deadP : null,
         oldMe: deadM ? deadM : null,
         newInLight: getLightPosition(updatedMe, updatedPartner, state.rocks),
         oldInLight: state.newInLight,
         updateSign: 'K'+Math.random()
+      }
+    case 'KNIGHT:SPELL_TO': 
+      //const {me, partner, rocks} = state
+      const spellObj = state.inAir.spells[state.spellInd]
+      const spellRes = spellObj.func({payload, sources: {me: state.me, partner: state.partner, rocks: state.rocks}, target: spellObj.target, who: 'me'}) //target enemy, me, rock
+      return {
+        ...state,
+        partner: spellRes.partner,
+        me: spellRes.me,
+        rocks: spellRes.rocks,
+        oldMe: spellRes.oldMe,
+        oldPartner: spellRes.oldPartner,
+        spellMap: spellRes.spellMap,
+        updateSign: 'S'+Math.random()
       }
     default: {
       return {
@@ -500,7 +657,7 @@ const treasuresCreator = () => {
 }
 
 
-const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y, X, misses) => {
+const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, ignore, Y, X, misses) => {
   let counter = pathLenght
   let ripFlag = true;
   let newPlace = {newY: Y, newX: X}
@@ -510,7 +667,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y
     let modXDir = Math.abs(xDir);
     let isEmptyPlace = [true]
     const passFunc = () => modYDir+modXDir <=2 ? realPath.push(newPlace) : misses.push(newPlace)
-    const checkPaths = (workArr, permit) => {
+    const checkPaths = (workArr, permit, igno) => {
       workArr.forEach((name) => {
         if(modYDir === modXDir
           && (rockInclude({y:newPlace.newY-yDir, x:newPlace.newX}) 
@@ -518,15 +675,19 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y
               ripFlag = false
               isEmptyPlace[0] = false
         } else if(mainSource[name].some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
-          permit && passFunc()
-          ripFlag = false
+          if(!igno) {
+            ripFlag = false
+            //isEmptyPlace[0] = false
+          }
+          permit && passFunc() // add dop dist for attack 
           isEmptyPlace[0] = false
         }
       })
     }
     //console.log('DEEEEEEEEEEEEEEEEEEEEBBBBBBBBBAAAG 2222:', block)
-    checkPaths(dop, true)
-    checkPaths(block, false)
+    checkPaths(dop, true, false)
+    checkPaths(block, false, false)
+    checkPaths(ignore, true, true)
     isEmptyPlace[0] && passFunc()
    
   }
@@ -559,7 +720,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, Y
 
 const checkMove = (me, partner, rocks, {id, Y, X, move}) => { // через PathBuilder
   console.log(move)
-  const {dirs, dopDirs, blockDirs, missesDirs} = move
+  const {dirs, dopDirs, blockDirs, missesDirs, ignore} = move
   let realPath = []
   let misses = []
   let mainSource = {me, partner, rocks}
@@ -573,7 +734,7 @@ const checkMove = (me, partner, rocks, {id, Y, X, move}) => { // через Path
   //   }
   // })
   //console.log('WHERE:',realPath)
-  dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
+  dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, ignore, Y, X, misses))
   missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
   return realPath
 }
@@ -602,8 +763,8 @@ const getLightPosition = (me, partner, rocks) => {
     console.log('VISIBILITY', visibility)
     realPath.push([])
     realPath[i].push({newY:Y, newX:X})
-    const {dirs, dopDirs, blockDirs, missesDirs} = visibility;
-    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath[i], mainSource, dopDirs, blockDirs, Y, X, misses));
+    const {dirs, dopDirs, blockDirs, missesDirs, ignore} = visibility;
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath[i], mainSource, dopDirs, blockDirs, ignore, Y, X, misses));
     missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath[i], Y, X, misses))
   })
   //МАНИПУЛЯЦИИ С МАССИВАМИ: Отдельный массив на каждого перса, с последующей передачей в metFunc и проверкой значимых позиций. --> Модификация исходника. --> склеивание массивов
@@ -624,24 +785,36 @@ const getNewStaff = (staff, {id}, {y, x}) => {
   return staff
 }
 
-const checkAttack = (me, partner, rocks, {id, Y, X, attack: {dirs, dopDirs, blockDirs, missesDirs, type}}) => {
+const checkAttack = (me, partner, rocks, {id, Y, X, attack: {dirs, dopDirs, blockDirs, missesDirs, ignore, type}}) => {
   let realPath = []
   let misses = []
-
+  console.log('PREPARE_TO_ATTACK:', ignore)
   let mainSource = {me, partner, rocks}
 
   switch(type) {
     case 'melee': 
     //console.log('DEEEEEEEEEEEEEEEEEEEEEBAAAAAAAAAAG', block)
-    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, []))
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, ignore, Y, X, []))
     break
     case 'range': 
-    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, ignore, Y, X, misses))
     missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
     break
     case 'magic':
-    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, Y, X, misses))
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, ignore, Y, X, misses))
     realPath = realPath.concat(misses) // right way
+  }
+  return realPath
+}
+
+const checkSpell = (me, partner, rocks, {Y, X, spells}, spellInd) => {
+  let realPath = []
+  let misses = []
+  let mainSource = {me, partner, rocks}
+  if(!(spellInd === null)) { 
+    const {dirs, dopDirs, blockDirs, missesDirs, ignore} = spells[spellInd]
+    dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, mainSource, dopDirs, blockDirs, ignore, Y, X, misses))
+    missesDirs.forEach(({yDir, xDir}) => fillTheGaps(yDir, xDir, realPath, Y, X, misses))
   }
   return realPath
 }
