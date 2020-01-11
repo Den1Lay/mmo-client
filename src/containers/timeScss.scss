@@ -11,6 +11,11 @@
 
 .squareBase {
   position: relative;
+  transition-property: opacity;
+    
+  &__toUp {
+    z-index: 10;
+  }
 }
 
 .flyUnit{

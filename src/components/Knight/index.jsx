@@ -8,7 +8,24 @@ import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo } from '@/stor
 
 import './Knight.scss'
 
-const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromAir, moveTo, animeMove, takeTreasure, takeIt, prepareTo, canAttack, canSpell}) => {
+const Knight = (
+  {
+    id, 
+    inAir, 
+    simbol, 
+    isPartner, 
+    y: Y, x: X,
+    addToAir, 
+    deleteFromAir, 
+    moveTo, 
+    animeMove, 
+    takeTreasure, 
+    takeIt, 
+    prepareTo, 
+    canAttack, 
+    canSpell,
+    mouseEvent
+  }) => {
   console.log(inAir)
   takeIt && takeTreasure({y:Y, x:X})
   if(isPartner){
@@ -103,7 +120,9 @@ const Knight = ({id, inAir, simbol, isPartner, y: Y, x: X, addToAir, deleteFromA
   }
 
   return (
-    <div 
+    <div
+    onMouseEnter={() => mouseEvent(true)}
+    //onMouseOut={() => mouseEvent(false)}
     onClick={!isPartner ? clickHandler : () => ({})}
     ref={!isPartner ? drag : () => ({})}
     className={

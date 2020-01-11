@@ -3,12 +3,15 @@ import classNames from 'classnames'
 
 import './Square.scss'
 
-const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked, herePartner}) => {
-  //console.log(`X:${x}, Y:${y}, isAttacked: ${isAttacked}`)
+const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, isAttacked, herePartner, mouseEvent}) => {
+  overlay && x === 8 && y === 1 && console.log('OOOOOOOOOOOOOVVVVVVVVVVVEEEEEEEEEEEERL',overlay)
   return (
-    <div className={classNames(
+    <div
+      style={ overlay ? {border: `2px solid rgb(${overlay.r}, ${overlay.g}, ${overlay.b})`} : null}
+      onMouseEnter={() => mouseEvent(true)}
+      onMouseOut={() => mouseEvent(false)}
+      className={classNames(
       'square',
-      overlay && `square__${overlay}`,
       isAttacked
       ? 'square__isAttacked'
       : isTreasure && isLight

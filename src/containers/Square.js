@@ -2,6 +2,7 @@ import React, {useState, useRef} from 'react';
 import { useDrop } from 'react-dnd'
 import store from '@/store'
 import anime from "animejs";
+import classNames from 'classnames'
 
 import { moveTo, animeMove, attackTo, kamickAttack, spellTo } from '@/store/actions'
 
@@ -13,9 +14,10 @@ import {
 import './timeScss.scss'
 
 const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell}) => {
+  
   //console.log(`PARTNERARR y: ${y}, x: ${x}:`, partner)
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
-  //console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
+  y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
   const flyUnitRef = useRef(null)
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
@@ -51,7 +53,13 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
         if(id === first) {
           switch(id.substr(1, 4)) {
             case 'Knig':
-              place = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner}/> //name of picture to use React.lazy
+              place = <Knight 
+                mouseEvent={(pass) => mouseHereHandl(pass)} 
+                id={id} 
+                simbol={'♞'} 
+                y={y} x={x} 
+                takeIt={isTreasure} 
+                isPartner={isPartner}/> //name of picture to use React.lazy
           }
         } else {
             flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner}/>
@@ -80,28 +88,28 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
         : 0
     }
     if(x === 0 && y === 8) {
-      console.log('PARTNEEEEEEEEEEEEEER: ', herePartner)
-      console.log('ME: ', hereMe)
+      console.log('PARTNEEEEEEEEEEEEEER: ',herePartner)
+      console.log('ME: ',hereMe)
     }
-    if(first.substr(0,1) === 'D') {
-      let dmg = maxXp*0.25
+    let firstIsP = first.substr(0,1) === 'D'
+
+      let dmg = firstIsP ? maxXp*0.25 : maxXpp*0.25
       let myXpRes = xp - dmg;
       let partnerXpRes = xpp - dmg;
       //console.log(`RESSSSSSSSSSSSSSSSSSSSSSSOLT XXXXXXXXXXXP MY: ${myXpRes}, partner: ${partnerXpRes}`)
       if(partnerXpRes <= 0 && myXpRes > 0) {
-        place = flyUnit // уничтожил
+        if(firstIsP) {place = flyUnit; setFirst(id);} // уничтожил
         flyUnit = null
         store.dispatch(kamickAttack({me: {id, xp: myXpRes, Y, X, pY, pX}, deadP: {id:idp, Y:Yp, X:Xp}, partner: null, deadM: null}))
-        setFirst(id)
         //dispatch...
         //console.log('FLY_UNIT:', flyUnit)
         //console.log('LAAAAAAAAAAAAAAAAAST HAAAAAAAAAAAAAANDLER place:', place)
         
       } else if(partnerXpRes > 0 &&  myXpRes > 0) {
-        let YDir = getNewDir(Y, pY)
-        let XDir = getNewDir(X, pX)
-        let newY = Y-YDir;
-        let newX = X-XDir;
+        let YDir = firstIsP ? getNewDir(Y, pY) : getNewDir(pY, pYp)
+        let XDir = firstIsP ? getNewDir(X, pX) : getNewDir(pX, pXp)
+        let newY = firstIsP ? Y-YDir : Yp-YDir
+        let newX = firstIsP ? X-XDir : Xp-XDir
         anime({
           targets: flyUnitRef.current, //transition on timeline to zero in 60%
           translateY: [0, -(YDir*52)],
@@ -109,13 +117,14 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
           duration: 600,
           loop: false,
           easing: 'easeInOutExpo',
-          complete: anim => {  // may take 90% event
+          complete: anim => {// may take 90% event
             if(anim.completed) {
               flyUnit = null
+              console.log(`firstIsP: ${firstIsP}`, {id:idp, xp:partnerXpRes, Y:newY, X:newX, pY:Yp, pX:Xp})
               //console.log(`Y: ${y}, X: ${x} HERE PARTNER: ${herePartner}, HERE ME: ${hereMe}`)
               store.dispatch(kamickAttack({
-                  me: {id, xp: myXpRes, Y:newY, X:newX, pY: Y, pX: X}, 
-                  partner: {id:idp, xp:partnerXpRes, Y:Yp, X:Xp, pY:pYp, pX:pXp},
+                  me: firstIsP ? {id, xp: myXpRes, Y:newY, X:newX, pY: Y, pX: X} : {id, xp: myXpRes, Y, X, pY, pX}, 
+                  partner: firstIsP ? {id:idp, xp:partnerXpRes, Y:Yp, X:Xp, pY:pYp, pX:pXp} : {id:idp, xp:partnerXpRes, Y:newY, X:newX, pY:Yp, pX:Xp},
                   deadM: null,
                   deadP: null //checkLogic
               })) //after anime
@@ -125,47 +134,108 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
         // оба выжили
         //anime()
       } else if(partnerXpRes > 0 && myXpRes <= 0) {
-        //уничтожился об противника       me: {id, xp: myXpRes, Y, X, pY, pX}
+        //уничтожился об противника me: {id, xp: myXpRes, Y, X, pY, pX}
         store.dispatch(kamickAttack({partner: {id:idp, xp: partnerXpRes, Y:Yp, X:Xp, pY:pYp, pX:pXp}, deadM: {id, Y, X}, me: null, deadP: null}))
-        flyUnit = null
+        if(!firstIsP) {place = flyUnit; setFirst(idp);}
+        flyUnit = null;
       } else {
         //оба анигилировались
         store.dispatch(kamickAttack({deadM:{id, Y, X}, deadP: {id:idp, Y:pYp, X:pXp}, me: null, partner: null}))
         flyUnit = null
         place = null
-        
       }
-    }
   }
   let backColor = canSpell
-  ? "indigo" : isOver && !canDrop
-  ? "red" : !isOver && (canDrop || canMove)
-  ? "yellow" : isOver && canDrop
-  ? "green" : null
+  ? canSpell : isOver && !canDrop
+  ? {r:255, g:0, b:0} : !isOver && (canDrop || canMove)
+  ? {r:0, g:128, b:0} : isOver && canDrop
+  ? {r:255, g:215, b:0} : null
+
 
   const clickHandler = () => {
+    // console.log(opct) rip logic
     let cause = place ? 'partner' : isRock ? 'rocks' : null;
     if( canMove ) { store.dispatch(animeMove({y, x})) }
     if( isAttacked ) { store.dispatch(attackTo({y, x, cause})) }
     if( canSpell ) { store.dispatch(spellTo({y, x}))}
     //socket.emit(~~{y, x}, inAir.id, spellInd)
   }
- if(y === 8 && x === 0) {
-  console.log(`Y: ${y} X: ${x} END POOOOOOOOOOOOOOOOOOOOOOOOOOOINT RES partnerIsHere? ${herePartner}`, flyUnit)
+//  if(y === 8 && x === 0) {
+//   console.log(`Y: ${y} X: ${x} END POOOOOOOOOOOOOOOOOOOOOOOOOOOINT RES partnerIsHere? ${herePartner}`, flyUnit)
+//  }
+
+// const [shadow, setShadow] = useState({payload: '',})
+// const [anime, setAnime] = useState(false)
+ const squareRef = useRef(null)
+//  const setShadowWithAnime = () => {
+//    setAnime(true)
+//  }
+let mouseHere = false
+ const setShadow = (r,g,b) => {
+  let progress = 0
+  let mainInterval = setInterval(() => {
+    progress++
+    if(mouseHere) {
+      squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.2*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
+    }
+  }, 50)
+  setTimeout(() => { clearInterval(mainInterval) }, 500)
+  //squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.2*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
  }
+
+//  if(mouseHere) {
+//   //canMove && shadow.color !== 'green' && setShadowWithAnime({payload: {boxShadow:'0px 0px 55px 10px rgba(23, 114,	69, 0.9)'}, color: 'green'})
+//   //isAttacked &&
+//   canMove && setShadow(23, 114, 69)
+//   isAttacked && setShadow(139, 0, 0)
+//   canSpell && setShadow(25, 25, 112)
+//  } 
+
+ const mouseHereHandl = (pass) => {
+  console.log('CAN_SPELL:', canSpell)
+  const {r, g, b} = canSpell
+  if(pass) {
+    mouseHere = true
+      squareRef.current.style['zIndex'] = 2
+      canMove && setShadow(23, 114, 69)
+      isAttacked && setShadow(139, 0, 0)
+      canSpell && setShadow(r, g, b)
+  } else {
+    mouseHere = false;
+    squareRef.current.style['boxShadow'] = '';
+    squareRef.current.style['zIndex'] = ''
+  }
+ }
+  //squareRef.current.style.boxShadow = ''
+  //shadow.payload !== null && setShadow({payload: null, color: null})
+ 
+
   return (
-    <div 
-      className='squareBase'
-      ref={drop}
-      onClick={clickHandler}>
-      <SquareBase y={y} x={x} overlay={backColor} isLight={isLight} isRock={isRock} isTreasure={isTreasure} isAttacked={isAttacked} herePartner={herePartner}>
-        {place}
-      </SquareBase>
-      <div ref={flyUnitRef} className="flyUnit">
-        {flyUnit}
+    <div ref={drop} >
+      <div 
+        ref={squareRef}
+        className={classNames('squareBase', mouseHere && 'squareBase__toUp')}
+        onClick={clickHandler}
+        onMouseEnter={() => mouseHereHandl(true)}
+        onMouseOut={() => mouseHereHandl(false)}> 
+        <SquareBase y={y} x={x} 
+          overlay={backColor}
+          isLight={isLight}
+          isRock={isRock}
+          isTreasure={isTreasure} 
+          isAttacked={isAttacked} 
+          herePartner={herePartner}
+          mouseEvent={(pass) => mouseHereHandl(pass)}
+          >
+          {place}
+        </SquareBase>
+        <div ref={flyUnitRef} className="flyUnit">
+          {flyUnit}
+        </div>
       </div>
     </div>
   )
 }
 
 export default Square
+

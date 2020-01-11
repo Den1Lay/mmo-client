@@ -7,7 +7,7 @@ const defaultState = {
       id: 'WKnight1', 
       Y: 17, X: 9,
       pY: 17, pX: 9,
-      xp: 12,
+      xp: 2,
       maxXp: 12,
       silensed: false,
       stunned: false,
@@ -266,6 +266,7 @@ const defaultState = {
           id: 'Teleport',
           icon: 'T',
           target: 'partner',
+          color: {r: 25, g: 25, b: 112},
           dopDirs: [],
           blockDirs: ['me'],
           ignore: [],
@@ -301,6 +302,12 @@ const defaultState = {
             if(who === 'me') {
               let aimIndex = null
               let workArr = sources[target].slice()
+              let rockArr = sources.rocks.slice()
+              let meArr = sources.me.slice()
+              let newOldPartner = null
+              let newOldMe = null
+              let newOldRocks = null
+              let spellMap = ['partner']
               workArr.forEach(({Y, X}, i) => {
                 if(Y === y && X === x) {
                   aimIndex = i
@@ -308,21 +315,77 @@ const defaultState = {
               })
               const {Y, X} = workArr[aimIndex]
               let newY = Y+5
-              if(newY - X > 12 && X <= 4) {
-                newY = 12 + X
-              } else if (newY - (17 - X) > 12 && X >= 13) {
-                newY = 12 + (17 - X)
-              } else if (newY > 17 && X <= 12 && X >= 5) {
-                newY = 17
+              let rockStunIndex = null
+              let meStunIndex = null
+              sources.rocks.forEach(({Y:rY, X:rX},i) => {
+                if(rY === newY && rX === X) {
+                  rockStunIndex = i
+                }
+              })
+              sources.me.forEach(({Y:mY, X:mX}, mi) => {
+                if(mY === newY && mX === X) {
+                  meStunIndex = mi
+                }
+              })
+              if(rockStunIndex === null && meStunIndex === null) {
+                if(newY - X > 12 && X <= 4) {
+                  newY = 12 + X
+                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+                } else if (newY - (17 - X) > 12 && X >= 13) {
+                  newY = 12 + (17 - X)
+                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+                } else if (newY > 17 && X <= 12 && X >= 5) {
+                  newY = 17
+                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+                } else {
+                  console.log('NOTH1NG')
+                }
+                workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              } else if(meStunIndex === null) {
+                newY = rockArr[rockStunIndex].Y
+                newOldRocks = rockArr[rockStunIndex]
+                console.log('ROCK_STUN_INDEX:', rockStunIndex)
+                console.log('NEW_OLD_ROCKS:', newOldRocks)
+                rockArr.splice(rockStunIndex, 1)
+                spellMap.push('oldRocks')
+                spellMap.push('rocks')
+                let resXp = workArr[aimIndex].xp - 5
+                if(resXp > 0) {
+                  workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, xp: resXp, stunned: 3}
+                } else { // RIP
+                  newOldPartner = workArr[aimIndex] 
+                  workArr.splice(aimIndex, 1)
+                  spellMap.push('oldPartner')
+                }
+              } else { // Stunk at me
+                let resPartnerXp = workArr[aimIndex].xp - 3
+                let resMyXp = meArr[meStunIndex].xp - 2
+                if(resPartnerXp > 0) { // survive
+                  workArr[aimIndex] = {...workArr[aimIndex], Y:sources.me[meStunIndex].Y, pY: workArr[aimIndex].Y, xp: resPartnerXp, stunned: 2}
+                } else { //RIP OF ME
+                  newOldPartner = workArr[aimIndex]
+                  workArr.splice(aimIndex, 1)
+                  spellMap.push('oldPartner')
+                }
+                spellMap.push('me')
+                if(resMyXp > 0) { //RIP ME
+                  meArr[meStunIndex] = {...meArr[meStunIndex], xp: resMyXp, stunned: 1}
+                } else {
+                  newOldMe = meArr[meStunIndex]
+                  meArr.splice(meStunIndex, 1)
+                  spellMap.push('oldMe')
+                }
+                
               }
-              workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              console.log("RES_CONTENT:", newOldRocks)
               return {
-                me: sources.me,
+                me: meArr,
                 partner: workArr,
-                rocks: sources.rocks,
-                oldMe: null,
-                oldPartner: null,
-                spellMap: ['partner']
+                rocks: rockArr,
+                oldMe: newOldMe,
+                oldPartner: newOldPartner,
+                oldRocks: newOldRocks,
+                spellMap
               } 
             } else {
 
@@ -335,8 +398,8 @@ const defaultState = {
   partner: [
     {
       id: 'DKnight1',
-      Y:0, X:12,
-      pY: 0, pX: 12,
+      Y:2, X:9,
+      pY: 2, pX: 9,
       xp: 14,
       maxXp: 12,
       silensed: false,
@@ -591,6 +654,7 @@ export default (state = defaultState, action) => {
         rocks: spellRes.rocks,
         oldMe: spellRes.oldMe,
         oldPartner: spellRes.oldPartner,
+        oldRocks: spellRes.oldRocks,
         spellMap: spellRes.spellMap,
         updateSign: 'S'+Math.random()
       }

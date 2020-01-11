@@ -27,7 +27,9 @@ const Board = (
     deletedTreasures,
     canAttack,
     oldCanAttack,
-    spellMap
+    spellMap,
+    inAir,
+    spellInd
   }) => { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
@@ -272,7 +274,8 @@ const Board = (
             oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
             cleaner()
             oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
-            spellSetter(canSpell, true)
+            console.log('INSADE:',inAir.spells[spellInd] )
+            canSpell.length > 0 && spellSetter(canSpell, inAir.spells[spellInd].color)
           }
           break
         case 'A':
@@ -301,6 +304,19 @@ const Board = (
               case 'partner':
                 cleanProps(partner, false)
                 updateDefState(partner, false)
+                break
+              case 'me':
+                cleanProps(me, true)
+                updateDefState(me, true)
+                break
+              case 'oldRocks':
+                rockSetter([oldRocks], false)
+                break
+              case 'oldMe':
+                persenSetter([oldMe], 'me', me, partner)
+                break
+              case 'oldPartner':
+                persenSetter([oldPartner], 'partner', me, partner)  
                 break
             }
           })
@@ -346,7 +362,9 @@ export default connect((
     deletedTreasures,
     canAttack,
     oldCanAttack,
-    spellMap
+    spellMap,
+    inAir,
+    spellInd
   }
   ) => (
     {
@@ -368,7 +386,9 @@ export default connect((
       deletedTreasures,
       canAttack,
       oldCanAttack,
-      spellMap
+      spellMap,
+      inAir,
+      spellInd
     }
     ), 
   {
