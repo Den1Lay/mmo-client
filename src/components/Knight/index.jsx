@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo } from '@/store/actions'
+import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, nextClick } from '@/store/actions'
 
 import './Knight.scss'
 
@@ -26,7 +26,7 @@ const Knight = (
     canSpell,
     mouseEvent
   }) => {
-  console.log(inAir)
+  //console.log(inAir)
   takeIt && takeTreasure({y:Y, x:X})
   if(isPartner){
     //console.log('ISSSSSSSSSPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAAAARRRRRRRRT')
@@ -34,10 +34,10 @@ const Knight = (
   //const [action, setAction] = useState(true)
   const [prevSpell, setPrevSpell] = useState(null)
   const mainRef = useRef(null)
-  console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
+  //console.log(`WRONG PROPS: y: ${Y}, x: ${X}`)
   let moveOnTreasure = false;
 
-  console.log('React.ClonePass:', `${Y}, ${X}`)
+  //console.log('React.ClonePass:', `${Y}, ${X}`)
   const [{isDragging, ...another}, drag] = useDrag({
     item: { type: 'knight', id},
     begin: monitor => {
@@ -76,7 +76,7 @@ const Knight = (
 
   if(animeMove && animeMove.id === id) {
     const {y, x} = animeMove
-    console.log('IS HAPPENED')
+    //console.log('IS HAPPENED')
     anime({
       targets: mainRef.current, //transition on timeline to zero in 60%
       translateY: [0, (y-Y)*52],
@@ -87,7 +87,6 @@ const Knight = (
         if(anim.completed) {
           console.log('ISTIME')
           moveTo({y, x})
-          
         }
       }
     });
@@ -97,16 +96,16 @@ const Knight = (
     e.stopPropagation()
     canAttack.length === 0 ? prepareTo('ATTACK', null) : prepareTo('MOVE', null)
     //setAction(!action)
-    console.log('LOOOOK')
+    //console.log('LOOOOK')
   }
 
   const spellHandler = (e, ind) => {
     e.stopPropagation()
-    console.log(canSpell)
+    //console.log(canSpell)
     canSpell.length === 0 
     ? prepareTo('SPELL', ind) : prevSpell !== ind 
     ? prepareTo('SPELL', ind) : prepareTo('SPELL', null)  // removeSpell
-    console.log('PREPATE_TO_SPELL: ',id)
+    //console.log('PREPATE_TO_SPELL: ',id)
     setPrevSpell(ind)
   }
 

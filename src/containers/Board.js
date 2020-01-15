@@ -7,7 +7,7 @@ import './timeScss.scss'
 
 import  Square from './Square'
 
-const Board = (
+function Board (
   {
     me,
     oldMe,
@@ -29,8 +29,12 @@ const Board = (
     oldCanAttack,
     spellMap,
     inAir,
-    spellInd
-  }) => { // canMove: [{y, x}, {y, x}]
+    spellInd,
+    fire,
+    oldFire,
+    venom,
+    oldVenom
+  }) { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
@@ -71,7 +75,7 @@ const Board = (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={null}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -168,6 +172,8 @@ const Board = (
       //     cloneMainMemoPlant[newY][checkIndex] = React.cloneElement(cloneMainMemoPlant[newY][checkIndex], {isLight: false})
       //   })
       // }
+
+      // РЕФАКТОРИНГ ЧЕРЕЗ ПОЛНУЮ ЗАМЕНУ PASS ОБЪЕКТА
       const lightSetter = (workArr, pass) => {
         let checkIndex = [];
         workArr.forEach(({newY, newX}) => {
@@ -204,7 +210,7 @@ const Board = (
         })
       }
       const persenSetter = (person, who, me, partner) => {
-        //console.log('PERSONSEETTTTTEEEEEEEEEER',person)
+        console.log('PERSONSEETTTTTEEEEEEEEEER',person)
         let checkIndex = []
         person.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
@@ -234,6 +240,13 @@ const Board = (
         workArr.forEach(({newY, newX}) => {
           indexFinder(checkIndex, newY, newX)
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {canSpell: pass})
+        })
+      }
+      const spellAnimeSetter = (workArr, payload) => {
+        let checkIndex = []
+        workArr.forEach(({newY, newX}) => {
+          indexFinder(checkIndex, newY, newX)
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: payload})
         })
       }
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
@@ -274,7 +287,7 @@ const Board = (
             oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
             cleaner()
             oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
-            console.log('INSADE:',inAir.spells[spellInd] )
+            console.log('INSADE:',inAir.spells[spellInd])
             canSpell.length > 0 && spellSetter(canSpell, inAir.spells[spellInd].color)
           }
           break
@@ -284,7 +297,7 @@ const Board = (
           attackSetter(oldCanAttack, false)
           lightSetter(newInLight, true)
           updateDefState(partner, false)
-          oldPartner && persenSetter([oldPartner], 'partner', me, partner)
+          oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
           break
         case 'K': 
           console.log('K-FIIIIIIIIIIIIILTER:', me)
@@ -292,34 +305,24 @@ const Board = (
           cleanProps(partner, false)
           updateDefState(me, true)
           updateDefState(partner, false)
-          oldPartner && persenSetter([oldPartner], 'partner', me, partner)
-          oldMe && persenSetter([oldMe], 'me', me, partner)
+          oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
+          oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
           break
         case 'S':
-          let sources = {partner, me, rocks, oldMe, oldPartner}
-          spellMap.forEach(propsName => {
-            switch(propsName){
-              case 'partner':
-                cleanProps(partner, false)
-                updateDefState(partner, false)
-                break
-              case 'me':
-                cleanProps(me, true)
-                updateDefState(me, true)
-                break
-              case 'oldRocks':
-                rockSetter([oldRocks], false)
-                break
-              case 'oldMe':
-                persenSetter([oldMe], 'me', me, partner)
-                break
-              case 'oldPartner':
-                persenSetter([oldPartner], 'partner', me, partner)  
-                break
+          //let sources = {partner, me, rocks, oldMe, oldPartner}
+          console.log('SPELL_MAP:',spellMap)
+          oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
+          let newSpellMap = spellMap.slice()
+          ['partner', 'oldPartner', 'me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom']
+          .forEach(el => {
+            if(!newSpellMap.some(pass => pass === el)) {
+              newSpellMap.push(el)
             }
           })
+          greatUpdater(newSpellMap, {me,oldMe,partner,oldPartner,oldRocks, fire, oldFire, venom, oldVenom})
+          break;
         default:
           console.log('START') // do something with this...
       }
@@ -340,6 +343,36 @@ const Board = (
         {mainRes}
     </div>
   )
+}
+
+const greatUpdater = (spellMap, source) => {
+  spellMap.forEach(propsName => {
+    switch(propsName){
+      case 'partner':
+        cleanProps(source.partner, false)
+        updateDefState(source.partner, false)
+        break
+      case 'me':
+        cleanProps(source.me, true)
+        updateDefState(source.me, true)
+        break
+      case 'oldRocks':
+        rockSetter([source.oldRocks], false)
+        break
+      case 'oldMe':
+        persenSetter(source.oldMe, 'me', source.me, source.partner)
+        break
+      case 'oldPartner':
+        //console.log('OLD_PARTNER_DATA', oldPartner)
+        persenSetter(source.oldPartner, 'partner', source.me, source.partner)  
+        break
+      case 'fire':
+        spellAnimeSetter(source.fire, {color: {r: 150, g: 0, b: 24}, src: ''})
+        break
+      default:
+        console.log('Some wrong things:', propsName)
+    }
+  })
 }
 
 export default connect((
@@ -364,7 +397,11 @@ export default connect((
     oldCanAttack,
     spellMap,
     inAir,
-    spellInd
+    spellInd,
+    fire,
+    oldFire,
+    venom,
+    oldVenom
   }
   ) => (
     {
@@ -388,7 +425,11 @@ export default connect((
       oldCanAttack,
       spellMap,
       inAir,
-      spellInd
+      spellInd,
+      fire,
+      oldFire,
+      venom,
+      oldVenom
     }
     ), 
   {

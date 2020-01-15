@@ -10,7 +10,7 @@ const defaultState = {
       xp: 2,
       maxXp: 12,
       silensed: false,
-      stunned: false,
+      stunned: 0,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -101,9 +101,10 @@ const defaultState = {
       },
       spells: [
         {
-          id: 'Teleport',
-          icon: 'T',
+          id: 'Fireball',
+          icon: 'F',
           target: 'partner',
+          color: {r: 150, g: 0, b: 24},
           dopDirs: [],
           blockDirs: ['me'],
           ignore: [],
@@ -137,30 +138,51 @@ const defaultState = {
           ],
           func: ({payload: {y, x}, sources, target, who}) => {
             if(who === 'me') {
-              let aimIndex = null
-              let workArr = sources[target].slice()
-              workArr.forEach(({Y, X}, i) => {
-                if(Y === y && X === x) {
-                  aimIndex = i
-                }
+              let newPartner = sources['partner'].slice()
+              let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];
+              let newOldPartner = [];
+              let spellMap = ['fire'];
+              let direction = [
+                {xDir:1, yDir:1, pathLenght:1},
+                {xDir:1, yDir:-1, pathLenght:1},
+                {xDir:1, yDir: 0, pathLenght:1},
+                {xDir:-1, yDir:-1, pathLenght:1},
+                {xDir:-1, yDir:1, pathLenght:1},
+                {xDir:-1, yDir: 0, pathLenght:1},
+                {xDir:0, yDir: 1, pathLenght:1},
+                {xDir:0, yDir: -1, pathLenght:1}
+              ];
+              direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, ['partner'], ['me', 'rocks'], [], y, x, []))
+              console.log('LAST_COMPAR:',newPartner, newFire)
+              newFire.forEach(({newY, newX}, fi) => {
+                newPartner.forEach(({Y, X}, i) => {
+                  if(newY === Y && newX === X) {
+                    let newXp = newPartner[i].xp - 6;
+                    if(newXp > 0) {
+                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)
+                      newPartner[i].xp = newXp
+                      spellMap.push('partner')
+                    } else {
+                      newOldPartner.push(newPartner[i]);
+                      newPartner.splice(i, 1);
+                      spellMap.push('oldPartner')
+                    }
+                  }
+                })
+                newFire[fi].time = 2;
+                newFire[fi].postDmg = 0;
               })
-              const {Y, X} = workArr[aimIndex]
-              let newY = Y+5
-              if(newY - X > 12 && X <= 4) {
-                newY = 12 + X
-              } else if (newY - (17 - X) > 12 && X >= 13) {
-                newY = 12 + (17 - X)
-              } else if (newY > 17 && X <= 12 && X >= 5) {
-                newY = 17
-              }
-              workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              console.log('PREV_RES_PARTNER:',newPartner)
               return {
                 me: sources.me,
-                partner: workArr,
+                partner: newPartner,
                 rocks: sources.rocks,
-                oldMe: null,
-                oldPartner: null,
-                spellMap: ['partner']
+                oldMe: [],
+                oldPartner: newOldPartner,
+                oldRocks: null,
+                fire: newFire,
+                venom: [],
+                spellMap
               } 
             } else {
 
@@ -176,7 +198,7 @@ const defaultState = {
       xp: 12,
       maxXp: 12,
       silensed: false,
-      stunned: false,
+      stunned: 0,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -304,8 +326,8 @@ const defaultState = {
               let workArr = sources[target].slice()
               let rockArr = sources.rocks.slice()
               let meArr = sources.me.slice()
-              let newOldPartner = null
-              let newOldMe = null
+              let newOldPartner = []
+              let newOldMe = []
               let newOldRocks = null
               let spellMap = ['partner']
               workArr.forEach(({Y, X}, i) => {
@@ -353,7 +375,7 @@ const defaultState = {
                 if(resXp > 0) {
                   workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, xp: resXp, stunned: 3}
                 } else { // RIP
-                  newOldPartner = workArr[aimIndex] 
+                  newOldPartner.push(workArr[aimIndex])  
                   workArr.splice(aimIndex, 1)
                   spellMap.push('oldPartner')
                 }
@@ -363,7 +385,7 @@ const defaultState = {
                 if(resPartnerXp > 0) { // survive
                   workArr[aimIndex] = {...workArr[aimIndex], Y:sources.me[meStunIndex].Y, pY: workArr[aimIndex].Y, xp: resPartnerXp, stunned: 2}
                 } else { //RIP OF ME
-                  newOldPartner = workArr[aimIndex]
+                  newOldPartner.push(workArr[aimIndex])
                   workArr.splice(aimIndex, 1)
                   spellMap.push('oldPartner')
                 }
@@ -371,7 +393,7 @@ const defaultState = {
                 if(resMyXp > 0) { //RIP ME
                   meArr[meStunIndex] = {...meArr[meStunIndex], xp: resMyXp, stunned: 1}
                 } else {
-                  newOldMe = meArr[meStunIndex]
+                  newOldMe.push(meArr[meStunIndex])
                   meArr.splice(meStunIndex, 1)
                   spellMap.push('oldMe')
                 }
@@ -385,6 +407,8 @@ const defaultState = {
                 oldMe: newOldMe,
                 oldPartner: newOldPartner,
                 oldRocks: newOldRocks,
+                fire: [],
+                venom: [],
                 spellMap
               } 
             } else {
@@ -403,7 +427,7 @@ const defaultState = {
       xp: 14,
       maxXp: 12,
       silensed: false,
-      stunned: false,
+      stunned: 0,
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -502,8 +526,8 @@ const defaultState = {
       ]
     }
   ],
-  oldMe: null,
-  oldPartner: null, // массив если будут ауе спелы
+  oldMe: [],
+  oldPartner: [], // массив если будут ауе спелы
   inAir: null,
   canMove: [],
   canSpell: [],
@@ -521,7 +545,10 @@ const defaultState = {
   myTreasures: [],
   canAttack: [],
   oldCanAttack: [],
-  spellMap: []
+  timeDepend: [],
+  spellMap: [],
+  fire: [],
+  venom: [],
 }
 
 export default (state = defaultState, action) => {
@@ -557,6 +584,7 @@ export default (state = defaultState, action) => {
         updateSign: 'D'+Math.random()
       }
     case 'KNIGHT:MOVE_TO':
+      console.log('PRE_GET_NEW_STAFF:', state.inAir)
       const newMe = getNewStaff(state.me, state.inAir, payload)
       //newPartner
       return {
@@ -588,7 +616,7 @@ export default (state = defaultState, action) => {
         updateSign: 'P'+Math.random(), // добавить небольшой прелоад и рипать его тут
       }
     case 'KNIGHT:TAKE_TREASURE': 
-      console.log("PAYLOOOOOOOOOAD", payload)
+      console.log("PAYLOOOOOOOOOAD", payload) ///НАХУЙ афтерКлик? //updateMap => func in Board
       return {
         ...state, // нижней строчки может и не быть.
         treasures: state.treasures.filter(({Y, X}) => !( Y === payload.Y && X === payload.X)),
@@ -619,7 +647,7 @@ export default (state = defaultState, action) => {
         ...state,
         partner: partnerRes.res,
         rocks: rocksRes.res,
-        oldPartner: partnerRes.target,
+        oldPartner: [partnerRes.target],
         oldRocks: rocksRes.target,
         canAttack: [],
         oldCanAttack: state.canAttack,
@@ -637,8 +665,8 @@ export default (state = defaultState, action) => {
         ...state,
         me: updatedMe,
         partner: updatedPartner,
-        oldPartner: deadP ? deadP : null,
-        oldMe: deadM ? deadM : null,
+        oldPartner: deadP ? [deadP] : [],
+        oldMe: deadM ? [deadM] : [],
         newInLight: getLightPosition(updatedMe, updatedPartner, state.rocks),
         oldInLight: state.newInLight,
         updateSign: 'K'+Math.random()
@@ -646,8 +674,14 @@ export default (state = defaultState, action) => {
     case 'KNIGHT:SPELL_TO': 
       //const {me, partner, rocks} = state
       const spellObj = state.inAir.spells[state.spellInd]
-      const spellRes = spellObj.func({payload, sources: {me: state.me, partner: state.partner, rocks: state.rocks}, target: spellObj.target, who: 'me'}) //target enemy, me, rock
-      return {
+      const spellRes = spellObj.func(
+        {
+          payload, 
+          sources: {me: state.me, partner: state.partner, rocks: state.rocks}, 
+          target: spellObj.target, 
+          who: 'me'
+        }) //target enemy, me, rock
+      return updateNextStep({
         ...state,
         partner: spellRes.partner,
         me: spellRes.me,
@@ -655,15 +689,65 @@ export default (state = defaultState, action) => {
         oldMe: spellRes.oldMe,
         oldPartner: spellRes.oldPartner,
         oldRocks: spellRes.oldRocks,
+        canSpell: [], 
+        oldCanSpell: state.canSpell,
+        fire: state.fire.concat(spellRes.fire),
+        venom: state.venom.concat(spellRes.venom),
         spellMap: spellRes.spellMap,
         updateSign: 'S'+Math.random()
-      }
+      }, state )
     default: {
       return {
         ...state
       }
     }
   }
+}
+const updateNextStep = (data, state) => {
+    const afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, data.venom ? data.venom : state.venom);
+    const afterClickMe = updateGameStats(data.me ? data.me : state.me, data.venom ? data.venom : state.venom);
+    const newFire = updateSpells(data.fire ? data.fire : state.fire);
+    const newVenom = updateSpells(data.venom ? data.venom : state.venom);
+  return {
+    ...data,
+    partner: afterClickPartner.res,
+    me: afterClickMe.res,
+    oldPartner:data.oldPartner ? data.oldPartner.concat(afterClickPartner.dead) : afterClickPartner.dead,
+    oldMe:data.oldMe ? data.oldMe.concat(afterClickMe.dead) : afterClickMe.dead,
+    fire: newFire.res,
+    oldFire: newFire.dead,
+    venom: newVenom.res,
+    oldVenom: newVenom.dead,
+  }
+}
+
+const updateGameStats = (workArr, venomArr) => {
+  let res = workArr.slice()
+  let dead = []
+  venomArr.forEach(({newY, newX, postDmg}) => {
+    res.forEach(({Y, X, stunned}, i) => {
+      if(stunned) {
+        res[i].stunned = stunned-=1
+      }
+      if(newY === Y && newX === X) {
+        let newXp = res[i].xp - postDmg
+        if(newXp < 0) {
+          dead.push(res[i])
+          res.splice(i, 1)
+        } else {
+          res[i].xp = newXp
+        }
+      }
+    })
+  })
+  return {res, dead}
+}
+
+const updateSpells = workArr => {
+  let res = workArr.map(({time, newX, newY, postDmg}) => ({newX, newY, postDmg, time: time-=1}))
+  let dead = res.filter(({time}) => time <= 0)
+  res = res.filter(({time}) => time >= 1)
+  return {res, dead}
 }
 
 const getNewStaffAfterKamick = (defArr, {id:ID, xp, Y, X, pY, pX}) => {

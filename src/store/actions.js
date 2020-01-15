@@ -46,6 +46,9 @@ export const spellTo = ({y, x}) => ({
   payload: {y, x}
 })
 
+export const nextClick = () => ({
+  type: 'NEXT_CLICK'
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

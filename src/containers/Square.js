@@ -4,7 +4,7 @@ import store from '@/store'
 import anime from "animejs";
 import classNames from 'classnames'
 
-import { moveTo, animeMove, attackTo, kamickAttack, spellTo } from '@/store/actions'
+import { moveTo, animeMove, attackTo, kamickAttack, spellTo, nextClick } from '@/store/actions'
 
 import { 
   Square as SquareBase,
@@ -13,8 +13,11 @@ import {
 
 import './timeScss.scss'
 
-const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell}) => {
-  
+const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime}) => {
+  if(spellAnime) { 
+    const {color, src} = spellAnime
+    console.log("SPELL_ANIME:", spellAnime)
+  }
   //console.log(`PARTNERARR y: ${y}, x: ${x}:`, partner)
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
   y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
@@ -146,19 +149,33 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
       }
   }
   let backColor = canSpell
-  ? canSpell : isOver && !canDrop
+  ? canSpell : isAttacked
+  ? {r: 180, g:0, b:0} : isOver && !canDrop
   ? {r:255, g:0, b:0} : !isOver && (canDrop || canMove)
   ? {r:0, g:128, b:0} : isOver && canDrop
   ? {r:255, g:215, b:0} : null
 
-
+  const {r, g, b} = canSpell
   const clickHandler = () => {
     // console.log(opct) rip logic
     let cause = place ? 'partner' : isRock ? 'rocks' : null;
     if( canMove ) { store.dispatch(animeMove({y, x})) }
     if( isAttacked ) { store.dispatch(attackTo({y, x, cause})) }
-    if( canSpell ) { store.dispatch(spellTo({y, x}))}
-    //socket.emit(~~{y, x}, inAir.id, spellInd)
+    if( canSpell ) {
+      let effect = new Promise((resolve, reject) => {
+        let progress = 100
+        let spellInt = setInterval(() => {
+          progress = progress-3
+          squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.5*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
+        }, 45)
+        setTimeout(() => {clearInterval(spellInt); squareRef.current.style['boxShadow'] = ''; resolve()}, 1500)
+      })
+      
+      effect.then(() => {
+        store.dispatch(spellTo({y, x}))
+      })
+     }
+    // socket.emit(~~{y, x}, inAir.id, spellInd)
   }
 //  if(y === 8 && x === 0) {
 //   console.log(`Y: ${y} X: ${x} END POOOOOOOOOOOOOOOOOOOOOOOOOOOINT RES partnerIsHere? ${herePartner}`, flyUnit)
@@ -166,7 +183,7 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
 
 // const [shadow, setShadow] = useState({payload: '',})
 // const [anime, setAnime] = useState(false)
- const squareRef = useRef(null)
+const squareRef = useRef(null)
 //  const setShadowWithAnime = () => {
 //    setAnime(true)
 //  }
@@ -192,8 +209,7 @@ let mouseHere = false
 //  } 
 
  const mouseHereHandl = (pass) => {
-  console.log('CAN_SPELL:', canSpell)
-  const {r, g, b} = canSpell
+  //console.log('CAN_SPELL:', canSpell)
   if(pass) {
     mouseHere = true
       squareRef.current.style['zIndex'] = 2
@@ -208,8 +224,6 @@ let mouseHere = false
  }
   //squareRef.current.style.boxShadow = ''
   //shadow.payload !== null && setShadow({payload: null, color: null})
- 
-
   return (
     <div ref={drop} >
       <div 
@@ -222,8 +236,9 @@ let mouseHere = false
           overlay={backColor}
           isLight={isLight}
           isRock={isRock}
-          isTreasure={isTreasure} 
-          isAttacked={isAttacked} 
+          isTreasure={isTreasure}
+          underSpell={spellAnime}
+          //isAttacked={isAttacked} 
           herePartner={herePartner}
           mouseEvent={(pass) => mouseHereHandl(pass)}
           >
