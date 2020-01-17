@@ -1,7 +1,8 @@
 import React, {useEffect, useState, cloneElement as setState} from 'react';
 import { connect } from 'react-redux'
+import { Button } from 'antd'
 
-import { lastPreparation } from '@/store/actions'
+import { lastPreparation, partnerAnimeMove} from '@/store/actions'
 
 import './timeScss.scss'
 
@@ -33,7 +34,9 @@ function Board (
     fire,
     oldFire,
     venom,
-    oldVenom
+    oldVenom,
+    moveFromShadow,
+    partnerAnimeMove
   }) { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
@@ -75,7 +78,7 @@ function Board (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={null}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={null} moveFromShadow={null}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -244,18 +247,33 @@ function Board (
       }
       const spellAnimeSetter = (workArr, payload) => {
         let checkIndex = []
+        console.log(`INSIDE_SPELL_ANIME_PAYLOAD:${payload}`, workArr)
         workArr.forEach(({newY, newX}) => {
           indexFinder(checkIndex, newY, newX)
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: payload})
         })
       }
+
+      const moveFromShadowSetter = (workObj, pass) => {
+        let checkIndex = []
+        indexFinder(checkIndex, workObj.fY, workObj.fX)
+        cloneMainMemoPlant[workObj.fY][checkIndex[0]] = setState(cloneMainMemoPlant[workObj.fY][checkIndex[0]], {moveFromShadow: pass})  
+      }
+
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
       switch(updateSign.substr(0,1)) {
         case 'M':
+          //console.log()
           cleaner()
           mover()
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
+
+          oldMe.length > 0 && updateDefState(me, true) // может нет никого уже..
+          oldPartner.length > 0 && updateDefState(partner, false)
+          oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
+          oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
+          oldFire.length > 0 && spellAnimeSetter(oldFire, null)
           break
         case 'C':
           setter()
@@ -293,11 +311,16 @@ function Board (
           break
         case 'A':
           console.log('A HANDLERRRRRRRRRRRRRRRRRRR', oldPartner)
-          oldRocks && rockSetter([oldRocks], false);
+          oldRocks.length > 0 && rockSetter(oldRocks, false);
           attackSetter(oldCanAttack, false)
           lightSetter(newInLight, true)
           updateDefState(partner, false)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
+          //optional time update
+          //greatUpdater(['me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom'])
+          oldMe.length > 0 && updateDefState(me, true)
+          oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
+          oldFire.length > 0 && spellAnimeSetter(fire, null)
           break
         case 'K': 
           console.log('K-FIIIIIIIIIIIIILTER:', me)
@@ -309,20 +332,69 @@ function Board (
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
+          //optional time update
+          //greatUpdater(['fire', 'oldFire', 'venom', 'oldVenom'])
+          //oldFire.length > 0 && spellAnimeSetter(fire, null)
           break
         case 'S':
           //let sources = {partner, me, rocks, oldMe, oldPartner}
-          console.log('SPELL_MAP:',spellMap)
+          //console.log('SPELL_MAP:',spellMap)
           oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
-          let newSpellMap = spellMap.slice()
-          ['partner', 'oldPartner', 'me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom']
-          .forEach(el => {
-            if(!newSpellMap.some(pass => pass === el)) {
+          let newSpellMap = spellMap.slice();
+          const checkArr = ['partner', 'oldPartner', 'me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom']
+          checkArr.forEach(el => {
+            if(!spellMap.some(pass => pass === el)) {
               newSpellMap.push(el)
             }
           })
-          greatUpdater(newSpellMap, {me,oldMe,partner,oldPartner,oldRocks, fire, oldFire, venom, oldVenom})
+          console.log('NEW_SPELL_MAP:', newSpellMap)
+          console.log('OLD_FIRE_CHECK:', oldFire) // newLightPos??
+          newSpellMap.forEach(propsName => {
+            switch(propsName){
+              case 'partner':
+                cleanProps(partner, false)
+                updateDefState(partner, false)
+                break
+              case 'me':
+                cleanProps(me, true)
+                updateDefState(me, true)
+                break
+              case 'oldRocks':
+                rockSetter(oldRocks, false)
+                break
+              case 'oldMe':
+                persenSetter(oldMe, 'me', me, partner)
+                break
+              case 'oldPartner':
+                oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)  
+                break
+              case 'fire':
+                spellAnimeSetter(fire, {color: {r: 150, g: 0, b: 24}, src: ''})
+                break
+              case 'oldFire':
+                console.log('ALIVE_OLD_FIRE')
+                oldFire.length > 0 && spellAnimeSetter(oldFire, null)
+                break
+              case 'venom':
+                //spellAnimeSetter(venom, {color: {r: 150, g: 0, b: 24}, src: ''})
+                break
+              case 'oldVenom':
+
+                break
+              default:
+                console.log('Some wrong things:', propsName)
+            }
+          })
           break;
+        case 'Q':
+          moveFromShadowSetter(moveFromShadow, moveFromShadow)
+          break
+        case 'W':
+          //console.log('W_DEBAG:PARTNER:',partner)
+          moveFromShadow && moveFromShadowSetter(moveFromShadow, null)
+          cleanProps(partner, false)
+          updateDefState(partner, false)
+          break
         default:
           console.log('START') // do something with this...
       }
@@ -341,39 +413,14 @@ function Board (
   return (
     <div className='board'>
         {mainRes}
+        <div className='board__rightTab'>
+          <Button type='primary' onClick={() => partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9})}>$$$</Button>
+        </div>
     </div>
   )
 }
+// одна функция для всех обновлений????
 
-const greatUpdater = (spellMap, source) => {
-  spellMap.forEach(propsName => {
-    switch(propsName){
-      case 'partner':
-        cleanProps(source.partner, false)
-        updateDefState(source.partner, false)
-        break
-      case 'me':
-        cleanProps(source.me, true)
-        updateDefState(source.me, true)
-        break
-      case 'oldRocks':
-        rockSetter([source.oldRocks], false)
-        break
-      case 'oldMe':
-        persenSetter(source.oldMe, 'me', source.me, source.partner)
-        break
-      case 'oldPartner':
-        //console.log('OLD_PARTNER_DATA', oldPartner)
-        persenSetter(source.oldPartner, 'partner', source.me, source.partner)  
-        break
-      case 'fire':
-        spellAnimeSetter(source.fire, {color: {r: 150, g: 0, b: 24}, src: ''})
-        break
-      default:
-        console.log('Some wrong things:', propsName)
-    }
-  })
-}
 
 export default connect((
   {
@@ -401,7 +448,8 @@ export default connect((
     fire,
     oldFire,
     venom,
-    oldVenom
+    oldVenom,
+    moveFromShadow,
   }
   ) => (
     {
@@ -429,10 +477,12 @@ export default connect((
       fire,
       oldFire,
       venom,
-      oldVenom
+      oldVenom,
+      moveFromShadow
     }
     ), 
   {
-    lastPreparation
+    lastPreparation,
+    partnerAnimeMove
   }
   )(Board)

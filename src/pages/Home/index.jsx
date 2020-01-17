@@ -4,8 +4,6 @@ import { connect } from 'react-redux'
 
 import { Board } from '@/containers'
 
-import { Button } from 'antd'
-
 import './Home.scss'
 
 const Home = () => {
@@ -13,7 +11,7 @@ const Home = () => {
   return(
     <section className={classNames('home')}>
       <Board>
-        
+
       </Board>
     </section>
   )

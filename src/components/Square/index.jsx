@@ -4,7 +4,7 @@ import Color from 'color'
 
 import './Square.scss'
                                                                       // underSpell will src
-const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpell, herePartner, mouseEvent}) => {
+const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpell, herePartner, mouseEvent, moveFromShadow}) => {
   overlay && x === 8 && y === 1 && console.log('OOOOOOOOOOOOOVVVVVVVVVVVEEEEEEEEEEEERL',overlay)
   const mainRef = useRef(null)
   useEffect(() => {
@@ -30,11 +30,10 @@ const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpel
         : isLight && 'square__isLight')
       }>
       {
-        children && !herePartner
-        ? children // React.createElement is the best
-        : herePartner && isLight
-          ? children
-          : `${y}, ${x}`
+        children && !herePartner ? children // React.createElement is the best
+        : moveFromShadow && herePartner ? children
+        : herePartner && isLight ? children
+        : `${y}, ${x}`
       }
     </div>
   )

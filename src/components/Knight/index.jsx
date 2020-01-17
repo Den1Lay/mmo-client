@@ -1,21 +1,21 @@
-import React, {useState, useRef} from 'react'
+import React, {useState, useRef, useEffect} from 'react'
 import { useDrag } from 'react-dnd'
 import { connect } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, nextClick } from '@/store/actions'
+import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo} from '@/store/actions'
 
 import './Knight.scss'
 
 const Knight = (
   {
-    id, 
-    inAir, 
-    simbol, 
-    isPartner, 
+    id,
+    inAir,
+    simbol,
+    isPartner,
     y: Y, x: X,
-    addToAir, 
+    addToAir,
     deleteFromAir, 
     moveTo, 
     animeMove, 
@@ -24,10 +24,19 @@ const Knight = (
     prepareTo, 
     canAttack, 
     canSpell,
-    mouseEvent
+    mouseEvent,
+    moveFromShadow,
+    partnerMoveTo
   }) => {
   //console.log(inAir)
   takeIt && takeTreasure({y:Y, x:X})
+
+  if(moveFromShadow) {
+    console.log(`MOVE_FROM_SHADOW y:${Y} x:${X}`,moveFromShadow)
+  }
+  if(animeMove) {
+    console.log(`ANIME_MOVE:`, animeMove)
+  }
   if(isPartner){
     //console.log('ISSSSSSSSSPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAAAARRRRRRRRT')
   }
@@ -62,8 +71,36 @@ const Knight = (
       isDragging: monitor.isDragging()
     })
   })
+
+  useEffect(() => {
+    if(moveFromShadow) { mainRef.current.style['opacity'] = '0' }
+    if(animeMove && animeMove.id === id || moveFromShadow) {
+      const {y, x, shadow} = animeMove || moveFromShadow
+      //console.log('IS HAPPENED')
+     
+     // console.log("%cExample %s", css, 'all code runs happy');
+      console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
+      anime({
+        targets: mainRef.current, //transition on timeline to zero in 60%
+        translateY: [0, (y-Y)*52],
+        translateX: [0, (x-X)*52],
+        duration: 1200,
+        easing: 'easeInOutExpo',
+        complete: anim => {  // may take 90% event
+          if(anim.completed) {
+            console.log('ISTIME')
+            !isPartner ? moveTo({y, x}) : partnerMoveTo({id, y, x})
+          }
+        },
+        update: anim => {
+          if(shadow) { mainRef.current.style['opacity'] = 1/anim.progress+'' }
+          if(moveFromShadow) { mainRef.current.style['opacity'] = anim.progress*0.01+''}
+        }
+      });
+    }
+  });
   const clickHandler = () => {
-    //onsole.log('CLIIIIIIIIIIICK HANDLER');
+    // console.log('CLIIIIIIIIIIICK HANDLER');
     // console.log(inAir);
     // console.log(inAir && (inAir.id !== id));
     if(inAir && (inAir.id !== id)) {
@@ -74,29 +111,9 @@ const Knight = (
     }
   }
 
-  if(animeMove && animeMove.id === id) {
-    const {y, x} = animeMove
-    //console.log('IS HAPPENED')
-    anime({
-      targets: mainRef.current, //transition on timeline to zero in 60%
-      translateY: [0, (y-Y)*52],
-      translateX: [0, (x-X)*52],
-      duration: 1200,
-      easing: 'easeInOutExpo',
-      complete: anim => {  // may take 90% event
-        if(anim.completed) {
-          console.log('ISTIME')
-          moveTo({y, x})
-        }
-      }
-    });
-  }
-
   const controlHandler = (e) => {
     e.stopPropagation()
     canAttack.length === 0 ? prepareTo('ATTACK', null) : prepareTo('MOVE', null)
-    //setAction(!action)
-    //console.log('LOOOOK')
   }
 
   const spellHandler = (e, ind) => {
@@ -126,7 +143,7 @@ const Knight = (
     ref={!isPartner ? drag : () => ({})}
     className={
       classNames('knight',
-        isPartner && 'knight__isPartner'
+        isPartner && 'knight__isPartner', // либо в сразу anime...
     )}
     >
       <div ref={mainRef}>
@@ -138,4 +155,4 @@ const Knight = (
   )
 }
 
-export default connect(({inAir, animeMove, canAttack, canSpell}) => ({inAir, animeMove, canAttack, canSpell}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo})(Knight)
+export default connect(({inAir, animeMove, canAttack, canSpell}) => ({inAir, animeMove, canAttack, canSpell}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo})(Knight)

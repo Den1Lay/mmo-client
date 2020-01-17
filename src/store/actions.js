@@ -46,8 +46,14 @@ export const spellTo = ({y, x}) => ({
   payload: {y, x}
 })
 
-export const nextClick = () => ({
-  type: 'NEXT_CLICK'
+export const partnerAnimeMove = ({id, y, x, fY, fX}) => ({
+  type: 'PARTNER:ANIME_MOVE',
+  payload: {id, y, x, fY, fX}
+})
+
+export const partnerMoveTo = ({id, y, x}) => ({
+  type: 'PARTNER:MOVE_TO',
+  payload: {id, y, x}
 })
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'

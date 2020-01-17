@@ -7,7 +7,7 @@ const defaultState = {
       id: 'WKnight1', 
       Y: 17, X: 9,
       pY: 17, pX: 9,
-      xp: 2,
+      xp: 20,
       maxXp: 12,
       silensed: false,
       stunned: 0,
@@ -328,7 +328,7 @@ const defaultState = {
               let meArr = sources.me.slice()
               let newOldPartner = []
               let newOldMe = []
-              let newOldRocks = null
+              let newOldRocks = []
               let spellMap = ['partner']
               workArr.forEach(({Y, X}, i) => {
                 if(Y === y && X === x) {
@@ -365,9 +365,9 @@ const defaultState = {
                 workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
               } else if(meStunIndex === null) {
                 newY = rockArr[rockStunIndex].Y
-                newOldRocks = rockArr[rockStunIndex]
-                console.log('ROCK_STUN_INDEX:', rockStunIndex)
-                console.log('NEW_OLD_ROCKS:', newOldRocks)
+                newOldRocks.push(rockArr[rockStunIndex])
+                //console.log('ROCK_STUN_INDEX:', rockStunIndex)
+                //console.log('NEW_OLD_ROCKS:', newOldRocks)
                 rockArr.splice(rockStunIndex, 1)
                 spellMap.push('oldRocks')
                 spellMap.push('rocks')
@@ -399,7 +399,7 @@ const defaultState = {
                 }
                 
               }
-              console.log("RES_CONTENT:", newOldRocks)
+              //console.log("RES_CONTENT:", newOldRocks)
               return {
                 me: meArr,
                 partner: workArr,
@@ -549,6 +549,7 @@ const defaultState = {
   spellMap: [],
   fire: [],
   venom: [],
+  moveFromShadow: null,
 }
 
 export default (state = defaultState, action) => {
@@ -583,11 +584,19 @@ export default (state = defaultState, action) => {
         oldCanSpell: state.canSpell.length !== 0 ? state.canSpell : [],
         updateSign: 'D'+Math.random()
       }
+    case 'PARTNER:ANIME_MOVE':
+      //check from what 
+      return preparePartnerAnimeMove(payload, state.newInLight, state)
+      break
+    case 'PARTNER:MOVE_TO':
+      console.log('INTRESTING_PAYLOAD:', payload)
+      return partnerMoveTo(payload, state)
+      break
     case 'KNIGHT:MOVE_TO':
       console.log('PRE_GET_NEW_STAFF:', state.inAir)
       const newMe = getNewStaff(state.me, state.inAir, payload)
       //newPartner
-      return {
+      return updateNextStep({
         ...state, 
         me: newMe,
         inAir: null,
@@ -596,8 +605,8 @@ export default (state = defaultState, action) => {
         newInLight: getLightPosition(newMe, state.partner, state.rocks),
         oldInLight: state.newInLight, // точечная перерисовка, если траблы с опти
         animeMove: null,  // for what, i don't know
-        updateSign: 'M'+Math.random(), 
-      }
+        updateSign: 'M'+Math.random(),
+      })
     case 'KNIGHT:ANIME_MOVE':
       return {
         ...state,
@@ -625,7 +634,7 @@ export default (state = defaultState, action) => {
         updateSign: 'T'+Math.random()
       }
     case 'KNIGHT:PREPARE_TO':
-      const {pass, dls} = payload
+      let {pass, dls} = payload
       console.log(`BIIIIIIIIIIIIIIIG PREPARE DLS: ${dls} PASS:`, pass)
       console.log(state.canSpell.length === 0 && pass === 'SPELL')
       return {
@@ -640,21 +649,21 @@ export default (state = defaultState, action) => {
         updateSign: 'U'+Math.random()
       }
     case 'KNIGHT:ATTACK_TO': //будет вызываться нескольколько раЗ, если необходимо, АУЕ
-      const {y, x, cause} = payload //refactory this
+      let {y, x, cause} = payload //refactory this
       let partnerRes =  findAndKill(state.partner, y, x, cause, 'partner', state.inAir)
       let rocksRes =  findAndKill(state.rocks, y, x, cause, 'rocks', state.inAir)
-      return {
+      return updateNextStep({  
         ...state,
         partner: partnerRes.res,
         rocks: rocksRes.res,
-        oldPartner: [partnerRes.target],
+        oldPartner: partnerRes.target,
         oldRocks: rocksRes.target,
         canAttack: [],
         oldCanAttack: state.canAttack,
         newInLight: partnerRes.target || rocksRes.target ? getLightPosition(state.me, partnerRes.res, rocksRes.res) : state.newInLight,
         //oldInLight: partnerRes.target || rocksRes.targetgetLigh ? state.newInLight : [],
         updateSign: 'A'+Math.random()
-      }
+      })
     case 'KNIGHT:KAMICK_ATTACK':
       const {me, partner, deadM, deadP} = payload
       console.log('DEEEEEEBBAG_PAYLOAD:',payload)
@@ -720,15 +729,57 @@ const updateNextStep = (data, state) => {
     oldVenom: newVenom.dead,
   }
 }
+// вызывается если есть совпадения 
+const preparePartnerAnimeMove = ({id, y, x, fY, fX}, newInLight, state) => {
+  let res = {}
+  if(!newInLight.some(({newY, newX}) => newY === fY && newX === fX)) { // выход из тени
+    res = {
+      ...state,
+      moveFromShadow: {y, x, fY, fX}, //пропсы с нижних уровней
+      updateSign: 'Q'
+    }
+  } else if (!newInLight.some(({newY, newX}) => newY === y && newX === x)) { // уход в тень
+    res = {
+      ...state,
+      animeMove: {id, y, x, shadow: true},
+      //updateSign: 'Q'
+    }
+  } else {
+    res = {
+      ...state,
+      animeMove: {id, y, x, shadow: false},
+      //updateSign: 'Q'
+    }
+  }
+  return res
+}
+
+const partnerMoveTo = ({id, y, x}, state) => {
+  console.log('NEW_PARNTNER:', {id, y, x})
+  const newPartner = getNewStaff(state.partner, {id}, {y, x})
+  return {
+    ...state,
+    partner: newPartner, 
+    newInLight: getLightPosition(state.me, newPartner, state.rocks),
+    oldInLight: state.newInLight,
+    animeMove: null,
+    moveFromShadow: null,
+    updateSign: 'W'
+  }
+}
 
 const updateGameStats = (workArr, venomArr) => {
   let res = workArr.slice()
   let dead = []
-  venomArr.forEach(({newY, newX, postDmg}) => {
+  //console.log('UPDATE_GAME_STATE:',workArr)
+  
     res.forEach(({Y, X, stunned}, i) => {
+      //console.log('STUNNED:',stunned)
       if(stunned) {
         res[i].stunned = stunned-=1
       }
+      
+      venomArr.forEach(({newY, newX, postDmg}) => {
       if(newY === Y && newX === X) {
         let newXp = res[i].xp - postDmg
         if(newXp < 0) {
@@ -744,6 +795,7 @@ const updateGameStats = (workArr, venomArr) => {
 }
 
 const updateSpells = workArr => {
+ // console.log('UPDATE_SPELLS:',workArr)
   let res = workArr.map(({time, newX, newY, postDmg}) => ({newX, newY, postDmg, time: time-=1}))
   let dead = res.filter(({time}) => time <= 0)
   res = res.filter(({time}) => time >= 1)
@@ -766,7 +818,7 @@ const getNewStaffAfterKamick = (defArr, {id:ID, xp, Y, X, pY, pX}) => {
 const findAndKill = (aim, y, x, cause, label, {attack}) => {
   let aimIndex = 0;
   let res = aim.slice()
-  let target = null;
+  let target = [];
   if( cause === label ) {
     aim.forEach(({Y, X}, i) => { // dependence from type of dammage
       if(Y === y && X === x) {
@@ -778,7 +830,7 @@ const findAndKill = (aim, y, x, cause, label, {attack}) => {
     let result = aim[aimIndex].xp - attack.dammage
     if(result <=0) {
       res.splice(aimIndex, 1)
-      target = aim[aimIndex]
+      target.push(aim[aimIndex])
     } else {
       res[aimIndex] = {...res[aimIndex], Y: res[aimIndex].Y, X: res[aimIndex].X, xp: result}
     }

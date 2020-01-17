@@ -13,7 +13,7 @@ import {
 
 import './timeScss.scss'
 
-const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime}) => {
+const Square =  function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow}) {
   if(spellAnime) { 
     const {color, src} = spellAnime
     console.log("SPELL_ANIME:", spellAnime)
@@ -61,11 +61,12 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
                 id={id} 
                 simbol={'♞'} 
                 y={y} x={x} 
-                takeIt={isTreasure} 
+                takeIt={isTreasure}
+                moveFromShadow={moveFromShadow}
                 isPartner={isPartner}/> //name of picture to use React.lazy
           }
         } else {
-            flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner}/>
+            flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner} moveFromShadow={moveFromShadow}/>
         }
       }
     })
@@ -79,7 +80,6 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
   }
   if(herePartner && hereMe) {
     //logic
-
     const {Y, X, pY, pX, id, xp, maxXp} = hereMe
     const {Y: Yp, X: Xp, pY: pYp, pX: pXp, id: idp, xp: xpp, maxXp: maxXpp} = herePartner
     
@@ -109,10 +109,12 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
         //console.log('LAAAAAAAAAAAAAAAAAST HAAAAAAAAAAAAAANDLER place:', place)
         
       } else if(partnerXpRes > 0 &&  myXpRes > 0) {
-        let YDir = firstIsP ? getNewDir(Y, pY) : getNewDir(pY, pYp)
-        let XDir = firstIsP ? getNewDir(X, pX) : getNewDir(pX, pXp)
+        //console.log('%c%s', 'color: navy; font: 18px Verdana;', `Y: ${pY}, X: ${pX}`)
+        let YDir = firstIsP ? getNewDir(Y, pY) : getNewDir(Yp, pYp)
+        let XDir = firstIsP ? getNewDir(X, pX) : getNewDir(Xp, pXp)
         let newY = firstIsP ? Y-YDir : Yp-YDir
         let newX = firstIsP ? X-XDir : Xp-XDir
+        console.log('%c%s', 'color: navy; font: 18px Verdana;', `newY: ${newY}, newX: ${newX} YDir: ${YDir} XDir: ${XDir}`)
         anime({
           targets: flyUnitRef.current, //transition on timeline to zero in 60%
           translateY: [0, -(YDir*52)],
@@ -156,7 +158,9 @@ const Square = ({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAtta
   ? {r:255, g:215, b:0} : null
 
   const {r, g, b} = canSpell
+  let ripFlag = false
   const clickHandler = () => {
+    ripFlag = true
     // console.log(opct) rip logic
     let cause = place ? 'partner' : isRock ? 'rocks' : null;
     if( canMove ) { store.dispatch(animeMove({y, x})) }
@@ -190,13 +194,17 @@ const squareRef = useRef(null)
 let mouseHere = false
  const setShadow = (r,g,b) => {
   let progress = 0
-  let mainInterval = setInterval(() => {
+
+  const tick = () => {
     progress++
-    if(mouseHere) {
+    if(mouseHere && !ripFlag) {
       squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.2*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
     }
-  }, 50)
-  setTimeout(() => { clearInterval(mainInterval) }, 500)
+    if(progress < 10 && !ripFlag) {
+      setTimeout(() => tick(), 50)
+    }
+  }
+  tick()
   //squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.2*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
  }
 
@@ -218,6 +226,7 @@ let mouseHere = false
       canSpell && setShadow(r, g, b)
   } else {
     mouseHere = false;
+    ripFlag = false
     squareRef.current.style['boxShadow'] = '';
     squareRef.current.style['zIndex'] = ''
   }
@@ -233,6 +242,7 @@ let mouseHere = false
         onMouseEnter={() => mouseHereHandl(true)}
         onMouseOut={() => mouseHereHandl(false)}> 
         <SquareBase y={y} x={x} 
+          moveFromShadow={moveFromShadow}
           overlay={backColor}
           isLight={isLight}
           isRock={isRock}
