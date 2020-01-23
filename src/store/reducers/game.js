@@ -1,4 +1,4 @@
-import store from './index'
+import store from '../index'
 import { indexFinderModel } from '@/helpers'
 
 const defaultState = {
@@ -362,7 +362,7 @@ const defaultState = {
                 } else {
                   console.log('NOTH1NG')
                 }
-                workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+                workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X}
               } else if(meStunIndex === null) {
                 newY = rockArr[rockStunIndex].Y
                 newOldRocks.push(rockArr[rockStunIndex])
@@ -373,7 +373,7 @@ const defaultState = {
                 spellMap.push('rocks')
                 let resXp = workArr[aimIndex].xp - 5
                 if(resXp > 0) {
-                  workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, xp: resXp, stunned: 3}
+                  workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X, xp: resXp, stunned: 3}
                 } else { // RIP
                   newOldPartner.push(workArr[aimIndex])  
                   workArr.splice(aimIndex, 1)
@@ -383,7 +383,7 @@ const defaultState = {
                 let resPartnerXp = workArr[aimIndex].xp - 3
                 let resMyXp = meArr[meStunIndex].xp - 2
                 if(resPartnerXp > 0) { // survive
-                  workArr[aimIndex] = {...workArr[aimIndex], Y:sources.me[meStunIndex].Y, pY: workArr[aimIndex].Y, xp: resPartnerXp, stunned: 2}
+                  workArr[aimIndex] = {...workArr[aimIndex], Y:sources.me[meStunIndex].Y, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X, xp: resPartnerXp, stunned: 2}
                 } else { //RIP OF ME
                   newOldPartner.push(workArr[aimIndex])
                   workArr.splice(aimIndex, 1)
@@ -399,7 +399,7 @@ const defaultState = {
                 }
                 
               }
-              //console.log("RES_CONTENT:", newOldRocks)
+              console.log("RES_CONTENT:", workArr)
               return {
                 me: meArr,
                 partner: workArr,

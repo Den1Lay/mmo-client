@@ -4,11 +4,6 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  &__rightTab {
-    position: absolute;
-    bottom: 50;
-    right: 50;
-  }
 }
 
 .line {
@@ -30,4 +25,39 @@
   z-index: 2;
   top: 8;
   right: 13;
+}
+
+.game {
+  position: relative;
+  //margin-right: -100vw;
+  width: 100vw;
+  height: 100vh;
+  &__rightTab {
+    z-index: 2;
+    position: absolute;
+    bottom: 50;
+    right: 50;
+  }
+  &__upLeftTab {
+    z-index: 2;
+    position: absolute;
+    top: 50;
+    left: 50; 
+  }
+  // &__hidden {
+    
+  // }
+}
+.homePage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(113, 192, 76, 0.705);
+  border-radius: 50px;
+  margin-left: -100vw;
+  // &__hidden {
+  //   
+  // }
 }

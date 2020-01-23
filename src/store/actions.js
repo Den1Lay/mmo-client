@@ -55,6 +55,15 @@ export const partnerMoveTo = ({id, y, x}) => ({
   type: 'PARTNER:MOVE_TO',
   payload: {id, y, x}
 })
+
+export const makeSlide = (pass) => ({
+  type: 'MAKE_SLIDE',
+  payload: pass
+})
+
+export const overMakeSlide = () => ({
+  type: 'OVER_MAKE_SLIDE'
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

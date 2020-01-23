@@ -1,8 +1,8 @@
-import React, {useEffect, useState, cloneElement as setState} from 'react';
+import React, {useEffect, useState, useRef, cloneElement as setState} from 'react';
 import { connect } from 'react-redux'
-import { Button } from 'antd'
+import classNames from 'classnames'
 
-import { lastPreparation, partnerAnimeMove} from '@/store/actions'
+import { lastPreparation, partnerAnimeMove, makeSlip} from '@/store/actions'
 
 import './timeScss.scss'
 
@@ -36,7 +36,7 @@ function Board (
     venom,
     oldVenom,
     moveFromShadow,
-    partnerAnimeMove
+    partnerAnimeMove,
   }) { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
@@ -409,48 +409,47 @@ function Board (
       setMainRes(midMainRes)
     }
   })
-  
+
   return (
-    <div className='board'>
+      <div className={classNames('board')}>
         {mainRes}
-        <div className='board__rightTab'>
-          <Button type='primary' onClick={() => partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9})}>$$$</Button>
-        </div>
-    </div>
+      </div>
   )
 }
-// одна функция для всех обновлений????
+// одна функция для всех обновлений???? net.
 
 
 export default connect((
-  {
-    me,
-    oldMe,
-    partner,
-    oldPartner,
-    updateSign, 
-    canMove,
-    oldCanMove,
-    canSpell,
-    oldCanSpell,
-    uselessCanMove,
-    newInLight,
-    oldInLight,
-    rocks,
-    oldRocks,
-    treasures,
-    deletedTreasures,
-    canAttack,
-    oldCanAttack,
-    spellMap,
-    inAir,
-    spellInd,
-    fire,
-    oldFire,
-    venom,
-    oldVenom,
-    moveFromShadow,
-  }
+   {
+     game: {
+      me,
+      oldMe,
+      partner,
+      oldPartner,
+      updateSign, 
+      canMove,
+      oldCanMove,
+      canSpell,
+      oldCanSpell,
+      uselessCanMove,
+      newInLight,
+      oldInLight,
+      rocks,
+      oldRocks,
+      treasures,
+      deletedTreasures,
+      canAttack,
+      oldCanAttack,
+      spellMap,
+      inAir,
+      spellInd,
+      fire,
+      oldFire,
+      venom,
+      oldVenom,
+      moveFromShadow,
+    }
+   }
   ) => (
     {
       me,
@@ -478,11 +477,11 @@ export default connect((
       oldFire,
       venom,
       oldVenom,
-      moveFromShadow
+      moveFromShadow,
     }
     ), 
   {
     lastPreparation,
-    partnerAnimeMove
+
   }
   )(Board)

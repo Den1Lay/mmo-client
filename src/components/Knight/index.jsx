@@ -85,7 +85,7 @@ const Knight = (
         translateY: [0, (y-Y)*52],
         translateX: [0, (x-X)*52],
         duration: 1200,
-        easing: 'easeInOutExpo',
+        easing: 'spring(1, 90, 12, 0)',
         complete: anim => {  // may take 90% event
           if(anim.completed) {
             console.log('ISTIME')
@@ -155,4 +155,5 @@ const Knight = (
   )
 }
 
-export default connect(({inAir, animeMove, canAttack, canSpell}) => ({inAir, animeMove, canAttack, canSpell}), {addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo})(Knight)
+export default connect(({game: {inAir, animeMove, canAttack, canSpell}}) => ({inAir, animeMove, canAttack, canSpell}), 
+{addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo})(Knight)
