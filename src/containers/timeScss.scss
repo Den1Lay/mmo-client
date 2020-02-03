@@ -32,6 +32,7 @@
   //margin-right: -100vw;
   width: 100vw;
   height: 100vh;
+  margin-right: -100%; //
   &__rightTab {
     z-index: 2;
     position: absolute;
@@ -46,18 +47,5 @@
   }
   // &__hidden {
     
-  // }
-}
-.homePage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(113, 192, 76, 0.705);
-  border-radius: 50px;
-  margin-left: -100vw;
-  // &__hidden {
-  //   
   // }
 }

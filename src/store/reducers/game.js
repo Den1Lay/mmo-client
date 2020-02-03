@@ -1,12 +1,12 @@
 import store from '../index'
-import { indexFinderModel } from '@/helpers'
+
 
 const defaultState = {
   me: [
     {
       id: 'WKnight1', 
-      Y: 17, X: 9,
-      pY: 17, pX: 9,
+      Y: 17, X: 9, // after PP
+      pY: 17, pX: 9, // after PP
       xp: 20,
       maxXp: 12,
       silensed: false,
@@ -555,6 +555,20 @@ const defaultState = {
 export default (state = defaultState, action) => {
   const { type, payload } = action
   switch (type) {
+    case 'SET_HEROES': {
+      //payload -> [{}, {}, {}, ...]
+      return {
+        ...state,
+        heroes: payload // cash if noCash refresh
+      }
+    }
+    case 'SET_USER_DATA': {
+      //payload === user -> avatar, cards, progress, username ...
+      return {
+        ...state,
+        user: payload
+      }
+    }
     case 'MOVE': {
       return {
         ...state,

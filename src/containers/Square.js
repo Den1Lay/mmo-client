@@ -4,7 +4,7 @@ import store from '@/store'
 import anime from "animejs";
 import classNames from 'classnames'
 
-import { moveTo, animeMove, attackTo, kamickAttack, spellTo, nextClick } from '@/store/actions'
+import { moveTo, animeMove, attackTo, kamickAttack, spellTo, nextClick } from '@/actions/game'
 
 import { 
   Square as SquareBase,

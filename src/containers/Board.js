@@ -2,8 +2,7 @@ import React, {useEffect, useState, useRef, cloneElement as setState} from 'reac
 import { connect } from 'react-redux'
 import classNames from 'classnames'
 
-import { lastPreparation, partnerAnimeMove, makeSlip} from '@/store/actions'
-
+import { lastPreparation, partnerAnimeMove } from '@/actions/game'
 import './timeScss.scss'
 
 import  Square from './Square'

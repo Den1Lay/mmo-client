@@ -1,11 +1,13 @@
 const defState = {
-  show: null
+  show: null,
+  nowIsReg: false,
 }
 
 export default (state = defState, action) => {
   const {type, payload} = action
   switch(type) {
     case 'MAKE_SLIDE':
+      console.log('TODO')
       return {
         ...state,
         show: payload 
@@ -14,6 +16,11 @@ export default (state = defState, action) => {
       return {
         ...state,
         show: null
+      }
+    case 'REGISTER_CONTROL':
+      return {
+        ...state,
+        nowIsReg: !state.nowIsReg
       }
     default: 
     return {

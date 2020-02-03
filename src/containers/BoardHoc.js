@@ -6,7 +6,9 @@ import classNames from 'classnames'
 import Board from './Board'
 import { Button } from 'antd'
 
-import {partnerAnimeMove, makeSlide, overMakeSlide} from '@/store/actions'
+import { makeSlide, overMakeSlide } from '@/actions/base'
+import { partnerAnimeMove } from '@/actions/game'
+import { SpellBtn } from '@/components'
 
 const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide}) => {
   const [boardHid, setBoardHid] = useState(true)
@@ -18,7 +20,7 @@ const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide}) => {
     const pass = show === 'home'
     anime({
       targets: mainRef.current,
-      translateX: pass ? window.innerWidth : 0,
+      translateX: pass ? 0 : -window.innerWidth,
       //direction: 'alternate',
       duration: 3000,
       easing: 'spring(1, 80, 10, 0)',

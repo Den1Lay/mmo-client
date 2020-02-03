@@ -1,2 +1,7 @@
 export {default as Square} from './Square'
 export {default as Knight} from './Knight'
+export {default as SpellBtn} from './SpellBtn'
+export {default as Chat} from './Chat'
+export {default as Dialogs} from './Dialogs'
+export {default as Heroes} from './Heroes'
+export {default as Progress} from './Progress'

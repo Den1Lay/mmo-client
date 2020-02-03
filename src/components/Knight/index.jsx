@@ -4,8 +4,7 @@ import { connect } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo} from '@/store/actions'
-
+import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo } from '@/actions/game'
 import './Knight.scss'
 
 const Knight = (

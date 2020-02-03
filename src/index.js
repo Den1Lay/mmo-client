@@ -10,7 +10,7 @@ import HTML5Backend from 'react-dnd-html5-backend'
 
 import store from '@/store'
 
-import { Home } from '@/pages';
+import { Base } from '@/pages';
 
 import 'antd/dist/antd.css';
 import '@/styles/index.scss';
@@ -19,7 +19,7 @@ ReactDOM.render(
 <Provider store={store}>
   <DndProvider backend={HTML5Backend}>
     <Router>
-      <Route exact path='/' component={Home}/>
+      <Route exact path='/' component={Base}/>
     </Router>
   </DndProvider>
 </Provider>, 

@@ -1,0 +1,23 @@
+.signIn {
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(199, 199, 199, 0.438);
+  z-index: 3;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  &__workArea {
+    padding: 20px;
+    background-color: rgb(219, 255, 219);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    input {
+      margin: 10px;
+    }
+  }
+}

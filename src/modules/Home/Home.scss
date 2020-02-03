@@ -1,0 +1,97 @@
+.home {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  position: relative;
+  //background: rgb(86, 129, 221);
+  //border-radius: 50px;
+  //margin-left: -100%; return
+  font: condensed oblique 25px "Helvetica Neue", serif;
+  &__header {
+    width: 70%;
+    height: 6%;
+    border-radius: 0  0  20px 20px;
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    color: whitesmoke;
+    margin-bottom: 1%;
+    &_logo {
+      background-color: rgb(34, 174, 255);
+      padding: 5px;
+      border-radius: 5px;
+      box-shadow: 0 0 24px 8px blueviolet;
+    }
+    &_reg {
+
+    }
+  }
+  &__firstTab {
+    width: 70%;
+    height: 33%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    &__gameState {
+      flex: 4;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    // &__friendList {
+    //   flex: 1 2;
+    //   background-color: rgb(58, 196, 81);
+    //   color: whitesmoke;
+    //   border-radius: 10px;
+    //   display: flex;
+    //   flex-direction: column;
+    //   align-items: center;
+    //   input {
+    //     border: none;
+    //     width: 88%;
+    //     margin: 20px;
+    //     border-radius: 10px;
+    //   }
+    // }
+
+    // &__verticalTab {
+    //   flex: 3;
+
+    //   margin-left: 1%;
+    //   border-radius: 10px;
+    //   display: flex;
+    //   flex-direction: column;
+    //   &__upLine {
+    //     width: 90%;
+    //       display: flex;
+    //       justify-content: space-around;
+    //       align-items: center;
+    //       flex: 1;
+    //       margin-bottom: 1.5%;
+    //       background-color: rgb(58, 196, 81);
+    //     &__profileBtn {
+    //       font-family: Verdana, Geneva, Tahoma, sans-serif;;
+    //     }
+    //     &__progressBar {
+    //       &__level {
+    //         font: 18px bold;
+    //         color: whitesmoke;
+    //       }
+    //       &__progress {
+    //         width: 80%;
+    //       }
+    //     }
+    //   }
+      
+    //   &__myHeroList {
+    //     flex: 8;
+    //     background-color: rgb(58, 196, 81);
+    //     color: #e0a72c;
+    //   }
+    // }
+  }
+}
