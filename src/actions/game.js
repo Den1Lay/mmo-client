@@ -56,6 +56,10 @@ export const partnerMoveTo = ({id, y, x}) => ({
   payload: {id, y, x}
 })
 
+export const transformFunc = () => ({
+  type: 'TRANSFORM_FUNC'
+})
+
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

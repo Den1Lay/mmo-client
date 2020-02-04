@@ -7,15 +7,17 @@ import Board from './Board'
 import { Button } from 'antd'
 
 import { makeSlide, overMakeSlide } from '@/actions/base'
-import { partnerAnimeMove } from '@/actions/game'
+import { partnerAnimeMove, transformFunc } from '@/actions/game'
+import { dropData } from '@/actions/network'
 import { SpellBtn } from '@/components'
 
-const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide}) => {
+const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide, transformFunc, transformStaff, me, dropData}) => {
   const [boardHid, setBoardHid] = useState(true)
   const mainRef = useRef(null)
   const moveHandler = () => {
     makeSlide('home')
   }
+  console.log('DEBAG_ME:', me)
   if(show) {
     const pass = show === 'home'
     anime({
@@ -29,10 +31,14 @@ const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide}) => {
           overMakeSlide()
           setBoardHid(pass)
         }
-        
+
       }
     })
   }
+  const pass = me[0].visibility
+  const func = me[0].spells[0].func
+  console.log('VISIBILITY:', pass)
+  console.log('FUNK:', func)
   return (
     <div className={classNames('game')} ref={mainRef}>
       <div className='game__rightTab'>
@@ -41,9 +47,14 @@ const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide}) => {
       <Board />
       <div className='game__upLeftTab'>
         <Button type='danger' disabled={show === 'home'} onClick={() => moveHandler()}>CHANGE</Button>
+        <Button type='primary' onClick={() => dropData(
+          {
+            func: func.toString(), 
+            visibility: pass
+          })}>INS</Button>
       </div>
     </div>
   )
 }
 
-export default connect(({admin: {show}}) => ({show}),{ partnerAnimeMove, makeSlide, overMakeSlide })(BoardHoc)
+export default connect(({admin: {show}, game: {transformStaff, me}}) => ({show, transformStaff, me}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData})(BoardHoc)

@@ -1,6 +1,6 @@
 import store from '../index'
 
-
+//develop edition
 const defaultState = {
   me: [
     {
@@ -136,7 +136,8 @@ const defaultState = {
             {xDir:-1, yDir: 2, pathLenght:1},
             {xDir:1, yDir: 2, pathLenght:1},
           ],
-          func: ({payload: {y, x}, sources, target, who}) => {
+          //func: new Function('return '+"({payload: {y, x}, sources, target, who}) => {if(who === 'me') { let newPartner = sources['partner'].slice();let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];let newOldPartner = [];let spellMap = ['fire'];let direction = [{xDir:1, yDir:1, pathLenght:1},{xDir:1, yDir:-1, pathLenght:1},{xDir:1, yDir: 0, pathLenght:1},{xDir:-1, yDir:-1, pathLenght:1},{xDir:-1, yDir:1, pathLenght:1},{xDir:-1, yDir: 0, pathLenght:1},{xDir:0, yDir: 1, pathLenght:1},{xDir:0, yDir: -1, pathLenght:1}];direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, ['partner'], ['me', 'rocks'], [], y, x, []));console.log('LAST_COMPAR:',newPartner, newFire);newFire.forEach(({newY, newX}, fi) => {newPartner.forEach(({Y, X}, i) => {if(newY === Y && newX === X) {let newXp = newPartner[i].xp - 6;if(newXp > 0) {console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)newPartner[i].xp = newXpspellMap.push('partner')} else {newOldPartner.push(newPartner[i]);newPartner.splice(i, 1);spellMap.push('oldPartner')}}})newFire[fi].time = 2;newFire[fi].postDmg = 0;});console.log('PREV_RES_PARTNER:',newPartner);return {me: sources.me,partner: newPartner,rocks: sources.rocks,oldMe: [],oldPartner: newOldPartner,oldRocks: null,fire: newFire,venom: [],spellMap}} else {}}")()
+          func: ({payload: {y, x}, sources, target, who, pathBuilder}) => {
             if(who === 'me') {
               let newPartner = sources['partner'].slice()
               let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];
@@ -189,7 +190,7 @@ const defaultState = {
             }
           }   // Новые lightPos.. 
         }     // Спелы противника это просто спел в другую сторону
-      ]
+      ],
     },
     {
       id: 'WKnight2', 
@@ -320,7 +321,7 @@ const defaultState = {
             {xDir:-1, yDir: 2, pathLenght:1},
             {xDir:1, yDir: 2, pathLenght:1},
           ],
-          func: ({payload: {y, x}, sources, target, who}) => {
+          func: ({payload: {y, x}, sources, target, who, pathBuilder}) => {
             if(who === 'me') {
               let aimIndex = null
               let workArr = sources[target].slice()
@@ -555,6 +556,18 @@ const defaultState = {
 export default (state = defaultState, action) => {
   const { type, payload } = action
   switch (type) {
+    case 'GET_FUNC_FROM_SERVER': {
+      return {
+        ...state,
+        me: addNewFunc(payload, state.me)
+      }
+    }
+    case 'TRANSFORM_FUNC': {
+      return {
+        ...state,
+        transformStaff: state.me[0].spells[0].func.toString()
+      }
+    }
     case 'SET_HEROES': {
       //payload -> [{}, {}, {}, ...]
       return {
@@ -702,8 +715,10 @@ export default (state = defaultState, action) => {
           payload, 
           sources: {me: state.me, partner: state.partner, rocks: state.rocks}, 
           target: spellObj.target, 
-          who: 'me'
+          who: 'me',
+          pathBuilder
         }) //target enemy, me, rock
+        console.log('%c%s','color: red, font-size: 24px','SPEEL_TO')
       return updateNextStep({
         ...state,
         partner: spellRes.partner,
@@ -712,7 +727,7 @@ export default (state = defaultState, action) => {
         oldMe: spellRes.oldMe,
         oldPartner: spellRes.oldPartner,
         oldRocks: spellRes.oldRocks,
-        canSpell: [], 
+        canSpell: [],
         oldCanSpell: state.canSpell,
         fire: state.fire.concat(spellRes.fire),
         venom: state.venom.concat(spellRes.venom),
@@ -726,6 +741,12 @@ export default (state = defaultState, action) => {
     }
   }
 }
+const addNewFunc = (newFunc, me) => {
+  let workArr = me;
+  workArr[0].spells[0].func = newFunc
+  return workArr
+}
+
 const updateNextStep = (data, state) => {
     const afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, data.venom ? data.venom : state.venom);
     const afterClickMe = updateGameStats(data.me ? data.me : state.me, data.venom ? data.venom : state.venom);
@@ -737,10 +758,10 @@ const updateNextStep = (data, state) => {
     me: afterClickMe.res,
     oldPartner:data.oldPartner ? data.oldPartner.concat(afterClickPartner.dead) : afterClickPartner.dead,
     oldMe:data.oldMe ? data.oldMe.concat(afterClickMe.dead) : afterClickMe.dead,
-    fire: newFire.res,
     oldFire: newFire.dead,
-    venom: newVenom.res,
+    fire: newFire.res,
     oldVenom: newVenom.dead,
+    venom: newVenom.res,
   }
 }
 // вызывается если есть совпадения 
@@ -903,7 +924,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, i
     checkPaths(block, false, false)
     checkPaths(ignore, true, true)
     isEmptyPlace[0] && passFunc()
-   
+
   }
   //console.log('SIGNALL',ripFlag && counter)
   while(ripFlag && counter) {

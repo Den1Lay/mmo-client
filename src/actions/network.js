@@ -40,3 +40,18 @@ const setHeroes = heroes => ({
   type: 'SET_HEROES',
   payload: heroes
 })
+
+export const dropData = (strFunc) => dispatch => {
+  console.log("GREAT_TRY")
+  HeroesApi.dropData(strFunc).then(({data}) => { // strFunc
+      console.log('PASS_FROM_SERVER:', data )
+      let newMainFunc = new Function('return '+data.func)()
+      console.log('DATA_FUNC:', newMainFunc)
+      console.log('DATA_REQ:', data)
+      dispatch({
+        type: 'GET_FUNC_FROM_SERVER',
+        payload: newMainFunc
+      })
+    })
+    .catch((er) => {console.error('NETWORK_ERROR: ', er)})
+}

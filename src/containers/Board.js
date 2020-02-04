@@ -343,7 +343,7 @@ function Board (
           const checkArr = ['partner', 'oldPartner', 'me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom']
           checkArr.forEach(el => {
             if(!spellMap.some(pass => pass === el)) {
-              newSpellMap.push(el)
+              newSpellMap.unshift(el)
             }
           })
           console.log('NEW_SPELL_MAP:', newSpellMap)
