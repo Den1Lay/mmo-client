@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import { connect } from 'react-redux'
 import anime from 'animejs'
 import classNames from 'classnames'
@@ -10,14 +10,37 @@ import { makeSlide, overMakeSlide } from '@/actions/base'
 import { partnerAnimeMove, transformFunc } from '@/actions/game'
 import { dropData } from '@/actions/network'
 import { SpellBtn } from '@/components'
+import { socket } from '@/core'
 
-const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide, transformFunc, transformStaff, me, dropData}) => {
+import arrow from '../img/umbrells.png'
+import arrow1 from '../img/arrow.png'
+
+const BoardHoc = (
+  {
+    partnerAnimeMove, 
+    show, makeSlide, 
+    overMakeSlide, 
+    transformFunc, 
+    transformStaff, 
+    me, dropData,
+    act, actTick,
+    stateHistory
+  }) => {
   const [boardHid, setBoardHid] = useState(true)
   const mainRef = useRef(null)
   const moveHandler = () => {
     makeSlide('home')
   }
-  console.log('DEBAG_ME:', me)
+  //console.log('DEBAG_ME:', me)
+  console.log('%c%s', 'color: gold; font-size: 33px', `ACT: ${act}, ACT_TICK: ${actTick}`, stateHistory)
+  useEffect(() => {
+    console.log('ARROW:', arrow)
+    console.log('ARROW1:', arrow1)
+    // let reader = new FileReader()
+    // let res = reader.readAsDataURL(arrow)
+    // console.log('GREAT_RES: ', res)
+  })
+
   if(show) {
     const pass = show === 'home'
     anime({
@@ -35,14 +58,18 @@ const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide, transformFu
       }
     })
   }
-  const pass = me[0].visibility
+  const visibility = me[0].visibility
   const func = me[0].spells[0].func
-  console.log('VISIBILITY:', pass)
-  console.log('FUNK:', func)
+  //console.log('VISIBILITY:', pass)
+  //console.log('FUNK:', func)
   return (
     <div className={classNames('game')} ref={mainRef}>
-      <div className='game__rightTab'>
-        <Button type='primary' onClick={() => partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9})}>$$$</Button>
+      <div className='game__rightTab'> 
+        <Button type='primary' onClick={() => {
+          console.log('CLIIIIICK')
+          partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9})
+          //socket.emit('GET_URL')
+        }}>$$$</Button>
       </div>
       <Board />
       <div className='game__upLeftTab'>
@@ -50,11 +77,11 @@ const BoardHoc = ({partnerAnimeMove, show, makeSlide, overMakeSlide, transformFu
         <Button type='primary' onClick={() => dropData(
           {
             func: func.toString(), 
-            visibility: pass
+            visibility
           })}>INS</Button>
       </div>
     </div>
   )
 }
 
-export default connect(({admin: {show}, game: {transformStaff, me}}) => ({show, transformStaff, me}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData})(BoardHoc)
+export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData})(BoardHoc)

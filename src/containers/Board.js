@@ -98,7 +98,7 @@ function Board (
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
       const indexFinder = (workIndex, newY, newX) => {
-       // console.log(`NEWY: ${newY}, NEWX: ${newX}`)
+        console.log(`NEWY: ${newY}, NEWX: ${newX}`)
         resSchema[newY].forEach(({x}, i) => {
           if(newX === x) {
             workIndex[0] = i
@@ -244,12 +244,12 @@ function Board (
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {canSpell: pass})
         })
       }
-      const spellAnimeSetter = (workArr, payload) => {
+      const spellAnimeSetter = (workArr, flag) => {
         let checkIndex = []
-        console.log(`INSIDE_SPELL_ANIME_PAYLOAD:${payload}`, workArr)
-        workArr.forEach(({newY, newX}) => {
+        //console.log(`INSIDE_SPELL_ANIME_PAYLOAD:${payload}`, workArr)
+        workArr.forEach(({newY, newX, color, src}) => {
           indexFinder(checkIndex, newY, newX)
-          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: payload})
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: flag ? {color, src} : null})
         })
       }
 
@@ -267,7 +267,8 @@ function Board (
           mover()
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
-
+          oldVenom.length > 0 && spellAnimeSetter(oldVenom, false)
+          venom.length > 0 && spellAnimeSetter(venom, true)
           oldMe.length > 0 && updateDefState(me, true) // может нет никого уже..
           oldPartner.length > 0 && updateDefState(partner, false)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
@@ -368,11 +369,11 @@ function Board (
                 oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)  
                 break
               case 'fire':
-                spellAnimeSetter(fire, {color: {r: 150, g: 0, b: 24}, src: ''})
+                spellAnimeSetter(fire, true)
                 break
               case 'oldFire':
                 console.log('ALIVE_OLD_FIRE')
-                oldFire.length > 0 && spellAnimeSetter(oldFire, null)
+                oldFire.length > 0 && spellAnimeSetter(oldFire, false)
                 break
               case 'venom':
                 //spellAnimeSetter(venom, {color: {r: 150, g: 0, b: 24}, src: ''})
@@ -386,10 +387,12 @@ function Board (
           })
           break;
         case 'Q':
+          console.log('MOVE_FROM_SHADOW_PASS:', moveFromShadow)
           moveFromShadowSetter(moveFromShadow, moveFromShadow)
           break
         case 'W':
           //console.log('W_DEBAG:PARTNER:',partner)
+          oldInLight.length > 0 && lightSetter(oldInLight, false)
           moveFromShadow && moveFromShadowSetter(moveFromShadow, null)
           cleanProps(partner, false)
           updateDefState(partner, false)

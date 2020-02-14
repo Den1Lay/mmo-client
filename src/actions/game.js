@@ -31,9 +31,13 @@ export const prepareTo = (pass, dls) => ({
   payload: {pass, dls}
 })
 
-export const attackTo = ({y, x, cause}) => ({
+export const startAttack = ({y, x, aim}) => ({
+  type: 'KNIGHT:START_ATTACK',
+  payload: {y, x, aim}
+})
+
+export const attackTo = () => ({
   type: 'KNIGHT:ATTACK_TO',
-  payload: {y, x, cause}
 })
 
 export const kamickAttack = ({me, partner, deadM, deadP}) => ({
@@ -41,9 +45,17 @@ export const kamickAttack = ({me, partner, deadM, deadP}) => ({
   payload: {me, partner, deadM, deadP}
 })
 
-export const spellTo = ({y, x}) => ({
-  type: 'KNIGHT:SPELL_TO',
+export const startSpell = ({y, x}) => ({
+  type: 'KNIGHT:START_SPELL',
   payload: {y, x}
+})
+
+export const spellTo = () => ({
+  type: 'KNIGHT:SPELL_TO',
+})
+
+export const endSpell = () => ({
+  type: 'KNIGHT:END_SPELL'
 })
 
 export const partnerAnimeMove = ({id, y, x, fY, fX}) => ({

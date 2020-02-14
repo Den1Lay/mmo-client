@@ -8,7 +8,7 @@ import './Progress.scss'
 
 const Progress = ({show, makeSlide}) => {
   const moveHandler = () => {
-    console.log("CLICK_HANDL", makeSlide)
+    //console.log("CLICK_HANDL", makeSlide)
     makeSlide('game')
   }
 

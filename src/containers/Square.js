@@ -1,10 +1,10 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import { useDrop } from 'react-dnd'
 import store from '@/store'
 import anime from "animejs";
 import classNames from 'classnames'
 
-import { moveTo, animeMove, attackTo, kamickAttack, spellTo, nextClick } from '@/actions/game'
+import { moveTo, animeMove, kamickAttack, spellTo, nextClick, startSpell, startAttack} from '@/actions/game'
 
 import { 
   Square as SquareBase,
@@ -13,11 +13,12 @@ import {
 
 import './timeScss.scss'
 
-const Square =  function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow}) {
+const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow}) {
   if(spellAnime) { 
     const {color, src} = spellAnime
     console.log("SPELL_ANIME:", spellAnime)
   }
+  // show and hide use true, false or do nothig if null
   //console.log(`PARTNERARR y: ${y}, x: ${x}:`, partner)
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
   y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
@@ -162,22 +163,25 @@ const Square =  function({y, x, me, partner, canMove, isLight, isRock, isTreasur
   const clickHandler = () => {
     ripFlag = true
     // console.log(opct) rip logic
-    let cause = place ? 'partner' : isRock ? 'rocks' : null;
+    let aim = place ? 'partner' : isRock ? 'rocks' : null;
     if( canMove ) { store.dispatch(animeMove({y, x})) }
-    if( isAttacked ) { store.dispatch(attackTo({y, x, cause})) }
+    if( isAttacked ) { 
+      console.log('TRY_TO_ATTACK')
+      store.dispatch(startAttack({y, x, aim}));
+     }
     if( canSpell ) {
-      let effect = new Promise((resolve, reject) => {
-        let progress = 100
-        let spellInt = setInterval(() => {
-          progress = progress-3
-          squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.5*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
-        }, 45)
-        setTimeout(() => {clearInterval(spellInt); squareRef.current.style['boxShadow'] = ''; resolve()}, 1500)
-      })
+      // let effect = new Promise((resolve, reject) => {
+      //   let progress = 100
+      //   let spellInt = setInterval(() => {
+      //     progress = progress-3
+      //     squareRef.current.style['boxShadow'] = `0px 0px ${5.5*progress}px ${1.5*progress}px rgba(${r}, ${g}, ${b}, ${progress/10})`;
+      //   }, 45)
+      //   setTimeout(() => {clearInterval(spellInt); squareRef.current.style['boxShadow'] = ''; resolve()}, 1500)
+      // })
       
-      effect.then(() => {
-        store.dispatch(spellTo({y, x}))
-      })
+      // effect.then(() => {
+        store.dispatch(startSpell({y, x}))
+      // })
      }
     // socket.emit(~~{y, x}, inAir.id, spellInd)
   }
@@ -228,13 +232,23 @@ let mouseHere = false
     mouseHere = false;
     ripFlag = false
     squareRef.current.style['boxShadow'] = '';
-    squareRef.current.style['zIndex'] = ''
+    squareRef.current.style['zIndex'] = '';
   }
  }
+  const [gameParticles, setGameParticles] = useState([])
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     console.log('USE_EFFECT_MOVE')
+  //     if(gameParticles.length === 0) {
+  //       // setGameParticles([<div style={{width: '20px', height: '20px', backgroundColor: 'orange'}}></div>])
+  //     }
+  //   }, 3000)
+  // })
   //squareRef.current.style.boxShadow = ''
   //shadow.payload !== null && setShadow({payload: null, color: null})
   return (
     <div ref={drop} >
+      
       <div 
         ref={squareRef}
         className={classNames('squareBase', mouseHere && 'squareBase__toUp')}
@@ -248,12 +262,13 @@ let mouseHere = false
           isRock={isRock}
           isTreasure={isTreasure}
           underSpell={spellAnime}
-          //isAttacked={isAttacked} 
+          //isAttacked={isAttacked}
           herePartner={herePartner}
           mouseEvent={(pass) => mouseHereHandl(pass)}
           >
           {place}
         </SquareBase>
+        {gameParticles}
         <div ref={flyUnitRef} className="flyUnit">
           {flyUnit}
         </div>
