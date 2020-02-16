@@ -1,10 +1,10 @@
 import React, {useState, useRef, useEffect} from 'react'
 import { useDrag } from 'react-dnd'
-import { connect } from 'react-redux'
+import { connect, batch } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell} from '@/actions/game'
+import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell} from '@/actions/game'
 import './Knight.scss'
 
 const Knight = (
@@ -16,7 +16,8 @@ const Knight = (
     y: Y, x: X,
     addToAir,
     deleteFromAir, 
-    moveTo, 
+    moveTo,
+    animeMoveHandler,
     animeMove, 
     takeTreasure, 
     takeIt, 
@@ -34,7 +35,7 @@ const Knight = (
   }) => {
   //console.log('I_D_:',id)
   console.log('%c%s', 'color: blue; font: 1.3rem/2;', 'REEEE_RENDER__ANIME_ATTACK:', animeAttack)
-  takeIt && takeTreasure({y:Y, x:X})
+ 
 
   if(moveFromShadow) {
     console.log(`MOVE_FROM_SHADOW y:${Y} x:${X}`,moveFromShadow)
@@ -58,20 +59,21 @@ const Knight = (
   let refStorage = [firstRef, secondRef, thirdRef, fourthRef, fifthRef]
   let particles = [
     <img ref={firstRef} 
-      style={{opacity: 0, position: 'absolute', bottom: '0px'}}
+      src={'https://sun9-40.userapi.com/c841028/v841028013/36cf8/LWcgCtaFt5A.jpg?ava=1'}
+      style={{display: 'none', position: 'absolute', width: '20px'}}
       onClick={(ev) => {
       ev.stopPropagation()
       firstRef.current.src = ''
       console.log('GREAT_DIR:', firstRef.current.src )
     }}/>,
     <img ref={secondRef} 
-      style={{opacity: 0, position: 'absolute', bottom: '0px'}}/>,
+      style={{display: 'none', position: 'absolute'}}/>,
     <img ref={thirdRef} 
-      style={{opacity: 0, position: 'absolute', bottom: '0px'}}/>,
+      style={{display: 'none', position: 'absolute'}}/>,
     <img ref={fourthRef} 
-      style={{opacity: 0, position: 'absolute', bottom: '0px'}}/>,
+      style={{display: 'none', position: 'absolute'}}/>,
     <img ref={fifthRef} 
-      style={{opacity: 0, position: 'absolute', bottom: '0px'}}/>,
+      style={{display: 'none', position: 'absolute'}}/>,
     // <div ref={secondRef} style={
     //   {
     //     position: 'absolute', 
@@ -98,9 +100,11 @@ const Knight = (
       if(item && dropResult) {
         const {y, x, isTreasure} = dropResult
         if(!(y === Y && x === X )) {
-          moveTo({y, x})
+          debugger
+          animeMoveHandler({y, x, isDrag: true})
+          moveTo()
           if(isTreasure) {
-            takeTreasure({y, x})
+            setTimeout(() => takeTreasure({y, x}),1000)
             moveOnTreasure = true
           }
         }
@@ -113,6 +117,7 @@ const Knight = (
   })
 
   useEffect(() => {
+    //takeIt && takeTreasure({y:Y, x:X})
     console.log('CHECK_REFS:', firstRef)
     if(moveFromShadow) { mainRef.current.style['opacity'] = '0' }
     if(animeMove && animeMove.id === id || moveFromShadow) {
@@ -276,4 +281,4 @@ const Knight = (
 }
 
 export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack}), 
-{addToAir, deleteFromAir, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell})(Knight)
+{addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell})(Knight)

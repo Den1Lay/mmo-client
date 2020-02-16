@@ -67,7 +67,7 @@ const BoardHoc = (
       <div className='game__rightTab'> 
         <Button type='primary' onClick={() => {
           console.log('CLIIIIICK')
-          partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9})
+          partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9, isDrag: false})
           //socket.emit('GET_URL')
         }}>$$$</Button>
       </div>

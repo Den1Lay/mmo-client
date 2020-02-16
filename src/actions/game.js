@@ -7,14 +7,13 @@ export const deleteFromAir = () => ({
   type: 'KNIGHT:DELETE_FROM_AIR'
 })
 
-export const moveTo = ({y, x}) => ({
-  type: 'KNIGHT:MOVE_TO',
-  payload: {y, x}
+export const moveTo = () => ({
+  type: 'KNIGHT:MOVE_TO'
 })
 
-export const animeMove = ({y, x}) => ({
+export const animeMoveHandler = ({y, x, isDrag}) => ({
   type: 'KNIGHT:ANIME_MOVE',
-  payload: {y, x}
+  payload: {y, x, isDrag}
 })
 
 export const lastPreparation = () => ({

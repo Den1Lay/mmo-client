@@ -215,8 +215,10 @@ const defaultState = {
             {xDir:1, yDir: 2, pathLenght:1},
           ],
           //func: new Function('return '+"({payload: {y, x}, sources, target, who}) => {if(who === 'me') { let newPartner = sources['partner'].slice();let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];let newOldPartner = [];let spellMap = ['fire'];let direction = [{xDir:1, yDir:1, pathLenght:1},{xDir:1, yDir:-1, pathLenght:1},{xDir:1, yDir: 0, pathLenght:1},{xDir:-1, yDir:-1, pathLenght:1},{xDir:-1, yDir:1, pathLenght:1},{xDir:-1, yDir: 0, pathLenght:1},{xDir:0, yDir: 1, pathLenght:1},{xDir:0, yDir: -1, pathLenght:1}];direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, ['partner'], ['me', 'rocks'], [], y, x, []));console.log('LAST_COMPAR:',newPartner, newFire);newFire.forEach(({newY, newX}, fi) => {newPartner.forEach(({Y, X}, i) => {if(newY === Y && newX === X) {let newXp = newPartner[i].xp - 6;if(newXp > 0) {console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)newPartner[i].xp = newXpspellMap.push('partner')} else {newOldPartner.push(newPartner[i]);newPartner.splice(i, 1);spellMap.push('oldPartner')}}})newFire[fi].time = 2;newFire[fi].postDmg = 0;});console.log('PREV_RES_PARTNER:',newPartner);return {me: sources.me,partner: newPartner,rocks: sources.rocks,oldMe: [],oldPartner: newOldPartner,oldRocks: null,fire: newFire,venom: [],spellMap}} else {}}")()
-          func: ({payload: {y, x}, sources, target, who, pathBuilder}) => {
+          func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => {
             if(who === 'me') {
+              //console.log('%c%s','color: green; font-size: 40px;','IN_AIR_INSIDE_FUNC:', inAir)
+              let hero = inAir;
               let newPartner = sources['partner'].slice()
               let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];
               let newOldPartner = [];
@@ -269,6 +271,10 @@ const defaultState = {
                 venom: [],
                 lightRed: false,
                 inLightBySpell: [],
+                args: {
+                  tX: (x-inAir.X)*52,
+                  tY: (y-inAir.Y)*52,
+                },
                 spellMap
               }
               console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
@@ -278,36 +284,43 @@ const defaultState = {
             }
           },  // Новые lightPos.. // Спелы противника это просто спел в другую сторону
           // Анимации делают, все тоже, что и reducer, maxSinx
-          animeFunc: ({particles, knight, args, anime, spellTo, endSpell}) => {
+          animeFunc: ({particles, knight, args: {tY, tX}, anime, spellTo, endSpell}) => {
             console.log('PARTICLES:', particles)
-            particles[0].current.style.opacity = 1;
-            particles[0].current.src = 'data:image/png;base64,'+window.localStorage.mainSrc+'';
-            particles[0].current.style.width = '110px';
+            particles[0].current.style.display = 'block';// 
+            particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
+            particles[0].current.style.width = '90px';
             //particles[0].current.style.height = '30px';
             anime({
               targets: particles[0].current, //transition on timeline to zero in 60%
-              translateY: [0, -200], // from args (y-Y)*52
-              translateX: [0, 200], // from args (x-X)*52
-              duration: 1200,
-              easing: 'spring(1, 90, 12, 0)',
+              translateY: [0, tY], // from args (y-Y)*52
+              translateX: [0, tX], // from args (x-X)*52
+              duration: 450,
+              easing: 'easeInCirc',
               complete: anim1 => {  // may take 90% event
                 if(anim1.completed) {  
                   console.log('ISTIME')
                   let resCheck = [];
                   particles[0].current.style.opacity = 0;
                   // применение изменений и конец анимаций через различные события
+                  let directions = [
+                    {ttY: 43, ttX: 43},
+                    {ttY: 43, ttX: -43},
+                    {ttY: -43, ttX: 43},
+                    {ttY: -43, ttX: -43},
+                  ]
                   let promisses = particles.slice(1).map(({current}, i) => {
-                    current.style.opacity = 1;
-                    current.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAApUlEQVRIie3VTQ2AMAyG4Q8UIAEJSEDCJCABJ5OABCQgAQmTMAlwYE2A8FdWdqFv0gthe5aMBOBvZcz3J6n9ciYslsIKK6ywwtHwiOWHsJ+7jtaMnAOVAPzJRpzxYS9WRgA2XJSyEah9i1LDC3SIRQGgAO++fVgjUs2AaymUah+grTRK9Rdo/xUKLHfnDlAHwXs9q8L2Y/PhWZKaFdykQqkujPaoGWfIgHyNsYQlAAAAAElFTkSuQmCC'
+                    let {ttY, ttX} = directions[i]
+                    current.style.display = 'block';
+                    current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
                     current.style.width = '75px';
                     return new Promise((resolve, reject) => {
                       anime({
                         targets: current,
-                        translateY: [-200, -20*i], // 0 --- last position of fireboll    
-                        translateX: [200, 20*i+100],
+                        translateY: [tY, tY-ttY], // 0 --- last position of fireboll    
+                        translateX: [tX, tX-ttX],
                         //rotateX: 
-                        duration: 1200,
-                        easing: 'spring(1, 90, 12, 0)',
+                        duration: 500,
+                        easing: 'easeInOutCirc', //'spring(1, 90, 12, 0)'
                         // update: anim => {
                         //   current.style.opacity = 1-anim.progress/100+''
                         //   console.log('UPDATE: ', anim.progress)
@@ -1012,10 +1025,10 @@ export default (state = defaultState, action) => {
       return preparePartnerAnimeMove(payload, state.inLight, state)
     case 'PARTNER:MOVE_TO':
       //console.log('INTRESTING_PAYLOAD:', payload)
-      return partnerMoveTo(payload, state)
+      return partnerMoveTo(state)
     case 'KNIGHT:MOVE_TO':
       //console.log('PRE_GET_NEW_STAFF:', state.inAir)
-      const newMe = getNewStaff(state.me, state.inAir, payload)
+      const newMe = getNewStaff(state.me, state.inAir, state.workPayload.payload)
       let sumDlsLight = [];
       let sumDlsVenom = [];
       const sources = {rocks: state.rocks, me: newMe, partner: state.partner}
@@ -1048,11 +1061,12 @@ export default (state = defaultState, action) => {
         }),
       state)
     case 'KNIGHT:ANIME_MOVE':
+      //payload = {x, y, isDrag}
       return {
         ...state,
         canMove: [],
         oldCanMove: state.canMove.length !== 0 ? state.canMove : [],
-        animeMove: {id:state.inAir.id, y: payload.y, x: payload.x},
+        animeMove: !payload.isDrag ? {id:state.inAir.id, y: payload.y, x: payload.x} : null,
         workPayload: {inAir: state.inAir, payload, me: true, cause: 'move', spellInd: null},
         updateSign: 'D'+Math.random()
       }
@@ -1163,7 +1177,8 @@ export default (state = defaultState, action) => {
       // state.spellInd state.inAir
       let spellObj = state.inAir.spells[state.spellInd]
       let spellRes = spellObj.func( // modify this... using call..
-        {
+        { 
+          inAir: state.inAir,
           payload,
           sources: {me: state.me, partner: state.partner, rocks: state.rocks}, 
           target: spellObj.target, 
@@ -1179,7 +1194,7 @@ export default (state = defaultState, action) => {
           personId: state.inAir.id
         },
         spellCash: spellRes,
-        workPayload: {inAir: state.inAir, payload, me: true, cause: 'spell', spellInd: state.spellInd},
+        workPayload: {air: state.inAir, payload, me: true, cause: 'spell', spellInd: state.spellInd},
       }
     case 'KNIGHT:END_SPELL': 
       return {
@@ -1285,7 +1300,7 @@ const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
   //const { fY, fX } = workPartner
   console.log('%c%s', 'color: red;', 'WORK_PARTNER_PASS:',workPartner)
   console.log('inLight: ', inLight)
-  let workPayload = {inAir: {id, fY, fX}, payload: {y, x}, me: false, cause: 'move', spellInd: null}
+  let workPayload = {air: {id, fY, fX}, payload: {y, x}, me: false, cause: 'move', spellInd: null}
   if(!inLight.some(({newY, newX}) => {
     return newY === workPartner.pY && newX === workPartner.pX
   })) { // выход из тени
@@ -1313,9 +1328,12 @@ const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
   return res
 }
 
-const partnerMoveTo = ({id, y, x}, state) => {
+const partnerMoveTo = (state) => {
   //console.log('NEW_PARNTNER:', {id, y, x})
   // alter Payload is state.workPayload where {id, y, x} refactory in f
+  console.log('%c%s', 'color: indigo; font-size: 44px;','WORK_PAYLOAD', state.workPayload)
+  let {y, x} = state.workPayload.payload
+  let {id} = state.workPayload.air
   const newPartner = getNewStaff(state.partner, {id}, {y, x})
   const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks)
   console.log('LIGHT_POS_AFTER_PARTNER_MOVE:',lightPosAfterPartnerMove)
@@ -1360,7 +1378,6 @@ const updateGameStats = (workArr, venomArr) => {
 
 const updateBaseStep = ({data, state}) => {
   const { workPayload: {inAir, payload, me, cause, spellInd} } = state;
-
   const stunUpdater = (workArr) => {
     let res = workArr.slice();
     res.forEach(({stunned}, i) => {
@@ -1642,7 +1659,7 @@ const getNewStaff = (staff, {id}, {y, x}) => {
       index = a
     }
   })
-  //console.log(`REDUCER INNNNNNNNNNNNNNSA_index: ${index}, Staff:`,staff)
+  console.log(`REDUCER INNNNNNNNNNNNNNSA THAT_TRY_FIND: ${id} _index: ${index}, Staff:`,staff)
   staff[index] = {...staff[index], id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X}
   //console.log({id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X})
   //console.log(staff)

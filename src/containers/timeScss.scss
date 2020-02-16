@@ -13,6 +13,9 @@
 .squareBase {
   position: relative;
   transition-property: opacity;
+  display: flex;
+  justify-content: center;
+  align-items: center;
     
   &__toUp {
     z-index: 10;

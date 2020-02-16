@@ -4,7 +4,7 @@ import store from '@/store'
 import anime from "animejs";
 import classNames from 'classnames'
 
-import { moveTo, animeMove, kamickAttack, spellTo, nextClick, startSpell, startAttack} from '@/actions/game'
+import { moveTo, animeMoveHandler, kamickAttack, spellTo, nextClick, startSpell, startAttack, takeTreasure} from '@/actions/game'
 
 import { 
   Square as SquareBase,
@@ -21,8 +21,9 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   // show and hide use true, false or do nothig if null
   //console.log(`PARTNERARR y: ${y}, x: ${x}:`, partner)
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
-  y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
-  const flyUnitRef = useRef(null)
+  //y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
+  const flyUnitRef = useRef(null);
+  const actionRef = useRef(null);
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
     drop: () => ({y, x, isTreasure}), //knight will take it,
@@ -33,12 +34,46 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       //canDrop: monitor.canDrop()
     })
   })
+
+  let backColor = canSpell
+  ? canSpell : isAttacked
+  ? {r: 180, g:0, b:0} : isOver && !canDrop
+  ? {r:255, g:0, b:0} : !isOver && (canDrop || canMove)
+  ? {r:0, g:128, b:0} : isOver && canDrop
+  ? {r:255, g:215, b:0} : null
+
   const [first, setFirst] = useState(null)
+  const [workSquare, setWorkSquare] = useState({id: null, payload: null, relictProps: {
+    moveFromShadow: null,  // may be bag
+    isLight: null,
+    isRock: null,
+    isTreasure: null,
+    underSpell: null, // here real bag he dont let start re render
+    herePartner: null,
+  }})
+  //const [prepareTarget, setstate] = useState(false)
+  const smokeRef = useRef(null)
   let place = null;
   let herePartner = false;
   let hereMe = false;
   let flyUnit = null;
   //console.log('ME',me) // КАК РАБОТАЮТ СПЕЛЫ???? ()
+  const checkRelictProps = () => {
+    let relictProps = workSquare.relictProps
+    if(
+      !!relictProps.moveFromShadow !== !!moveFromShadow || // may be bag
+      relictProps.isLight !== isLight || 
+      relictProps.isRock !== isRock ||
+      relictProps.isTreasure !== isTreasure ||
+      relictProps.underSpell !== spellAnime || // here real bag he dont let start re render
+      !!relictProps.herePartner !== !!herePartner
+    ) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   const preparePlace = ({array, isPartner}) => {
     array.forEach(({Y, X, id, pY, pX, xp, maxXp}) => {
       if(y === Y && x === X) {
@@ -65,6 +100,37 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
                 takeIt={isTreasure}
                 moveFromShadow={moveFromShadow}
                 isPartner={isPartner}/> //name of picture to use React.lazy
+          }
+          
+          console.log('%c%s', 'color: red; font-size: 22px', `RE_RENDOR_TROUNBLE: 1: ${workSquare.id !== id}, 2: ${checkRelictProps()} X:${x}, Y:${y}`)
+          if(workSquare.id !== id || checkRelictProps() || (!herePartner && !hereMe)) { 
+            setWorkSquare(
+              {
+                id, 
+                payload: <SquareBase y={y} x={x} 
+                            moveFromShadow={moveFromShadow}
+                            //overlay={backColor}
+                            isLight={isLight}
+                            isRock={isRock}
+                            isTreasure={isTreasure}
+                            underSpell={spellAnime}
+                            //isAttacked={isAttacked}
+                            herePartner={herePartner}
+                            mouseEvent={(pass) => mouseHereHandl(pass)}
+                            >
+                            {place}
+                          </SquareBase>, 
+                relictProps: {
+                  moveFromShadow,
+                  //overlay:backColor,
+                  isLight,
+                  isRock,
+                  isTreasure,
+                  underSpell:spellAnime,
+                  herePartner
+                }
+              }
+            )
           }
         } else {
             flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner} moveFromShadow={moveFromShadow}/>
@@ -151,20 +217,49 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         place = null
       }
   }
-  let backColor = canSpell
-  ? canSpell : isAttacked
-  ? {r: 180, g:0, b:0} : isOver && !canDrop
-  ? {r:255, g:0, b:0} : !isOver && (canDrop || canMove)
-  ? {r:0, g:128, b:0} : isOver && canDrop
-  ? {r:255, g:215, b:0} : null
+
+  if(workSquare.payload === null || checkRelictProps() || (workSquare.id !== null && (!hereMe && !herePartner))) {
+    setWorkSquare({
+      id: null, 
+      payload: <SquareBase y={y} x={x} 
+                  moveFromShadow={moveFromShadow}
+                  //overlay={backColor}
+                  isLight={isLight}
+                  isRock={isRock}
+                  isTreasure={isTreasure}
+                  underSpell={spellAnime}
+                  //isAttacked={isAttacked}
+                  herePartner={herePartner}
+                  mouseEvent={(pass) => mouseHereHandl(pass)}
+                  >
+                  {null}
+                </SquareBase>, 
+      relictProps: {
+        moveFromShadow,
+        //overlay:backColor,
+        isLight,
+        isRock,
+        isTreasure,
+        underSpell:spellAnime,
+        herePartner
+      }
+    })
+  }
 
   const {r, g, b} = canSpell
   let ripFlag = false
-  const clickHandler = () => {
+  const clickHandler = () => {  
     ripFlag = true
     // console.log(opct) rip logic
     let aim = place ? 'partner' : isRock ? 'rocks' : null;
-    if( canMove ) { store.dispatch(animeMove({y, x})) }
+    if( canMove ) { 
+      if(isTreasure) {
+        store.dispatch(animeMoveHandler({y, x, isDrag: false})) // объединение 2 событий???
+        setTimeout(() => {store.dispatch(takeTreasure({y, x}))}, 1000)
+      } else {
+        store.dispatch(animeMoveHandler({y, x, isDrag: false})) 
+      }
+    }
     if( isAttacked ) { 
       console.log('TRY_TO_ATTACK')
       store.dispatch(startAttack({y, x, aim}));
@@ -178,7 +273,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       //   }, 45)
       //   setTimeout(() => {clearInterval(spellInt); squareRef.current.style['boxShadow'] = ''; resolve()}, 1500)
       // })
-      
+      // где план??
       // effect.then(() => {
         store.dispatch(startSpell({y, x}))
       // })
@@ -235,7 +330,7 @@ let mouseHere = false
     squareRef.current.style['zIndex'] = '';
   }
  }
-  const [gameParticles, setGameParticles] = useState([])
+  const [gameParticles, setGameParticles] = useState([])  
   // useEffect(() => {
   //   setTimeout(() => {
   //     console.log('USE_EFFECT_MOVE')
@@ -244,20 +339,55 @@ let mouseHere = false
   //     }
   //   }, 3000)
   // })
-  //squareRef.current.style.boxShadow = ''
-  //shadow.payload !== null && setShadow({payload: null, color: null})
+  // squareRef.current.style.boxShadow = ''
+  // shadow.payload !== null && setShadow({payload: null, color: null})
+  // useEffect(() => {
+  //   if(first && isTreasure) {
+  //     store.dispatch(takeTreasure({y, x}));
+  //   }
+  // })
+
+  // smoke will here
+// const smokeSetter = (manipExp, pass) => {
+//   let smoker = () => {
+//     smokeRef.current.style.opacity = manipExp
+//     this.progress--
+//     if(this.progress > 0) {
+//       setTimeout(() => smoker.call(this, manipExp, pass), 10)
+//     } else {
+//       setSmoke(pass)
+//     }
+//   }
+// } // что с this 
+//  useEffect(() => {
+//   let progress = 100
+//    if(isLight && smoke) { // уход тени
+//     smokeSetter.call(this, 1-this.progress/100+'', false)
+//    } else if (!isLight && !smoke) { // подъем 
+//     smokeSetter.call(this, this.progress/100+'', true)
+//    }
+//  })
+  
   return (
-    <div ref={drop} >
-      
+    <div ref={drop}
+      style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+      {/* <img ref={smokeRef} // preview spellAnime will here
+        src={'data:image/png;base64,'+window.localStorage.smoke} // local..
+        style={{position: 'absolute', width: '40px', zIndex: '2'}}
+       /> */}
       <div 
         ref={squareRef}
         className={classNames('squareBase', mouseHere && 'squareBase__toUp')}
         onClick={clickHandler}
         onMouseEnter={() => mouseHereHandl(true)}
         onMouseOut={() => mouseHereHandl(false)}> 
-        <SquareBase y={y} x={x} 
+        <img ref={actionRef} // preview spellAnime will here
+        //src={} // local..
+        style={{position: 'absolute', width: '40px', zIndex: '2', opacity: '1'}}
+       />
+        {/* <SquareBase y={y} x={x} 
           moveFromShadow={moveFromShadow}
-          overlay={backColor}
+          //overlay={backColor}
           isLight={isLight}
           isRock={isRock}
           isTreasure={isTreasure}
@@ -267,7 +397,8 @@ let mouseHere = false
           mouseEvent={(pass) => mouseHereHandl(pass)}
           >
           {place}
-        </SquareBase>
+        </SquareBase> */}
+        {workSquare.payload}
         {gameParticles}
         <div ref={flyUnitRef} className="flyUnit">
           {flyUnit}

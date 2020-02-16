@@ -2,7 +2,7 @@
   width: 52px;
   height: 52px;
   border: 1px solid gold;
-  background: #00BFFF;
+  //background: #00BFFF;
   color: white;
   display: flex;
   justify-content: center;
@@ -20,7 +20,7 @@
     background: rgb(160, 160, 160);
   }
   &__isLight {
-    background: rgb(139, 226, 255);
+    background: #8be2ff;
   }
   &__red {
     border: 2px solid rgb(255, 0, 0);

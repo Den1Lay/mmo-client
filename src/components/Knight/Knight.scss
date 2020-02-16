@@ -3,6 +3,10 @@
   font-size: 25px;
   cursor: pointer;
   z-index: 4;
+  //position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .buttleButton {
     cursor: pointer;
     font-size: 20px;
