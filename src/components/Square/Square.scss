@@ -2,36 +2,39 @@
   width: 52px;
   height: 52px;
   border: 1px solid gold;
-  //background: #00BFFF;
+  background: #00BFFF;
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: 1s linear;
   &__isAttacked {
     background: rgb(182, 0, 0);
     color: black;
   }
-  &__isTreasure {
-    background: goldenrod;
-    color: red;
-    font-weight: bold;
-  }
+  
   &__isRock {
     background: rgb(160, 160, 160);
   }
   &__isLight {
     background: #8be2ff;
   }
-  &__red {
-    border: 2px solid rgb(255, 0, 0);
+  &__isTreasure {
+    background: goldenrod;
+    color: red;
+    font-weight: bold;
   }
-  &__yellow {
-    border: 2px solid rgb(176, 255, 30);
-  }
-  &__green {
-    border: 2px solid green;
-  }
-  &__indigo {
-    border: 2px solid rgb(114, 61, 153);
-  }
+  
+  // &__red {
+  //   border: 2px solid rgb(255, 0, 0);
+  // }
+  // &__yellow {
+  //   border: 2px solid rgb(176, 255, 30);
+  // }
+  // &__green {
+  //   border: 2px solid green;
+  // }
+  // &__indigo {
+  //   border: 2px solid rgb(114, 61, 153);
+  // }
 }

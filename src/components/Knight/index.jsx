@@ -195,7 +195,8 @@ const Knight = (
         const {y, x, type} = animeAttack;
         let workCurrent = firstRef.current
 
-        workCurrent.style.opacity = 1
+        workCurrent.style.opacity = 1;
+        workCurrent.style.display = 'block';
         workCurrent.src = 'data:image/png;base64,'+window.localStorage.mainSrc+'';
         workCurrent.style.width = '20px'
         anime({
@@ -208,6 +209,7 @@ const Knight = (
             if(anim.completed) {
               console.log('ISTIME')
               !isPartner ? attackTo() : partnerMoveTo({id, y, x})
+
             }
           },
           update: anim => {
@@ -279,6 +281,6 @@ const Knight = (
     </div>
   )
 }
-
+// слежение за собственным хп
 export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack}), 
 {addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell})(Knight)

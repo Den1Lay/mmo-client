@@ -12,11 +12,31 @@
 
 .squareBase {
   position: relative;
-  transition-property: opacity;
+  //transition-property: opacity;
   display: flex;
   justify-content: center;
   align-items: center;
-    
+    .layout {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      opacity: 0;
+      z-index: 3;
+      //background: green;
+      transition: 1s ease-in-out;
+      &__move {
+        background: linear-gradient(45deg, rgb(3, 105, 83), rgb(2, 233, 2));
+      }
+      &__attack {
+        background: linear-gradient(45deg, rgb(97, 18, 73), rgb(255, 0, 55));
+      }
+      &__spell {
+        background: linear-gradient(45deg, rgb(153, 58, 153), rgb(11, 137, 175));
+      }
+      &__show {
+        opacity: 0.44;
+      }
+    }
   &__toUp {
     z-index: 10;
   }

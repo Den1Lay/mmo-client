@@ -321,6 +321,8 @@ function Board (
           oldMe.length > 0 && updateDefState(me, true)
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           oldFire.length > 0 && spellAnimeSetter(fire, null)
+          oldVenom.length > 0 && spellAnimeSetter(oldVenom, false)
+          venom.length > 0 && spellAnimeSetter(venom, true)
           break
         case 'K': 
           console.log('K-FIIIIIIIIIIIIILTER:', me)
@@ -347,8 +349,8 @@ function Board (
               newSpellMap.unshift(el)
             }
           })
-          console.log('NEW_SPELL_MAP:', newSpellMap)
-          console.log('OLD_FIRE_CHECK:', oldFire) // newLightPos??
+          console.log('%c%s', 'color: aqua; font-size: 44px;','NEW_SPELL_MAP:', newSpellMap)
+          console.log('FIRE_CHECK:', fire) // newLightPos??
           newSpellMap.forEach(propsName => {
             switch(propsName){
               case 'partner':
@@ -376,10 +378,10 @@ function Board (
                 oldFire.length > 0 && spellAnimeSetter(oldFire, false)
                 break
               case 'venom':
-                //spellAnimeSetter(venom, {color: {r: 150, g: 0, b: 24}, src: ''})
+                spellAnimeSetter(venom, true)
                 break
               case 'oldVenom':
-
+                spellAnimeSetter(oldVenom, false)
                 break
               default:
                 console.log('Some wrong things:', propsName)

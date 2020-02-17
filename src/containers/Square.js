@@ -23,7 +23,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
   //y === 12 && x === 9 && console.log(`NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|NEW_PACKAGE|X:${x}, Y:${y}`, partner)
   const flyUnitRef = useRef(null);
-  const actionRef = useRef(null);
+  //const actionRef = useRef(null);
   const [{isOver, canDrop}, drop] = useDrop({
     accept: 'knight',
     drop: () => ({y, x, isTreasure}), //knight will take it,
@@ -92,7 +92,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         if(id === first) {
           switch(id.substr(1, 4)) {
             case 'Knig':
-              place = <Knight 
+              place = <Knight   //он сам вытащит все шо надо...
                 mouseEvent={(pass) => mouseHereHandl(pass)} 
                 id={id} 
                 simbol={'♞'} 
@@ -381,10 +381,9 @@ let mouseHere = false
         onClick={clickHandler}
         onMouseEnter={() => mouseHereHandl(true)}
         onMouseOut={() => mouseHereHandl(false)}> 
-        <img ref={actionRef} // preview spellAnime will here
-        //src={} // local..
-        style={{position: 'absolute', width: '40px', zIndex: '2', opacity: '1'}}
-       />
+        <div className={classNames('layout', 'layout__move', canMove && 'layout__show')}/>
+        <div className={classNames('layout', 'layout__spell', canSpell && 'layout__show')}/>
+        <div className={classNames('layout', 'layout__attack', isAttacked && 'layout__show')}/>
         {/* <SquareBase y={y} x={x} 
           moveFromShadow={moveFromShadow}
           //overlay={backColor}
