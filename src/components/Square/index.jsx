@@ -14,9 +14,9 @@ const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpel
     //console.log('%c%s', 'color: blue; font-size: 20px', `RE_RENDER_SQUARE: x: ${x}, y: ${y}`)
     //underSpell  = {rgb, src}
     useEffect(() => {
-      if(underSpell) {
-        //console.log('REEEEEEEF:', mainRef.current.style)
-        mainRef.current.style['background'] = Color(underSpell.color)
+      if(underSpell.length > 0) {
+        console.log('%c%s','color: green; font-size: 22px;','GET_NEW_UNDER_SPELL:', underSpell)
+        mainRef.current.style['background'] = Color(underSpell[0].color)
       } else {
         mainRef.current.style['background'] = '';
       }

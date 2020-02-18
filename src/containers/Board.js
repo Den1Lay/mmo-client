@@ -32,8 +32,10 @@ function Board (
     spellInd,
     fire,
     oldFire,
-    venom,
-    oldVenom,
+    myVenom,
+    oldMyVenom,
+    partVenom,
+    oldPartVenom,
     moveFromShadow,
     partnerAnimeMove,
   }) { // canMove: [{y, x}, {y, x}]
@@ -77,7 +79,7 @@ function Board (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={null} moveFromShadow={null}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={[]} moveFromShadow={null}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -249,7 +251,25 @@ function Board (
         //console.log(`INSIDE_SPELL_ANIME_PAYLOAD:${payload}`, workArr)
         workArr.forEach(({newY, newX, color, src}) => {
           indexFinder(checkIndex, newY, newX)
-          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: flag ? {color, src} : null})
+          //console.log('%c%s', 'color: blue; font-size: 44px;', 'THAT_CLONE:', cloneMainMemoPlant[newY][checkIndex[0]].props)
+          let workEl = cloneMainMemoPlant[newY][checkIndex[0]]
+          const modifySpellAnime = () => {
+            if(flag) {
+              workEl.props.spellAnime.push({color, src})
+            } else {
+              let deadInd = 0;
+              workEl.props.spellAnime.forEach(({src: deadSrc}, i) => {
+                if(deadSrc === src) {
+                  deadInd = i
+                }
+              })
+              workEl.props.spellAnime.splice(deadInd, 1)
+            }
+          }
+          modifySpellAnime()
+          console.log('%c%s', 'color: brown; font-size: 13px;',`POS_THAT_WAS_UP: Y:${workEl.props.y}, X:${workEl.props.x}`)
+          //console.log('%c%s', 'color: blue; font-size: 44px;', 'THAT_CLONE:', cloneMainMemoPlant[newY][checkIndex[0]].props)
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: workEl.props.spellAnime}) // хилимся живем..
         })
       }
 
@@ -260,6 +280,8 @@ function Board (
       }
 
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
+      console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_RES:', mainRes)
+      console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_MEMO_PLANT:', mainMemoPlant)
       switch(updateSign.substr(0,1)) {
         case 'M':
           //console.log()
@@ -267,8 +289,11 @@ function Board (
           mover()
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
-          oldVenom.length > 0 && spellAnimeSetter(oldVenom, false)
-          venom.length > 0 && spellAnimeSetter(venom, true)
+          oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
+          oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false) // конфликтик..
+          console.log('PREVIEW_MODIFY:',myVenom)
+          myVenom.length > 0 && spellAnimeSetter(myVenom, true)
+          partVenom.length > 0 && spellAnimeSetter(partVenom, true)
           oldMe.length > 0 && updateDefState(me, true) // может нет никого уже..
           oldPartner.length > 0 && updateDefState(partner, false)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
@@ -321,8 +346,10 @@ function Board (
           oldMe.length > 0 && updateDefState(me, true)
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           oldFire.length > 0 && spellAnimeSetter(fire, null)
-          oldVenom.length > 0 && spellAnimeSetter(oldVenom, false)
-          venom.length > 0 && spellAnimeSetter(venom, true)
+          oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
+          myVenom.length > 0 && spellAnimeSetter(myVenom, true)
+          oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false)
+          partVenom.length > 0 && spellAnimeSetter(partVenom, true)
           break
         case 'K': 
           console.log('K-FIIIIIIIIIIIIILTER:', me)
@@ -377,11 +404,17 @@ function Board (
                 console.log('ALIVE_OLD_FIRE')
                 oldFire.length > 0 && spellAnimeSetter(oldFire, false)
                 break
-              case 'venom':
-                spellAnimeSetter(venom, true)
+              case 'myVenom':
+                spellAnimeSetter(myVenom, true)
                 break
-              case 'oldVenom':
-                spellAnimeSetter(oldVenom, false)
+              case 'oldMyVenom':
+                spellAnimeSetter(oldMyVenom, false)
+                break
+              case 'partVenom': 
+                spellAnimeSetter(partVenom, true)
+                break
+              case 'oldPartVenom':
+                spellAnimeSetter(oldPartVenom, false)
                 break
               default:
                 console.log('Some wrong things:', propsName)
@@ -413,12 +446,12 @@ function Board (
       setMainRes(midMainRes)
     }
   })
-
+  console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_RES:', mainRes)
   return (
       <div className={classNames('board')}>
         {mainRes}
       </div>
-  )
+  ) 
 }
 // одна функция для всех обновлений???? net.
 
@@ -449,8 +482,10 @@ export default connect((
       spellInd,
       fire,
       oldFire,
-      venom,
-      oldVenom,
+      myVenom,
+      oldMyVenom,
+      partVenom,
+      oldPartVenom,
       moveFromShadow,
     }
    }
@@ -479,8 +514,10 @@ export default connect((
       spellInd,
       fire,
       oldFire,
-      venom,
-      oldVenom,
+      myVenom,
+      oldMyVenom,
+      partVenom,
+      oldPartVenom,
       moveFromShadow,
     }
     ), 

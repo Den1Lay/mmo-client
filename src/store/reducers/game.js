@@ -851,6 +851,26 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        effect: ({sources, Y, X, pathBuilder})  => {
+          let newVenome = [{newX: X, newY: Y}];
+          let direction = [
+            {xDir:1, yDir:1, pathLenght:1},
+            {xDir:1, yDir:-1, pathLenght:1},
+            {xDir:1, yDir: 0, pathLenght:1},
+            {xDir:-1, yDir:-1, pathLenght:1},
+            {xDir:-1, yDir:1, pathLenght:1},
+            {xDir:-1, yDir: 0, pathLenght:1},
+            {xDir:0, yDir: 1, pathLenght:1},
+            {xDir:0, yDir: -1, pathLenght:1}
+          ];
+          direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, [], ['rocks'], [], Y, X, []))
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 2, postDmg: 9, color: {r: 95, g: 255, b: 202}, src: ''})) //(95, 255, 202)
+          console.log("INSIDE_VENOME_FUNC:",newVenome)
+          return {
+            dlsVenome: newVenome,
+            dlsLight: []
+          }   
+        },
         dopDirs: ['partner'],
         blockDirs: ['me', 'rocks'],
         ignore: [],
@@ -939,7 +959,8 @@ const defaultState = {
   spellMap: [],
   fire: [],
   oldFire: [],
-  venom: [],
+  myVenom: [],
+  partVenom: [],
   act: 0, // reduce that
   actTick: 0,
   maxTick: 3,
@@ -1042,7 +1063,7 @@ export default (state = defaultState, action) => {
       let allLightPos = getLightPosition(newMe, state.partner, state.rocks).concat(r.sumDlsLight)
       //newPartner
       return updateBaseStep(
-        updateVenomStep({
+        updateVenomStep({ // // for what, i don't know 
           data: {
             ...state, 
             me: newMe,
@@ -1052,8 +1073,9 @@ export default (state = defaultState, action) => {
             inLight: allLightPos,
             newInLight: getNewInLight(state.inLight, allLightPos),
             oldInLight: getOldInLight(state.inLight, allLightPos), // точечная перерисовка, если траблы с опти
-            animeMove: null,  // for what, i don't know
-            venom: state.venom.concat(r.sumDlsVenom),
+            animeMove: null, 
+            myVenom: state.myVenom.concat(r.sumDlsMyVenom),
+            partVenom: state.partVenom.concat(r.sumDlsPartVenom),
             updateSign: 'M'+Math.random(),
           },
           state
@@ -1132,7 +1154,7 @@ export default (state = defaultState, action) => {
       let {y, x, aim} = state.workPayload; // refactory this
       let partnerRes =  findAndKill(state.partner, y, x, aim, 'partner', state.inAir)
       let rocksRes =  findAndKill(state.rocks, y, x, aim, 'rocks', state.inAir)
-
+      // буст от аттаки inAir'а
       const attackSources = {rocks: rocksRes.res, me: state.me, partner: partnerRes.res} // Эта длс для камня.. если кто - либо рипает преграду dls lightу
       let attackR = getDlsData({ sources: attackSources, pathBuilder})
       let allLightPosAfterMurder = getLightPosition(state.me, partnerRes.res, rocksRes.res).concat(attackR.sumDlsLight)
@@ -1149,7 +1171,8 @@ export default (state = defaultState, action) => {
           inLight: partnerRes.target || rocksRes.target ? allLightPosAfterMurder : state.inLight,
           newInLight: partnerRes.target || rocksRes.target ? getNewInLight(state.inLight, allLightPosAfterMurder) : [],
           //oldInLight: partnerRes.target || rocksRes.targetgetLigh ? state.newInLight : [],
-          venom: state.venom.concat(attackR.sumDlsVenom),
+          myVenom: state.myVenom.concat(attackR.sumDlsMyVenom),
+          partVenom: state.partVenom.concat(attackR.sumDlsPartVenom),
           animeAttack: null,
           updateSign: 'A'+Math.random(),
         },
@@ -1165,23 +1188,17 @@ export default (state = defaultState, action) => {
       let kamikR = getDlsData({ sources: kamikSource, pathBuilder})
       
       let allLightPosAfterKamick = getLightPosition(updatedMe, updatedPartner, state.rocks).concat(kamikR.sumDlsLight)
-      return updateBaseStep(
-        updateVenomStep({
-          data: {
-            ...state,
-            me: updatedMe,
-            partner: updatedPartner,
-            oldPartner: deadP ? [deadP] : [],
-            oldMe: deadM ? [deadM] : [],
-            inLight: allLightPosAfterKamick,
-            newInLight: getNewInLight(state.inLight, allLightPosAfterKamick),
-            oldInLight: getOldInLight(state.inLight, allLightPosAfterKamick),
-            venome: state.venom.concat(kamikR.sumDlsVenom),
-            updateSign: 'K'+Math.random()
-          },
-          state
-        })
-      )
+      return {
+        ...state,
+        me: updatedMe,
+        partner: updatedPartner,
+        oldPartner: deadP ? [deadP] : [],
+        oldMe: deadM ? [deadM] : [],
+        inLight: allLightPosAfterKamick,
+        newInLight: getNewInLight(state.inLight, allLightPosAfterKamick),
+        oldInLight: getOldInLight(state.inLight, allLightPosAfterKamick),
+        updateSign: 'K'+Math.random()
+      }
     case 'KNIGHT:START_SPELL':
       // state.spellInd state.inAir
       let spellObj = state.inAir.spells[state.spellInd]
@@ -1233,8 +1250,9 @@ export default (state = defaultState, action) => {
           oldRocks: spellCashRes.oldRocks,
           canSpell: [],
           oldCanSpell: state.canSpell,
-          fire: state.fire.concat(spellCashRes.fire),
-          venom: state.venom.concat(spellCashRes.venom).concat(r.sumDlsVenom),
+          fire: state.fire.concat(spellCashRes.fire), //Just flash not real fire
+          myVenom: state.venom.concat(spellCashRes.myVenom).concat(r.sumDlsMyVenom),
+          partVenom: state.partVenom.concat(spellCashRes.partVenom).concat(r.sumDlsPartVenom),
           spellMap: spellCashRes.spellMap,
           inLight: spellCashRes.lightRed ? allLightPosAfterSpell : state.inLight,
           newInLight: spellCashRes.lightRed ? getNewInLight(state.inLight, allLightPosAfterSpell) : [],
@@ -1274,9 +1292,10 @@ const getOldInLight = (state, newData) => {
 const updateVenomStep = ({data, state}) => {
     //console.log('DATA_PASS:', data)
 
-    const newVenom = updateSpells(data.venom ? data.venom : state.venom);
-    const afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, newVenom.res);
-    const afterClickMe = updateGameStats(data.me ? data.me : state.me, newVenom.res);
+    const newMyVenom = updateSpells(data.myVenom ? data.myVenom : state.myVenom);
+    const newPartVenom = updateSpells(data.partVenom ? data.partVenom : state.partVenom);
+    const afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, newMyVenom.res);
+    const afterClickMe = updateGameStats(data.me ? data.me : state.me, newPartVenom.res);
     const newFire = updateSpells(data.fire ? data.fire : state.fire);
     
     //console.log('NEW_FIRE:', newFire.res)
@@ -1285,8 +1304,13 @@ const updateVenomStep = ({data, state}) => {
         let newSpellMap = data.spellMap;
         [
           {
-            workArr: newVenom,
-            pushPass: 'oldVenom',
+            workArr: newMyVenom,
+            pushPass: 'oldMyVenom',
+            pass: 'dead'
+          },
+          {
+            workArr: newPartVenom,
+            pushPass: 'oldPartVenom',
             pass: 'dead'
           },
           {
@@ -1305,8 +1329,13 @@ const updateVenomStep = ({data, state}) => {
             pass: 'dead'
           },
           {
-            workArr: newVenom,
-            pushPass: 'venom',
+            workArr: newMyVenom,
+            pushPass: 'myVenom',
+            pass: 'res'
+          },
+          {
+            workArr: newPartVenom,
+            pushPass: 'partVenom',
             pass: 'res'
           },
           {
@@ -1333,8 +1362,10 @@ const updateVenomStep = ({data, state}) => {
     oldMe:data.oldMe ? data.oldMe.concat(afterClickMe.dead) : afterClickMe.dead,
     oldFire: newFire.dead,
     fire: newFire.res,
-    oldVenom: newVenom.dead,
-    venom: newVenom.res,
+    oldMyVenom: newMyVenom.dead,
+    oldPartVenom: newPartVenom.dead,
+    partVenom: newPartVenom.res,
+    myVenom: newMyVenom.res,
     spellMap: getNewSpellMap()
   }
 }
@@ -1350,7 +1381,7 @@ const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
   //const { fY, fX } = workPartner
   console.log('%c%s', 'color: red;', 'WORK_PARTNER_PASS:',workPartner)
   console.log('inLight: ', inLight)
-  let workPayload = {air: {id, fY, fX}, payload: {y, x}, me: false, cause: 'move', spellInd: null}
+  let workPayload = {inAir: {id, fY, fX}, payload: {y, x}, me: false, cause: 'move', spellInd: null}
   if(!inLight.some(({newY, newX}) => {
     return newY === workPartner.pY && newX === workPartner.pX
   })) { // выход из тени
@@ -1383,17 +1414,21 @@ const partnerMoveTo = (state) => {
   // alter Payload is state.workPayload where {id, y, x} refactory in f
   console.log('%c%s', 'color: indigo; font-size: 44px;','WORK_PAYLOAD', state.workPayload)
   let {y, x} = state.workPayload.payload
-  let {id} = state.workPayload.air
+  let {id} = state.workPayload.inAir
   const newPartner = getNewStaff(state.partner, {id}, {y, x})
-  const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks)
+  let partMoveSource = {rocks: state.rocks, me: state.me, partner: newPartner}
+  let partMoveR = getDlsData({ sources: partMoveSource, pathBuilder})
+  const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks).concat(partMoveR.sumDlsLight)
   console.log('LIGHT_POS_AFTER_PARTNER_MOVE:',lightPosAfterPartnerMove)
-  return updateVenomStep(
-    updateBaseStep({
+  return updateBaseStep(
+    updateVenomStep({
       data:
       {
         ...state,
         partner: newPartner, 
         inLight: lightPosAfterPartnerMove,
+        myVenom: state.myVenom.concat(partMoveR.sumDlsMyVenom),
+        partVenom: state.partVenom.concat(partMoveR.sumDlsPartVenom),
         newInLight: getNewInLight(state.inLight, lightPosAfterPartnerMove),
         oldInLight: getOldInLight(state.inLight, lightPosAfterPartnerMove),
         animeMove: null,
@@ -1401,7 +1436,7 @@ const partnerMoveTo = (state) => {
         updateSign: 'W'
       }, 
       state //workPayload inside insert in
-    }), state)
+    }))
 }
 
 const updateGameStats = (workArr, venomArr) => {
@@ -1455,8 +1490,9 @@ const updateBaseStep = (data) => {
       me: meAfterStun,
       partner: partnerAfterStun,
       rocks: data.rocks,
-      fire: data.fire,
-      venom: data.venom,
+      fire: data.fire, // just flash
+      myVenom: data.myVenom,
+      partVenom: data.partVenom,
       inLight: data.inLight,
       treasures: data.treasures,
       myTreasures: data.myTreasures,
