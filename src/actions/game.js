@@ -67,6 +67,16 @@ export const partnerMoveTo = ({id, y, x}) => ({
   payload: {id, y, x}
 })
 
+export const partnerStartSpell = ({id, x, y, spellInd, withAnime, show}) => ({
+  //show == combo  from partnerSpell + inLight.some ===> result show
+  type: 'PARTNER:START_SPELL',
+  payload: {id, x, y, spellInd, withAnime, show}
+})
+
+export const cleanAfterPartSpell = () => ({
+  type: 'PARTNER:CLEAN_AFTER_SPELL'
+})
+
 export const transformFunc = () => ({
   type: 'TRANSFORM_FUNC'
 })

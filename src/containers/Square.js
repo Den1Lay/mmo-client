@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useMemo} from 'react';
 import { useDrop } from 'react-dnd'
 import store from '@/store'
 import anime from "animejs";
@@ -13,13 +13,13 @@ import {
 
 import './timeScss.scss'
 
-const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow}) {
+const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow, showOnSecond}) {
   
   if(spellAnime) { 
     const {color, src} = spellAnime
     //console.log("SPELL_ANIME:", spellAnime)
   }
-  console.log('%c%s', 'color: navy; font-size: 15px;',`REALY_WAS_UPDATE: Y:${y}, X:${x}`, spellAnime)
+  //console.log('%c%s', 'color: navy; font-size: 15px;',`REALY_WAS_UPDATE: Y:${y}, X:${x}`, spellAnime)
   // show and hide use true, false or do nothig if null
   //console.log(`PARTNERARR y: ${y}, x: ${x}:`, partner)
   //console.log(`MEEEEEEEEE y: ${y}, x: ${x}:`, me)
@@ -45,17 +45,17 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   ? {r:255, g:215, b:0} : null
 
   const [first, setFirst] = useState(null)
-  const [workSquare, setWorkSquare] = useState({id: null, payload: null, relictProps: {
-    moveFromShadow: null,  // may be bag
-    isLight: null,
-    isRock: null,
-    isTreasure: null,
-    underSpell: [], // here real bag he dont let start re render
-    herePartner: null,
-  }})
-  if(x === 7 && y === 3) {
-    debugger
-  }
+  // const [workSquare, setWorkSquare] = useState({id: null, payload: null, relictProps: {
+  //   moveFromShadow: null,  // may be bag
+  //   isLight: null,
+  //   isRock: null,
+  //   isTreasure: null,
+  //   underSpell: [], // here real bag he dont let start re render
+  //   herePartner: null,
+  // }})
+  // if(x === 7 && y === 3) {
+  //   debugger
+  // }
   //const [prepareTarget, setstate] = useState(false)
   const smokeRef = useRef(null)
   let place = null;
@@ -63,44 +63,44 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   let hereMe = false;
   let flyUnit = null;
   //console.log('ME',me) // КАК РАБОТАЮТ СПЕЛЫ???? ()
-  const checkSpells = (fromRelict, newSpell) => {
-    console.log('%c%s', 'color: orange; font-size: 10px', `INSIDE_CHECK: ${newSpell} and NEW: relict: `,fromRelict )
-    if(fromRelict.length === newSpell.length) {
-      let res = false;
-      fromRelict.forEach(({src}, i) => {
-        if(src !== newSpell[i].src) {
-          res = true
-        }
-      })
-      return res;
-    } else {
-      return true;
-    }
-  }
-  const checkRelictProps = () => {
-    //console.log('%c%s', 'color: aqua; font-size: 22px', `Y:${y}, X:${x} And Another one`)
-    let relictProps = workSquare.relictProps
-    if(x === 8 && y === 1) {
-      console.log('%c%s', 'color: orange; font-size: 10px',`INSIDE_CHECK
-    moveFromShadow: ${!!relictProps.moveFromShadow} and ${!!moveFromShadow}, res: ${!!relictProps.moveFromShadow !== !!moveFromShadow};
-    isLight ${relictProps.isLight} and ${isLight}, res: ${relictProps.isLight !== isLight};
-    isRock: ${relictProps.isRock} and ${isRock}, res: ${relictProps.isRock !== isRock};
-    underSpell: ${checkSpells(relictProps.underSpell, spellAnime)};
-    `)
-    }
-    if(
-      !!relictProps.moveFromShadow !== !!moveFromShadow || // may be bag
-      relictProps.isLight !== isLight || 
-      relictProps.isRock !== isRock ||
-      relictProps.isTreasure !== isTreasure ||
-      checkSpells(relictProps.underSpell, spellAnime) || // here real bag he dont let start re render or another... in another
-      !!relictProps.herePartner !== !!herePartner
-    ) {
-      return true
-    } else {
-      return false
-    }
-  }
+  // const checkSpells = (fromRelict, newSpell) => {
+  //   console.log('%c%s', 'color: orange; font-size: 10px', `INSIDE_CHECK: ${newSpell} and NEW: relict: `,fromRelict )
+  //   if(fromRelict.length === newSpell.length) {
+  //     let res = false;
+  //     fromRelict.forEach(({src}, i) => {
+  //       if(src !== newSpell[i].src) {
+  //         res = true
+  //       }
+  //     })
+  //     return res;
+  //   } else {
+  //     return true;
+  //   }
+  // }
+  // const checkRelictProps = () => {
+  //   //console.log('%c%s', 'color: aqua; font-size: 22px', `Y:${y}, X:${x} And Another one`)
+  //   let relictProps = workSquare.relictProps
+  //   if(x === 8 && y === 1) {
+  //     console.log('%c%s', 'color: orange; font-size: 10px',`INSIDE_CHECK
+  //   moveFromShadow: ${!!relictProps.moveFromShadow} and ${!!moveFromShadow}, res: ${!!relictProps.moveFromShadow !== !!moveFromShadow};
+  //   isLight ${relictProps.isLight} and ${isLight}, res: ${relictProps.isLight !== isLight};
+  //   isRock: ${relictProps.isRock} and ${isRock}, res: ${relictProps.isRock !== isRock};
+  //   underSpell: ${checkSpells(relictProps.underSpell, spellAnime)};
+  //   `)
+  //   }
+  //   if(
+  //     !!relictProps.moveFromShadow !== !!moveFromShadow || // may be bag
+  //     relictProps.isLight !== isLight || 
+  //     relictProps.isRock !== isRock ||
+  //     relictProps.isTreasure !== isTreasure ||
+  //     checkSpells(relictProps.underSpell, spellAnime) || // here real bag he dont let start re render or another... in another
+  //     !!relictProps.herePartner !== !!herePartner
+  //   ) {
+  //     return true
+  //   } else {
+  //     return false
+  //   }
+  // }
 
   const preparePlace = ({array, isPartner}) => {
     array.forEach(({Y, X, id, pY, pX, xp, maxXp}) => {
@@ -126,41 +126,30 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
                 simbol={'♞'} 
                 y={y} x={x} 
                 takeIt={isTreasure}
+                showOnSecond={showOnSecond}
                 moveFromShadow={moveFromShadow}
                 isPartner={isPartner}/> //name of picture to use React.lazy
           }
           
           
-          if(workSquare.id !== id || checkRelictProps() || (!herePartner && !hereMe)) {
-            x === 8 && y === 1 && console.log('%c%s', 'color: red; font-size: 33px', `RE_RENDOR_TROUNBLE: 1: ${workSquare.id !== id}, 2: ${checkRelictProps()} X:${x}, Y:${y}`) 
-            setWorkSquare(
-              {
-                id, 
-                payload: <SquareBase y={y} x={x} 
-                            moveFromShadow={moveFromShadow}
-                            //overlay={backColor}
-                            isLight={isLight}
-                            isRock={isRock}
-                            isTreasure={isTreasure}
-                            underSpell={spellAnime}
-                            //isAttacked={isAttacked}
-                            herePartner={herePartner}
-                            mouseEvent={(pass) => mouseHereHandl(pass)}
-                            >
-                            {place}
-                          </SquareBase>, 
-                relictProps: {
-                  moveFromShadow,
-                  //overlay:backColor,
-                  isLight,
-                  isRock,
-                  isTreasure,
-                  underSpell:spellAnime,
-                  herePartner
-                }
-              }
-            )
-          }
+          // if(workSquare.id !== id || checkRelictProps() || (!herePartner && !hereMe)) {
+          //   x === 8 && y === 1 && console.log('%c%s', 'color: red; font-size: 33px', `RE_RENDOR_TROUNBLE: 1: ${workSquare.id !== id}, 2: ${checkRelictProps()} X:${x}, Y:${y}`) 
+          //   setWorkSquare(
+          //     {
+          //       id, 
+          //       payload: , 
+          //       relictProps: {
+          //         moveFromShadow,
+          //         //overlay:backColor,
+          //         isLight,
+          //         isRock,
+          //         isTreasure,
+          //         underSpell:spellAnime,
+          //         herePartner
+          //       }
+          //     }
+          //   )
+          // }
         } else {
             flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner} moveFromShadow={moveFromShadow}/>
         }
@@ -246,46 +235,46 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         place = null
       }
   }
-  if(x === 7 && y === 3) {
-    debugger
-    console.log('%c%s', 'color: red; font-size: 32px;', `Y:${y}, X:${x}, TRY_TO_UND, check: ${checkRelictProps()}, 
-  ALL_CHECK: ${workSquare.payload === null || checkRelictProps() || (workSquare.id !== null && (!hereMe && !herePartner))},
-  PAY:`, workSquare.payload)
-  }
-  if(workSquare.payload === null || checkRelictProps() || (workSquare.id !== null && (!hereMe && !herePartner))) {
+  // if(x === 7 && y === 3) {
+  //   debugger
+  //   console.log('%c%s', 'color: red; font-size: 32px;', `Y:${y}, X:${x}, TRY_TO_UND, check: ${checkRelictProps()}, 
+  // ALL_CHECK: ${workSquare.payload === null || checkRelictProps() || (workSquare.id !== null && (!hereMe && !herePartner))},
+  // PAY:`, workSquare.payload)
+  // }
+  // if(workSquare.payload === null || checkRelictProps() || (workSquare.id !== null && (!hereMe && !herePartner))) {
     
-    setWorkSquare({
-      id: null, 
-      payload: <SquareBase y={y} x={x} 
-                  moveFromShadow={moveFromShadow}
-                  //overlay={backColor}
-                  isLight={isLight}
-                  isRock={isRock}
-                  isTreasure={isTreasure}
-                  underSpell={spellAnime}
-                  //isAttacked={isAttacked}
-                  herePartner={herePartner}
-                  mouseEvent={(pass) => mouseHereHandl(pass)}
-                  >
-                  {null}
-                </SquareBase>, 
-      relictProps: {
-        moveFromShadow,
-        //overlay:backColor,
-        isLight,
-        isRock,
-        isTreasure,
-        underSpell:spellAnime,
-        herePartner
-      }
-    })
-  }
+  //   setWorkSquare({
+  //     id: null, 
+  //     payload: <SquareBase y={y} x={x} 
+  //                 moveFromShadow={moveFromShadow}
+  //                 //overlay={backColor}
+  //                 isLight={isLight}
+  //                 isRock={isRock}
+  //                 isTreasure={isTreasure}
+  //                 underSpell={spellAnime}
+  //                 //isAttacked={isAttacked}
+  //                 herePartner={herePartner}
+  //                 mouseEvent={(pass) => mouseHereHandl(pass)}
+  //                 >
+  //                 {null}
+  //               </SquareBase>, 
+  //     relictProps: {
+  //       moveFromShadow,
+  //       //overlay:backColor,
+  //       isLight,
+  //       isRock,
+  //       isTreasure,
+  //       underSpell:spellAnime,
+  //       herePartner
+  //     }
+  //   })
+  // }
   
 
   const {r, g, b} = canSpell
   let ripFlag = false
   const clickHandler = () => {  
-    console.log('WORK_SQUARE:', workSquare)
+    //console.log('WORK_SQUARE:', workSquare)
     ripFlag = true
     // console.log(opct) rip logic
     let aim = place ? 'partner' : isRock ? 'rocks' : null;
@@ -404,7 +393,6 @@ let mouseHere = false
 //     smokeSetter.call(this, this.progress/100+'', true)
 //    }
 //  })
-  
   return (
     <div ref={drop}
       style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
@@ -434,7 +422,21 @@ let mouseHere = false
           >
           {place}
         </SquareBase> */}
-        {workSquare.payload}
+
+          <SquareBase y={y} x={x} 
+            moveFromShadow={moveFromShadow}
+            showOnSecond={showOnSecond}
+            //overlay={backColor}
+            isLight={isLight}
+            isRock={isRock}
+            isTreasure={isTreasure}
+            underSpell={spellAnime}
+            //isAttacked={isAttacked}
+            herePartner={herePartner}
+            mouseEvent={(pass) => mouseHereHandl(pass)}
+            >
+            {place}
+          </SquareBase>
         {gameParticles}
         <div ref={flyUnitRef} className="flyUnit">
           {flyUnit}

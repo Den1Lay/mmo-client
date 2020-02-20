@@ -1,3 +1,4 @@
+// НИКОГДА НЕ МОДИФИЦИРОВАТЬ ЭЛЕМЕНТ ЧЕРЕЗ МОДИФИКАЦИЮ ОБЪЕКТА КОМПОНЕНТА, ДАЖЕ ЕСЛИ ЗАТЕМ ПРИСВАИВАЕШЬ ЕМУ НОВЫЙ СОМП
 import React, {useEffect, useState, useRef, cloneElement as setState} from 'react';
 import { connect } from 'react-redux'
 import classNames from 'classnames'
@@ -37,7 +38,10 @@ function Board (
     partVenom,
     oldPartVenom,
     moveFromShadow,
-    partnerAnimeMove,
+    oldMoveFromShadow,
+    showOnSecond,
+    //partnerAnimeMove,
+    oldShowOnSecond,
   }) { // canMove: [{y, x}, {y, x}]
   console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
@@ -79,7 +83,7 @@ function Board (
       //   )
       // })
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
-        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={[]} moveFromShadow={null}/>)
+        return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={[]} moveFromShadow={null} showOnSecond={null}/>)
       })
       console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
@@ -252,31 +256,31 @@ function Board (
         workArr.forEach(({newY, newX, color, src}) => {
           indexFinder(checkIndex, newY, newX)
           //console.log('%c%s', 'color: blue; font-size: 44px;', 'THAT_CLONE:', cloneMainMemoPlant[newY][checkIndex[0]].props)
-          let workEl = cloneMainMemoPlant[newY][checkIndex[0]]
+          let workElPass = cloneMainMemoPlant[newY][checkIndex[0]].props.spellAnime.slice()
           const modifySpellAnime = () => {
             if(flag) {
-              workEl.props.spellAnime.push({color, src})
+              workElPass.push({color, src})  
             } else {
               let deadInd = 0;
-              workEl.props.spellAnime.forEach(({src: deadSrc}, i) => {
+              workElPass.forEach(({src: deadSrc}, i) => {
                 if(deadSrc === src) {
                   deadInd = i
                 }
               })
-              workEl.props.spellAnime.splice(deadInd, 1)
+              workElPass.splice(deadInd, 1)
             }
           }
           modifySpellAnime()
-          console.log('%c%s', 'color: brown; font-size: 13px;',`POS_THAT_WAS_UP: Y:${workEl.props.y}, X:${workEl.props.x}`)
+          //console.log('%c%s', 'color: brown; font-size: 13px;',`POS_THAT_WAS_UP: Y:${workEl.props.y}, X:${workEl.props.x}`)
           //console.log('%c%s', 'color: blue; font-size: 44px;', 'THAT_CLONE:', cloneMainMemoPlant[newY][checkIndex[0]].props)
-          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: workEl.props.spellAnime}) // хилимся живем..
+          cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {spellAnime: workElPass}) // хилимся живем..
         })
       }
 
-      const moveFromShadowSetter = (workObj, pass) => {
+      const moveFromShadowSetter = (workObj, objPass) => {
         let checkIndex = []
         indexFinder(checkIndex, workObj.fY, workObj.fX)
-        cloneMainMemoPlant[workObj.fY][checkIndex[0]] = setState(cloneMainMemoPlant[workObj.fY][checkIndex[0]], {moveFromShadow: pass})  
+        cloneMainMemoPlant[workObj.fY][checkIndex[0]] = setState(cloneMainMemoPlant[workObj.fY][checkIndex[0]], objPass)  
       }
 
       console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
@@ -285,20 +289,22 @@ function Board (
       switch(updateSign.substr(0,1)) {
         case 'M':
           //console.log()
+          
           cleaner()
           mover()
           lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
+          oldFire.length > 0 && spellAnimeSetter(oldFire, null)
           oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
           oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false) // конфликтик..
-          console.log('PREVIEW_MODIFY:',myVenom)
+          //console.log('PREVIEW_MODIFY:',myVenom)
           myVenom.length > 0 && spellAnimeSetter(myVenom, true)
           partVenom.length > 0 && spellAnimeSetter(partVenom, true)
           oldMe.length > 0 && updateDefState(me, true) // может нет никого уже..
           oldPartner.length > 0 && updateDefState(partner, false)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
-          oldFire.length > 0 && spellAnimeSetter(oldFire, null)
+          
           break
         case 'C':
           setter()
@@ -378,6 +384,7 @@ function Board (
           })
           console.log('%c%s', 'color: aqua; font-size: 44px;','NEW_SPELL_MAP:', newSpellMap)
           console.log('FIRE_CHECK:', fire) // newLightPos??
+          
           newSpellMap.forEach(propsName => {
             switch(propsName){
               case 'partner':
@@ -423,14 +430,27 @@ function Board (
           break;
         case 'Q':
           console.log('MOVE_FROM_SHADOW_PASS:', moveFromShadow)
-          moveFromShadowSetter(moveFromShadow, moveFromShadow)
+          moveFromShadowSetter(moveFromShadow, {moveFromShadow})
           break
         case 'W':
           //console.log('W_DEBAG:PARTNER:',partner)
           oldInLight.length > 0 && lightSetter(oldInLight, false)
-          moveFromShadow && moveFromShadowSetter(moveFromShadow, null)
+          console.log('%c%s','color: darkblue; font-size: 33px', 'OLD_MOVE_FROM_SHADOW:', oldMoveFromShadow)
+          oldMoveFromShadow && moveFromShadowSetter(oldMoveFromShadow, {moveFromShadow: null})
           cleanProps(partner, false)
           updateDefState(partner, false)
+          //=====================TAKEOUT=======================
+          oldFire.length > 0 && spellAnimeSetter(fire, null)
+          oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
+          myVenom.length > 0 && spellAnimeSetter(myVenom, true)
+          oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false)
+          partVenom.length > 0 && spellAnimeSetter(partVenom, true)
+          break
+        case 'H': 
+          showOnSecond && moveFromShadowSetter(showOnSecond, {showOnSecond})
+          break
+        case 'Z':
+          oldShowOnSecond && moveFromShadowSetter(oldShowOnSecond, {showOnSecond: null}) 
           break
         default:
           console.log('START') // do something with this...
@@ -487,6 +507,9 @@ export default connect((
       partVenom,
       oldPartVenom,
       moveFromShadow,
+      oldMoveFromShadow,
+      showOnSecond,
+      oldShowOnSecond,
     }
    }
   ) => (
@@ -519,6 +542,9 @@ export default connect((
       partVenom,
       oldPartVenom,
       moveFromShadow,
+      oldMoveFromShadow,
+      showOnSecond,
+      oldShowOnSecond,
     }
     ), 
   {

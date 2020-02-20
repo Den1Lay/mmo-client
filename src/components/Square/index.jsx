@@ -7,50 +7,19 @@ import darkPlace from '@/img/DarkPlace.png'
 
 import './Square.scss'
                                                                       // underSpell will src
-const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpell, herePartner, mouseEvent, moveFromShadow}) => {
-  //overlay && x === 8 && y === 1 && console.log('OOOOOOOOOOOOOVVVVVVVVVVVEEEEEEEEEEEERL',overlay)
+const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure, underSpell, herePartner, mouseEvent, moveFromShadow, showOnSecond}) => {
+  console.log('%c%s','color: navy; font-size: 22px;',`X: ${x}, Y: ${y}, REAL_RE_RENDER:`, underSpell)
   const mainRef = useRef(null)
-  // useEffect(() => {
-    //console.log('%c%s', 'color: blue; font-size: 20px', `RE_RENDER_SQUARE: x: ${x}, y: ${y}`)
-    //underSpell  = {rgb, src}
+
     useEffect(() => {
       if(underSpell.length > 0) {
-        console.log('%c%s','color: green; font-size: 22px;','GET_NEW_UNDER_SPELL:', underSpell)
-        mainRef.current.style['background'] = Color(underSpell[0].color)
+        //console.log('%c%s','color: green; font-size: 22px;','GET_NEW_UNDER_SPELL:', underSpell)
+        mainRef.current.style['background'] = Color(underSpell[0].color) // think some-thing
       } else {
         mainRef.current.style['background'] = '';
       }
     })
-    // if(isLight && !lightState) {
-    //   let progress = 100
-    //   let lightMalyr = () => {
-    //     if(progress > 0) {
-    //       progress--
-    //       darkRef.current.style.opacity = progress/100+'';
-    //       lightRef.current.style.opacity = 1 - progress/100+'';
-    //       setTimeout(() => lightMalyr(), 10)
-    //     } else {
-    //       setLightState(true)
-    //     }
-    //   }
-    //   lightMalyr()
-    // }
-    // if(!isLight && lightState) { // state is saved
-    //   let darkProgress = 100
-    //   let darkMalyr = () => {
-    //     if(darkProgress > 0) {
-    //       darkProgress--
-    //       darkRef.current.style.opacity = 1 - darkProgress/100+'';
-    //       lightRef.current.style.opacity = darkProgress/100+'';
-    //       setTimeout(() => darkMalyr(), 10)
-    //     } else {
-    //       setLightState(false)
-    //     }
-    //   }
-    //   darkMalyr()
-    //   // make smoke
-    // }
-  //})
+
   return (
     <div
       ref={mainRef}
@@ -67,36 +36,61 @@ const Square = ({x, y, children, overlay, isLight, isRock, isTreasure, underSpel
         {/* <img ref={} // treasure
         src={} // local..
         style={{position: 'absolute', width: '48px', zIndex: '-1', opacity: '0'}}
-       />
-        <img ref={}  // spell
-        src={} // local..
-        style={{position: 'absolute', width: '48px', zIndex: '-1', opacity: '0'}}
-       />
-        <img ref={}  // rock
-        src={} // local..
-        style={{position: 'absolute', width: '48px', zIndex: '-1', opacity: '0'}}
        /> */}
-        
-         {/* <img ref={lightRef}
-        src={lightPlace} // local..
-        style={{position: 'absolute', width: '52  px', zIndex: '-1', opacity: '0'}}
-       /> */}
-       {/**
-        * <div ref={lightRef} style={{position:'absolute', width: '52px', height: '52px', zIndex: '-1', opacity: '0', backgroundColor: '#8be2ff'}}/>
-        * <div ref={darkRef} style={{position:'absolute', width: '52px', height: '52px', zIndex: '-1', opacity: '1', backgroundColor: '#00BFFF'}}/>
-        */}
-       {/* <img ref={darkRef}
-        src={darkPlace} // local..
-        style={{position: 'absolute', width: '52px', zIndex: '-1', opacity: '1'}}
-       /> */}
+
       {
         children && !herePartner ? children // React.createElement is the best
         : moveFromShadow && herePartner ? children
+        : showOnSecond && herePartner ? children
         : herePartner && isLight ? children
         : `${y}, ${x}`
       }
     </div>
   )
-}
+}, ({y, x, children, isLight, isRock, isTreasure, underSpell, herePartner, moveFromShadow, showOnSecond}, nextProps) => {
+  //console.log('%c%s', 'color: indigo; font-size:22px', 'THAT_CHILDREN:', children)
+  //console.log('%c%s', 'color: indigo; font-size:22px', 'THAT_NEXT_PROPS:', nextProps)
+
+  const checkUnderSpell = (prevUnder, nextUnder) => {
+    if(y=== 1 && x===8) {
+      console.log('%c%s', 'color: gold; font-size:22px', 'THAT_PREV', prevUnder)
+      console.log('%c%s', 'color: gold; font-size:22px', 'THAT_NEXT', nextUnder)
+    }
+    if(prevUnder.length === nextUnder.length) {
+      let res = true
+      prevUnder.forEach(({src},i) => {
+        if(src !== nextUnder[i].src) {
+          res = false
+        }
+      })
+      return res;
+    } else {
+      return false
+    }
+  }
+  const checkChildren = (prevChild, nextChild) => {
+    if(React.isValidElement(prevChild) && React.isValidElement(nextChild)) {
+      return prevChild.props.id === nextChild.props.id
+    } else if(React.isValidElement(prevChild) || React.isValidElement(nextChild)) {
+      return false
+    } else {
+      return true
+    }
+  }
+  const checkMoveFromShadow = (prevMove, nextMove) => {
+    //console.log('%c%s', 'color: indigo; font-size:33px', 'THAT_MOVE:', move)
+    return !!prevMove === !!nextMove
+  }
+
+  let res = isLight === nextProps.isLight
+  && isRock === nextProps.isRock 
+  && isTreasure === nextProps.isTreasure
+  && checkUnderSpell(underSpell, nextProps.underSpell)
+  && checkChildren(children, nextProps.children)
+  && herePartner === nextProps.herePartner
+  && checkMoveFromShadow(moveFromShadow)
+  && !!showOnSecond === !!nextProps.showOnSecond
+  return res 
+})
 
 export default Square

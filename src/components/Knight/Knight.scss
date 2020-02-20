@@ -7,6 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: 1s ease-in-out 0.3s;
   .buttleButton {
     cursor: pointer;
     font-size: 20px;
@@ -38,5 +39,12 @@
     display: flex;
     justify-content: space-between;
   }
-
+  // .mainSimbol {
+  //   opacity: 1;
+  //   // transition: 1s ease-in-out;
+  //   // transition-property: opacity;
+  //   // &__goToShadow {
+  //   //   opacity: 0;
+  //   // }
+  // }
 }

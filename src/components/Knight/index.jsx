@@ -4,7 +4,7 @@ import { connect, batch } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
-import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell} from '@/actions/game'
+import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell} from '@/actions/game'
 import './Knight.scss'
 
 const Knight = (
@@ -31,17 +31,18 @@ const Knight = (
     spellTo,
     spellAnimations,
     animeAttack,
-    endSpell
+    cleanAfterPartSpell,
+    showOnSecond
   }) => {
   //console.log('I_D_:',id)
-  console.log('%c%s', 'color: blue; font: 1.3rem/2;', 'REEEE_RENDER__ANIME_ATTACK:', animeAttack)
+  //console.log('%c%s', 'color: blue; font: 1.3rem/2;', 'REEEE_RENDER__ANIME_ATTACK:', animeAttack)
  
 
   if(moveFromShadow) {
-    console.log(`MOVE_FROM_SHADOW y:${Y} x:${X}`,moveFromShadow)
+    //console.log(`MOVE_FROM_SHADOW y:${Y} x:${X}`,moveFromShadow)
   }
   if(animeMove) {
-    console.log(`ANIME_MOVE:`, animeMove)
+    //console.log(`ANIME_MOVE:`, animeMove)
   }
   if(isPartner){
     //console.log('ISSSSSSSSSPPPPPPPPPPPPPPPPPPPPPPPPPPPAAAAAAAAAAAAAAAAAAARRRRRRRRT')
@@ -49,6 +50,7 @@ const Knight = (
   //const [action, setAction] = useState(true)
   const [spellReady, setSpellReady] = useState(false)
   const [animeTick, setAnimeTick] = useState(false)
+  let shadow = false;
   const mainRef = useRef(null)
   const firstRef = useRef(null)
   const secondRef = useRef(null)
@@ -117,6 +119,12 @@ const Knight = (
   })
 
   useEffect(() => {
+    // if(showOnSecond && !shadow) { // go throug ref....... 
+    //   shadow = true // go throung setTimeout..
+    // }  else if (showOnSecond && shadow) {
+    //   //spell here
+
+    // }
     //takeIt && takeTreasure({y:Y, x:X})
     console.log('CHECK_REFS:', firstRef)
     if(moveFromShadow) { mainRef.current.style['opacity'] = '0' }
@@ -125,7 +133,7 @@ const Knight = (
       //console.log('IS HAPPENED')
      
      // console.log("%cExample %s", css, 'all code runs happy');
-      console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
+      //console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
       anime({
         targets: mainRef.current, //transition on timeline to zero in 60%
         translateY: [0, (y-Y)*52],
@@ -144,8 +152,8 @@ const Knight = (
         }
       });
     }
-    console.log('%c%s', 'color: orange; font: 40px; ','ANIME_TiCK:', animeTick)
-    console.log('SPELL_ANIMATIONS', spellAnimations)
+    //console.log('%c%s', 'color: orange; font: 40px; ','ANIME_TiCK:', animeTick)
+    //console.log('SPELL_ANIMATIONS', spellAnimations)
     if(spellAnimations && spellAnimations.personId === id ) {
       console.log('SPELL_ANIMATIONS:INSIDE')
       if(particles.length === 0) {
@@ -167,8 +175,8 @@ const Knight = (
         // });
         //setParticles({refs, elements}); // pass.particles
       } else {
-        console.log('CHECK_PARTICLES:', particles)
-        console.log('CHECK_REFS:', secondRef)
+        //console.log('CHECK_PARTICLES:', particles)
+        //console.log('CHECK_REFS:', secondRef)
         // anime({
         //   targets: refStorage[0].current, //transition on timeline to zero in 60%
         //   translateY: [0, -200], // from args (y-Y)*52
@@ -187,7 +195,7 @@ const Knight = (
         // });
           // setAnimeTick(true)
           console.log('%c%s', 'color: orange; font: 40px; ','ANIME_TICK_AFTER:', animeTick)
-          spellAnimations.animeFunc({particles: refStorage, knight: mainRef, args: spellAnimations.animeArg, anime, spellTo, endSpell})
+          spellAnimations.animeFunc({particles: refStorage, knight: mainRef, args: spellAnimations.animeArg, anime, spellTo, cleanAfterPartSpell})
         }
         
       }
@@ -270,6 +278,7 @@ const Knight = (
     className={
       classNames('knight',
         isPartner && 'knight__isPartner', // либо в сразу anime...
+        //showOnSecond && 'knight__goToShadow'
     )}
     >
       <div ref={mainRef}>
@@ -283,4 +292,4 @@ const Knight = (
 }
 // слежение за собственным хп
 export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack}), 
-{addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, endSpell})(Knight)
+{addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell})(Knight)

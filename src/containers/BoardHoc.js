@@ -7,7 +7,7 @@ import Board from './Board'
 import { Button } from 'antd'
 
 import { makeSlide, overMakeSlide } from '@/actions/base'
-import { partnerAnimeMove, transformFunc } from '@/actions/game'
+import { partnerAnimeMove, transformFunc, partnerStartSpell, spellTo } from '@/actions/game'
 import { dropData } from '@/actions/network'
 import { SpellBtn } from '@/components'
 import { socket } from '@/core'
@@ -18,6 +18,8 @@ import arrow1 from '../img/arrow.png'
 const BoardHoc = (
   {
     partnerAnimeMove, 
+    partnerStartSpell,
+    spellTo,
     show, makeSlide, 
     overMakeSlide, 
     transformFunc, 
@@ -27,6 +29,7 @@ const BoardHoc = (
     stateHistory
   }) => {
   const [boardHid, setBoardHid] = useState(true)
+  const [exp, setExp] = useState(null)
   const mainRef = useRef(null)
   const moveHandler = () => {
     makeSlide('home')
@@ -36,9 +39,6 @@ const BoardHoc = (
   useEffect(() => {
     console.log('ARROW:', arrow)
     console.log('ARROW1:', arrow1)
-    // let reader = new FileReader()
-    // let res = reader.readAsDataURL(arrow)
-    // console.log('GREAT_RES: ', res)
   })
 
   if(show) {
@@ -67,9 +67,16 @@ const BoardHoc = (
       <div className='game__rightTab'> 
         <Button type='primary' onClick={() => {
           console.log('CLIIIIICK')
-          partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9, isDrag: false})
+          partnerAnimeMove({id: 'DKnight1', y: 3, x: 7, fY: 2, fX: 9}) //, isDrag: false
           //socket.emit('GET_URL')
         }}>$$$</Button>
+        <Button type='link' onClick={() => {
+          // isLight.some(({}) => payload.x === newX && payload.y === newY)
+          partnerStartSpell({id: 'DKnight1', y: 3, x: 7, spellInd: 0, withAnime: true, show: false}) // superShow
+          //spellTo()
+        }}>
+          $PELL
+        </Button>
       </div>
       <Board />
       <div className='game__upLeftTab'>
@@ -79,9 +86,10 @@ const BoardHoc = (
             func: func.toString(), 
             visibility
           })}>INS</Button>
+          
       </div>
     </div>
   )
 }
 
-export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData})(BoardHoc)
+export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData, partnerStartSpell, spellTo})(BoardHoc)
