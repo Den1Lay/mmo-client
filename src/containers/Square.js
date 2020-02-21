@@ -45,6 +45,8 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   ? {r:255, g:215, b:0} : null
 
   const [first, setFirst] = useState(null)
+  const [cash, setCash] = useState({me: null, partner: null, First: null})
+  const [place, setPlace] = useState(null)
   // const [workSquare, setWorkSquare] = useState({id: null, payload: null, relictProps: {
   //   moveFromShadow: null,  // may be bag
   //   isLight: null,
@@ -58,7 +60,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   // }
   //const [prepareTarget, setstate] = useState(false)
   const smokeRef = useRef(null)
-  let place = null;
+
   let herePartner = false;
   let hereMe = false;
   let flyUnit = null;
@@ -101,37 +103,57 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   //     return false
   //   }
   // }
-
-  const preparePlace = ({array, isPartner}) => {
-    array.forEach(({Y, X, id, pY, pX, xp, maxXp}) => {
+  const checkEquality = (arrayPass, etalonName) => {
+    let etalon = cash[etalonName]
+    let res = false; // arr may be deff
+    arrayPass.forEach(({id, Y, X, moveFromShadow, takeIt, isPartner}, i) => {
+      let workEl = etalon[i]
+      res = !(id === workEl.id && 
+        Y === workEl.Y && 
+        X === workEl.X)
+    })
+    if(!!cash.First.props.moveFromShadow !== !!moveFromShadow) {
+      res = true
+    }
+    return res 
+  }
+  const preparePlace = ({array, isPartner, name}) => { // me = [{id, Y, X, pY, pX, }]
+     array.forEach(({Y, X, id, pY, pX, xp, maxXp}) => {
       if(y === Y && x === X) {
-        if (isPartner) {
+        // if(y === 3 && x === 7 ) {
+        //   debugger
+        // }
+        if (isPartner) { // flag one 
           //console.log('HERE_PARTNER:', herePartner)
           herePartner = {Y, X, pY, pX, id, xp, maxXp}
           //console.log('HERE_PARTNER:', herePartner)
-        }
+        } //flag two)
         if (!isPartner) {hereMe = {Y, X, pY, pX, id, xp, maxXp}
           //console.log('HERE_ME', hereMe)
         }
-        if(!first) {
-          setFirst(id)
+        if(cash[name] === null || !cash.First || checkEquality(array, name)) {
+          if(cash.First && cash.First.props.id === id) {
+            if(y === 3 && x === 7) {console.log('%c%s', 'color:orchid; font-size: 44px;','FUUUUUUCKEN_UPDDDAATE@@!!!')}
+            setCash({me, partner, First: React.cloneElement(cash.First, {moveFromShadow, takeIt:isTreasure, isPartner})})
+          }
+          if(!cash.First) {
+            let place = <Knight   //он сам вытащит все шо надо...
+              mouseEvent={(pass) => mouseHereHandl(pass)} 
+              id={id} 
+              simbol={'♞'} 
+              y={y} x={x} 
+              takeIt={isTreasure}
+              //showOnSecond={showOnSecond}
+              moveFromShadow={moveFromShadow}
+              isPartner={isPartner}/>
+              setCash({me, partner, First: place})
+          } 
+        }
+        if(cash.First && cash.First.props.id !== id) { // ghost kill
+          flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner} moveFromShadow={moveFromShadow}/>
         }
         //console.log(`Inside Pass: y: ${y}, x: ${x}`)
-        if(id === first) {
-          switch(id.substr(1, 4)) {
-            case 'Knig':
-              place = <Knight   //он сам вытащит все шо надо...
-                mouseEvent={(pass) => mouseHereHandl(pass)} 
-                id={id} 
-                simbol={'♞'} 
-                y={y} x={x} 
-                takeIt={isTreasure}
-                showOnSecond={showOnSecond}
-                moveFromShadow={moveFromShadow}
-                isPartner={isPartner}/> //name of picture to use React.lazy
-          }
-          
-          
+    
           // if(workSquare.id !== id || checkRelictProps() || (!herePartner && !hereMe)) {
           //   x === 8 && y === 1 && console.log('%c%s', 'color: red; font-size: 33px', `RE_RENDOR_TROUNBLE: 1: ${workSquare.id !== id}, 2: ${checkRelictProps()} X:${x}, Y:${y}`) 
           //   setWorkSquare(
@@ -150,18 +172,16 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
           //     }
           //   )
           // }
-        } else {
-            flyUnit = <Knight id={id} simbol={'♞'} y={y} x={x} takeIt={isTreasure} isPartner={isPartner} moveFromShadow={moveFromShadow}/>
-        }
+         
       }
     })
-  }
+  } // return cash 
   // ПРОПСЫ ONLY СВЕРХУ ВНИЗ
   
-  preparePlace({array: me, isPartner: false})
-  preparePlace({array: partner, isPartner: true})
-  if(first && !place) {
-    setFirst(null)
+  preparePlace({array: me, isPartner: false, name: 'me'})
+  preparePlace({array: partner, isPartner: true, name: 'partner'})
+  if(cash.First && !(hereMe || herePartner)) {
+    setCash({me, partner, First: null})
   }
   if(herePartner && hereMe) {
     //logic
@@ -179,16 +199,17 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       console.log('PARTNEEEEEEEEEEEEEER: ',herePartner)
       console.log('ME: ',hereMe)
     }
-    let firstIsP = first.substr(0,1) === 'D'
+    let firstIsP = cash.First.props.id.substr(0,1) === 'D'
 
       let dmg = firstIsP ? maxXp*0.25 : maxXpp*0.25
       let myXpRes = xp - dmg;
       let partnerXpRes = xpp - dmg;
       //console.log(`RESSSSSSSSSSSSSSSSSSSSSSSOLT XXXXXXXXXXXP MY: ${myXpRes}, partner: ${partnerXpRes}`)
       if(partnerXpRes <= 0 && myXpRes > 0) {
-        if(firstIsP) {place = flyUnit; setFirst(id);} // уничтожил
-        flyUnit = null
         store.dispatch(kamickAttack({me: {id, xp: myXpRes, Y, X, pY, pX}, deadP: {id:idp, Y:Yp, X:Xp}, partner: null, deadM: null}))
+        if(firstIsP) {setCash({me, partner, First:flyUnit})} // уничтожил place = flyUnit; setFirst(id);
+        flyUnit = null
+        
         //dispatch...
         //console.log('FLY_UNIT:', flyUnit)
         //console.log('LAAAAAAAAAAAAAAAAAST HAAAAAAAAAAAAAANDLER place:', place)
@@ -199,7 +220,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         let XDir = firstIsP ? getNewDir(X, pX) : getNewDir(Xp, pXp)
         let newY = firstIsP ? Y-YDir : Yp-YDir
         let newX = firstIsP ? X-XDir : Xp-XDir
-        console.log('%c%s', 'color: navy; font: 18px Verdana;', `newY: ${newY}, newX: ${newX} YDir: ${YDir} XDir: ${XDir}`)
+        console.log('%c%s', 'color: navy; font-size: 66px;', `newY: ${newY}, newX: ${newX} YDir: ${YDir} XDir: ${XDir}`, flyUnit)
         anime({
           targets: flyUnitRef.current, //transition on timeline to zero in 60%
           translateY: [0, -(YDir*52)],
@@ -209,7 +230,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
           easing: 'easeInOutExpo',
           complete: anim => {// may take 90% event
             if(anim.completed) {
-              flyUnit = null
+              //flyUnit = null
               console.log(`firstIsP: ${firstIsP}`, {id:idp, xp:partnerXpRes, Y:newY, X:newX, pY:Yp, pX:Xp})
               //console.log(`Y: ${y}, X: ${x} HERE PARTNER: ${herePartner}, HERE ME: ${hereMe}`)
               store.dispatch(kamickAttack({
@@ -226,7 +247,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       } else if(partnerXpRes > 0 && myXpRes <= 0) {
         //уничтожился об противника me: {id, xp: myXpRes, Y, X, pY, pX}
         store.dispatch(kamickAttack({partner: {id:idp, xp: partnerXpRes, Y:Yp, X:Xp, pY:pYp, pX:pXp}, deadM: {id, Y, X}, me: null, deadP: null}))
-        if(!firstIsP) {place = flyUnit; setFirst(idp);}
+        if(!firstIsP) { setCash({me, partner, First: flyUnit})} //}place = flyUnit; setFirst(idp);}
         flyUnit = null;
       } else {
         //оба анигилировались
@@ -435,7 +456,7 @@ let mouseHere = false
             herePartner={herePartner}
             mouseEvent={(pass) => mouseHereHandl(pass)}
             >
-            {place}
+            {cash.First}
           </SquareBase>
         {gameParticles}
         <div ref={flyUnitRef} className="flyUnit">

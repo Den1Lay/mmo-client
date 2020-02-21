@@ -48,6 +48,7 @@ function Board (
   const [resSchema, setResSchema] = useState([])
   const [mainMemoPlant, setMainMemoPlant] = useState([])
   const [updateId, setUpdateId] = useState(null)
+  //const [resolution, setResolution] = useState(mainRes)
   useEffect(() => {
     if(mainRes.length === 0) {
       let topPart = [];
@@ -219,10 +220,15 @@ function Board (
       }
       const persenSetter = (person, who, me, partner) => {
         console.log('PERSONSEETTTTTEEEEEEEEEER',person)
+        console.log('%c%s', 'color: darkmagenta; font-size: 35px;', `ME_PASS_INSIDE_PERS_SETTER:`, me)
+        console.log('WHO::', who)
         let checkIndex = []
         person.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
           cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], who === 'me' ? {me} : {partner})
+          if(Y === 3 && X === 7) {
+            console.log('%c%s', 'color: deepskyblue; font-size: 33px', 'ELEMET X: 7, Y: 3', cloneMainMemoPlant[Y][checkIndex[0]])
+          }
         })
       }
       const updateDefState = (workArr, pass) => {
@@ -372,6 +378,7 @@ function Board (
           //oldFire.length > 0 && spellAnimeSetter(fire, null)
           break
         case 'S':
+          // может залпом перересуем??????
           //let sources = {partner, me, rocks, oldMe, oldPartner}
           //console.log('SPELL_MAP:',spellMap)
           oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
@@ -399,6 +406,7 @@ function Board (
                 rockSetter(oldRocks, false)
                 break
               case 'oldMe':
+                console.log('%c%s', 'color: cadetblue; font-size:44px;','WORK_TRIGGER:',oldMe)
                 persenSetter(oldMe, 'me', me, partner)
                 break
               case 'oldPartner':
@@ -440,7 +448,12 @@ function Board (
           cleanProps(partner, false)
           updateDefState(partner, false)
           //=====================TAKEOUT=======================
-          oldFire.length > 0 && spellAnimeSetter(fire, null)
+          //debugger
+          oldMe.length > 0 && updateDefState(me, true) // может нет никого уже..
+          oldPartner.length > 0 && updateDefState(partner, false)
+          oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
+          oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
+          oldFire.length > 0 && spellAnimeSetter(oldFire, null)
           oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
           myVenom.length > 0 && spellAnimeSetter(myVenom, true)
           oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false)

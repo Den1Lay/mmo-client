@@ -39,6 +39,19 @@
     display: flex;
     justify-content: space-between;
   }
+  .heart {
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: -20px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: crimson;
+    z-index: 3;
+  }
   // .mainSimbol {
   //   opacity: 1;
   //   // transition: 1s ease-in-out;

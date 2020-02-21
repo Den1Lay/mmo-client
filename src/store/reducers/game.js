@@ -13,7 +13,9 @@ const defaultState = {
       xp: 20,
       maxXp: 12,
       silensed: false,
+      buffs: [],
       stunned: 0,
+      v: Math.random(),
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],//'rocks'
@@ -380,10 +382,12 @@ const defaultState = {
       id: 'WKnight2', 
       Y: 1, X: 7,
       pY: 1, pX: 7,
-      xp: 12,
+      xp: 26,
       maxXp: 12,
       silensed: false,
       stunned: 0,
+      buffs: [],
+      v: Math.random(),
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -634,6 +638,8 @@ const defaultState = {
       maxXp: 12,
       silensed: false,
       stunned: 0,
+      buffs: [],
+      v: Math.random(),
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -818,6 +824,8 @@ const defaultState = {
       maxXp: 12,
       silensed: false,
       stunned: 0,
+      buffs: [],
+      v: Math.random(),
       visibility: {
         dopDirs: ['partner'], // mustBe in future
         blockDirs: ['me', 'rocks'],
@@ -861,8 +869,8 @@ const defaultState = {
             {xDir:-1, yDir:-1, pathLenght:1},
             {xDir:-1, yDir:1, pathLenght:1},
             {xDir:-1, yDir: 0, pathLenght:1},
-            {xDir:0, yDir: 1, pathLenght:1},
-            {xDir:0, yDir: -1, pathLenght:1}
+            {xDir:0, yDir:1, pathLenght:1},
+            {xDir:0, yDir:-1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, [], ['rocks'], [], Y, X, []))
           newVenome = newVenome.map(({...staff}) => ({...staff, time: 2, postDmg: 9, color: {r: 95, g: 255, b: 202}, src: ''})) //(95, 255, 202)
@@ -985,24 +993,28 @@ const defaultState = {
                 {xDir:0, yDir: 1, pathLenght:1},
                 {xDir:0, yDir: -1, pathLenght:1}
               ];
-              let gE = who === 'me'
+              let gE = who === 'me';
               direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, [gE ? 'partner' : 'me'], [gE ? 'me' : 'partner', 'rocks'], [], y, x, []))
               let workArr = gE ? newPartner : newMe;
-              let workArrPass = gE ? 'partner' : 'me'
+              let workArrPass = gE ? 'partner' : 'me';
               let workSpellMapPass = gE ? 'oldPartner' : 'oldMe';
+              let workDeadArr = gE ? newOldPartner : newOldMe
               newFire.forEach(({newY, newX}, fi) => {
                 workArr.forEach(({Y, X}, i) => {
                   if(newY === Y && newX === X) {
                     let newXp = workArr[i].xp - 6;
                     if(newXp > 0) {
-                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)
+                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT:',);
                       workArr[i].xp = newXp
+                      workArr[i].v = Math.random()
                       if(!spellMap.some(name => name === workArrPass)) {
                         spellMap.push(workArrPass)
                       }
                     } else {
+                      console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
+                      workDeadArr.push(workArr[i]);
                       workArr.splice(i, 1);
-                      newOldPartner.push(workArr[i]);
+                      //workArr[i].v = Math.random()
                       if(spellMap.some(name => name === workSpellMapPass)) {
                         spellMap.push(workSpellMapPass)
                       }
@@ -1014,8 +1026,8 @@ const defaultState = {
                 newFire[fi].color = gE ? {r: 150, g: 0, b: 24} : {r: 255, g: 0, b: 55};
                 newFire[fi].src = gE ? 'meFireBollSrc' : 'partFireBollSrc';
               })
-              console.log('%c%s', 'color: cadetblue; font-size:44px;','IN_AIR:',inAir)
-              console.log('%c%s', 'color: cadetblue; font-size:44px;',`x: ${x}, y: ${y}`)
+              //console.log('%c%s', 'color: cadetblue; font-size:44px;','IN_AIR:',inAir)
+              //console.log('%c%s', 'color: cadetblue; font-size:44px;',`x: ${x}, y: ${y}`)
               let firebol_res = {
                 me: newMe,
                 partner: newPartner,
@@ -1671,14 +1683,14 @@ const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
 const partnerMoveTo = (state) => {
   //console.log('NEW_PARNTNER:', {id, y, x})
   // alter Payload is state.workPayload where {id, y, x} refactory in f
-  console.log('%c%s', 'color: indigo; font-size: 44px;','WORK_PAYLOAD', state.workPayload)
+  //console.log('%c%s', 'color: indigo; font-size: 44px;','WORK_PAYLOAD', state.workPayload)
   let {y, x} = state.workPayload.payload
   let {id} = state.workPayload.inAir
   const newPartner = getNewStaff(state.partner, {id}, {y, x})
   let partMoveSource = {rocks: state.rocks, me: state.me, partner: newPartner}
   let partMoveR = getDlsData({ sources: partMoveSource, pathBuilder})
   const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks).concat(partMoveR.sumDlsLight)
-  console.log('LIGHT_POS_AFTER_PARTNER_MOVE:',lightPosAfterPartnerMove)
+  //console.log('LIGHT_POS_AFTER_PARTNER_MOVE:',lightPosAfterPartnerMove)
   
   return updateBaseStep(
     updateVenomStep({
@@ -1715,6 +1727,7 @@ const updateGameStats = (workArr, venomArr) => {
           res.splice(i, 1)
         } else {
           res[i].xp = newXp
+          res[i].v = Math.random()
         }
       }
     })
@@ -1792,7 +1805,7 @@ const getNewStaffAfterKamick = (defArr, {id:ID, xp, Y, X, pY, pX}) => {
       checkIndex = i
     }
   })
-  workArr[checkIndex] = {...workArr[checkIndex], xp, Y, X, pY, pX}
+  workArr[checkIndex] = {...workArr[checkIndex], xp, Y, X, pY, pX, v: Math.random()}
   return workArr
 }
 
@@ -1995,9 +2008,10 @@ const getNewStaff = (staff, {id}, {y, x}) => {
     }
   })
   console.log(`REDUCER INNNNNNNNNNNNNNSA THAT_TRY_FIND: ${id} _index: ${index}, Staff:`,staff)
-  staff[index] = {...staff[index], id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X}
+  staff[index] = {...staff[index], id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X, v: Math.random()}
   //console.log({id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X})
   //console.log(staff)
+
   return staff
 }
 
