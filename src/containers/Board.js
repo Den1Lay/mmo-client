@@ -350,18 +350,21 @@ function Board (
           console.log('A HANDLERRRRRRRRRRRRRRRRRRR', oldPartner)
           oldRocks.length > 0 && rockSetter(oldRocks, false);
           attackSetter(oldCanAttack, false)
-          lightSetter(newInLight, true)
+          newInLight.length > 0 && lightSetter(newInLight, true)
+          oldInLight.length > 0 && lightSetter(oldInLight, false)
           updateDefState(partner, false)
+          updateDefState(me, true)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
           //optional time update
           //greatUpdater(['me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom'])
-          oldMe.length > 0 && updateDefState(me, true)
+          //oldMe.length > 0 && updateDefState(me, true)
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           oldFire.length > 0 && spellAnimeSetter(fire, null)
           oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
           myVenom.length > 0 && spellAnimeSetter(myVenom, true)
           oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false)
           partVenom.length > 0 && spellAnimeSetter(partVenom, true)
+          oldShowOnSecond && moveFromShadowSetter(oldShowOnSecond, {showOnSecond: null}) 
           break
         case 'K': 
           console.log('K-FIIIIIIIIIIIIILTER:', me)
@@ -371,7 +374,7 @@ function Board (
           updateDefState(partner, false)
           oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
-          lightSetter(oldInLight, false)
+          oldInLight.length > 0 && lightSetter(oldInLight, false)
           lightSetter(newInLight, true)
           //optional time update
           //greatUpdater(['fire', 'oldFire', 'venom', 'oldVenom'])
@@ -392,6 +395,9 @@ function Board (
           console.log('%c%s', 'color: aqua; font-size: 44px;','NEW_SPELL_MAP:', newSpellMap)
           console.log('FIRE_CHECK:', fire) // newLightPos??
           
+          oldInLight.length > 0 && lightSetter(oldInLight, false)
+          newInLight.length > 0 && lightSetter(newInLight, true)
+
           newSpellMap.forEach(propsName => {
             switch(propsName){
               case 'partner':

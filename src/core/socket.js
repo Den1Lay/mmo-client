@@ -20,6 +20,7 @@ socket.on('GAME:PARTNER_SPELL', ({payload}) => {
   // const  {id: 'DKnight1', y: 3, x: 7, spellInd: 0, withAnime: true, show: false} = payload
   let { inLight } = store.getState().game
   // inAir take here
+  let show = true
   if(show) {
     //store.dispatch(partnerStartSpell...) withAnime(true)
   } else { // полностью в тени..

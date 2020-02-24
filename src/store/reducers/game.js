@@ -1,5 +1,5 @@
 import store from '../index'
-import { getDlsData } from '@/utils'
+import { getDlsData, lightFilter } from '@/utils'
 // ПЕРВАЯ ЗАПОВЕДЬ СПЕЛЛОВ: НЕЛЬЗЯ РЕДАЧИТЬ ГЕРОЯ, КОТОРЫЙ ДРОПНУЛ СПЕЛ ИЛИ КЛЕТКУ НА КОТОРОЙ СТОИТ ГЕРОЙ, ЕСЛИ У СПЕЛА ЕСТЬ АФТЕР ЭФФЕКТЫ. (можно)
 // СОБЫТИЕ: START_СОБЫТИЯ (createCash, wp) --> СОБЫТИЕ_TO
 // develop edition 
@@ -219,81 +219,122 @@ const defaultState = {
           ],
           //func: new Function('return '+"({payload: {y, x}, sources, target, who}) => {if(who === 'me') { let newPartner = sources['partner'].slice();let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];let newOldPartner = [];let spellMap = ['fire'];let direction = [{xDir:1, yDir:1, pathLenght:1},{xDir:1, yDir:-1, pathLenght:1},{xDir:1, yDir: 0, pathLenght:1},{xDir:-1, yDir:-1, pathLenght:1},{xDir:-1, yDir:1, pathLenght:1},{xDir:-1, yDir: 0, pathLenght:1},{xDir:0, yDir: 1, pathLenght:1},{xDir:0, yDir: -1, pathLenght:1}];direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, ['partner'], ['me', 'rocks'], [], y, x, []));console.log('LAST_COMPAR:',newPartner, newFire);newFire.forEach(({newY, newX}, fi) => {newPartner.forEach(({Y, X}, i) => {if(newY === Y && newX === X) {let newXp = newPartner[i].xp - 6;if(newXp > 0) {console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)newPartner[i].xp = newXpspellMap.push('partner')} else {newOldPartner.push(newPartner[i]);newPartner.splice(i, 1);spellMap.push('oldPartner')}}})newFire[fi].time = 2;newFire[fi].postDmg = 0;});console.log('PREV_RES_PARTNER:',newPartner);return {me: sources.me,partner: newPartner,rocks: sources.rocks,oldMe: [],oldPartner: newOldPartner,oldRocks: null,fire: newFire,venom: [],spellMap}} else {}}")()
           func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => {
+            // то как будут рисоваться спелы зависит от клик позиции, а не от площади спела
+            // очень важный момент... решение о том, будет вижен и какой он будет принимаются в функции... ибо индивид... котл, килл
+            // как будет строится анимация зависит от выхода
             let hero = inAir;
-            let newPartner = sources['partner'].slice()
-            let newMe = sources['me'].slice()
-            let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];
-            let newOldPartner = [];
-            let newOldMe = []
-            let spellMap = ['fire'];
-            let direction = [
-              {xDir:1, yDir:1, pathLenght:1},
-              {xDir:1, yDir:-1, pathLenght:1},
-              {xDir:1, yDir: 0, pathLenght:1},
-              {xDir:-1, yDir:-1, pathLenght:1},
-              {xDir:-1, yDir:1, pathLenght:1},
-              {xDir:-1, yDir: 0, pathLenght:1},
-              {xDir:0, yDir: 1, pathLenght:1},
-              {xDir:0, yDir: -1, pathLenght:1}
-            ];
-            let gE = who === 'me'
-            direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, [gE ? 'partner' : 'me'], [gE ? 'me' : 'partner', 'rocks'], [], y, x, []))
-            let workArr = gE ? newPartner : newMe;
-            let workArrPass = gE ? 'partner' : 'me'
-            let workSpellMapPass = gE ? 'oldPartner' : 'oldMe';
-            newFire.forEach(({newY, newX}, fi) => {
-              workArr.forEach(({Y, X}, i) => {
-                if(newY === Y && newX === X) {
-                  let newXp = workArr[i].xp - 6;
-                  if(newXp > 0) {
-                    console.log('TAAAAAAAAAAAAAAAAKE ITTTTT: ',)
-                    workArr[i].xp = newXp
-                    if(!spellMap.some(name => name === workArrPass)) {
-                      spellMap.push(workArrPass)
-                    }
-                  } else {
-                    workArr.splice(i, 1);
-                    newOldPartner.push(workArr[i]);
-                    if(spellMap.some(name => name === workSpellMapPass)) {
-                      spellMap.push(workSpellMapPass)
+              let newPartner = sources['partner'].slice()
+              let newMe = sources['me'].slice()
+              let newFire = [{newY: y, newX: x, time: 2, postDmg: 0}];
+              let newOldPartner = [];
+              let newOldMe = []
+              let spellMap = ['fire'];
+              let direction = [
+                {xDir:1, yDir:1, pathLenght:1},
+                {xDir:1, yDir:-1, pathLenght:1},
+                {xDir:1, yDir: 0, pathLenght:1},
+                {xDir:-1, yDir:-1, pathLenght:1},
+                {xDir:-1, yDir:1, pathLenght:1},
+                {xDir:-1, yDir: 0, pathLenght:1},
+                {xDir:0, yDir: 1, pathLenght:1},
+                {xDir:0, yDir: -1, pathLenght:1}
+              ];
+              let gE = who === 'me';
+              direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newFire, sources, [gE ? 'partner' : 'me'], [gE ? 'me' : 'partner', 'rocks'], [], y, x, []))
+              let workArr = gE ? newPartner : newMe;
+              let workArrPass = gE ? 'partner' : 'me';
+              let workSpellMapPass = gE ? 'oldPartner' : 'oldMe';
+              let workDeadArr = gE ? newOldPartner : newOldMe
+              newFire.forEach(({newY, newX}, fi) => {
+                workArr.forEach(({Y, X}, i) => {
+                  if(newY === Y && newX === X) {
+                    let newXp = workArr[i].xp - 6;
+                    if(newXp > 0) {
+                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT:',);
+                      workArr[i].xp = newXp
+                      workArr[i].v = Math.random()
+                      if(!spellMap.some(name => name === workArrPass)) {
+                        spellMap.push(workArrPass)
+                      }
+                    } else {
+                      console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
+                      workDeadArr.push(workArr[i]);
+                      workArr.splice(i, 1);
+                      //workArr[i].v = Math.random()
+                      if(spellMap.some(name => name === workSpellMapPass)) {
+                        spellMap.push(workSpellMapPass)
+                      }
                     }
                   }
-                }
+                })
+                newFire[fi].time = 2;
+                newFire[fi].postDmg = 0;
+                newFire[fi].color = gE ? {r: 150, g: 0, b: 24} : {r: 255, g: 0, b: 55};
+                newFire[fi].src = gE ? 'meFireBollSrc' : 'partFireBollSrc';
               })
-              newFire[fi].time = 2;
-              newFire[fi].postDmg = 0;
-              newFire[fi].color = gE ? {r: 150, g: 0, b: 24} : {r: 255, g: 0, b: 55};
-              newFire[fi].src = gE ? 'meFireBollSrc' : 'partFireBollSrc';
-            })
-            console.log('PREV_RES_PARTNER:',newPartner)
-            let firebol_res = {
-              me: newMe,
-              partner: newPartner,
-              rocks: sources.rocks,
-              oldMe: newOldMe,
-              oldPartner: newOldPartner,
-              oldRocks: null,
-              fire: newFire,
-              myVenom: [],
-              partVenom: [],
-              lightRed: false,
-              inLightBySpell: [],
-              args: {
-                tX: (x-inAir.X)*52,
-                tY: (y-inAir.Y)*52,
-              },
-              spellMap
-            }
-            console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
-            return firebol_res
-        },  // Новые lightPos.. // Спелы противника это просто спел в другую сторону
+              //console.log('%c%s', 'color: cadetblue; font-size:44px;','IN_AIR:',inAir)
+              //console.log('%c%s', 'color: cadetblue; font-size:44px;',`x: ${x}, y: ${y}`)
+              let firebol_res = {
+                me: newMe,
+                partner: newPartner,
+                rocks: sources.rocks,
+                oldMe: newOldMe,
+                oldPartner: newOldPartner,
+                oldRocks: null,
+                fire: newFire,
+                myVenom: [],
+                partVenom: [],
+                lightRed: false,
+                inLightBySpell: [],
+                args: {
+                  tX: (x-inAir.X)*52,
+                  tY: (y-inAir.Y)*52,
+                  animeFunc: 'animeFunc',
+                  hideKnight: !gE ? !sources['inLight'].some(({newY, newX}) => inAir.Y === newY && inAir.X === newX) : false
+                },
+                spellMap
+              }
+              console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
+              return firebol_res
+          },  // Новые lightPos.. // Спелы противника это просто спел в другую сторону
           // Анимации делают, все тоже, что и reducer, maxSinx
-          animeFunc: ({particles, knight, args: {tY, tX}, anime, spellTo, endSpell}) => {
+          animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {
+            // для мастера подгод под конкретное число, inAir известен...
+            const opacityRedWrapper = (baseStep, endStep) => {
+              return new Promise((resolve) => {
+                let progress = 0
+                let opacityRed = () => {
+                  setTimeout(() => {
+                    progress++
+                    baseStep(progress)
+                    
+                    if(progress <100) {
+                      opacityRed()
+                    } else {
+                      endStep()
+                      resolve()
+                      //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
+                    }
+                  }, 10)
+                }
+                opacityRed()
+              })
+            }
+            
             console.log('PARTICLES:', particles)
-            particles[0].current.style.display = 'block';// 
+            particles[0].current.style.display = 'block'; // 
             particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
             particles[0].current.style.width = '90px';
             //particles[0].current.style.height = '30px';
+            console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
+            if(hideKnight || payloadShow) {
+              opacityRedWrapper(
+                (progress) => knight.current.style.opacity = 1-progress/100+'',
+                () => {}
+              )
+              //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
+              //knight.current.style.opacity = 1-animU.progress/100;
+            }
             anime({
               targets: particles[0].current, //transition on timeline to zero in 60%
               translateY: [0, tY], // from args (y-Y)*52
@@ -339,24 +380,16 @@ const defaultState = {
                   })
                   Promise.all(promisses).then(() => {
                     spellTo()
-                    let progress = 0
-                    let opacityRed = () => {
-                      setTimeout(() => {
-                        progress++
-                        particles.slice(1).forEach(({current}) => current.style.opacity = 1-progress/100+'')
-                        if(progress <100) {
-                          opacityRed()
-                        } else {
-                          particles.forEach(({current}) => {
-                            current.style.display = 'none';
-                            current.style.transform = 'translateY(0px) translateX(0px)';
-                            current.style.opacity = '1'
-                          })
-                          //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
-                        }
-                      }, 10)
-                    }
-                    opacityRed()
+                    opacityRedWrapper(
+                      (progress) => particles.slice(1).forEach(({current}) => current.style.opacity = 1-progress/100+''),
+                      () => {
+                        particles.forEach(({current}) => {
+                          current.style.display = 'none';
+                          current.style.transform = 'translateY(0px) translateX(0px)';
+                          current.style.opacity = '1'
+                        })
+                      }
+                    ).then(() => (hideKnight || payloadShow) && cleanAfterPartSpell())
                     //setTimeout(() => endSpell(), )
                     //setTimeout(() => endSpell(), 1000)
                   })
@@ -372,9 +405,9 @@ const defaultState = {
               }
             });
           }, // использование последовательностей
-          particles: [
-            { width: '10px', height: '10px', color: 'red', src: null },
-          ]
+          // particles: [
+          //   { width: '10px', height: '10px', color: 'red', src: null },
+          // ]
         }     
       ],
     },
@@ -436,7 +469,7 @@ const defaultState = {
             {xDir:0, yDir: -1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, ['partner'], ['me', 'rocks'], [], Y, X, []))
-          newVenome = newVenome.map(({...staff}) => ({...staff, time: 2, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
           console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: newVenome,
@@ -530,104 +563,271 @@ const defaultState = {
             {xDir:-1, yDir: 2, pathLenght:1},
             {xDir:1, yDir: 2, pathLenght:1},
           ],
-          func: ({payload: {y, x}, sources, target, who, pathBuilder}) => {
-            if(who === 'me') {
-              let aimIndex = null
-              let workArr = sources[target].slice()
-              let rockArr = sources.rocks.slice()
-              let meArr = sources.me.slice()
-              let newOldPartner = []
-              let newOldMe = []
-              let newOldRocks = []
-              let spellMap = ['partner']
-              workArr.forEach(({Y, X}, i) => {
-                if(Y === y && X === x) {
-                  aimIndex = i
-                }
-              })
-              const {Y, X} = workArr[aimIndex]
-              let newY = Y+5
-              let rockStunIndex = null
-              let meStunIndex = null
-              sources.rocks.forEach(({Y:rY, X:rX},i) => {
-                if(rY === newY && rX === X) {
-                  rockStunIndex = i
-                }
-              })
-              sources.me.forEach(({Y:mY, X:mX}, mi) => {
-                if(mY === newY && mX === X) {
-                  meStunIndex = mi
-                }
-              })
-              if(rockStunIndex === null && meStunIndex === null) {
-                if(newY - X > 12 && X <= 4) {
-                  newY = 12 + X
-                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
-                } else if (newY - (17 - X) > 12 && X >= 13) {
-                  newY = 12 + (17 - X)
-                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
-                } else if (newY > 17 && X <= 12 && X >= 5) {
-                  newY = 17
-                  //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
-                } else {
-                  console.log('NOTH1NG')
-                }
-                workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X}
-              } else if(meStunIndex === null) {
-                newY = rockArr[rockStunIndex].Y
-                newOldRocks.push(rockArr[rockStunIndex])
-                //console.log('ROCK_STUN_INDEX:', rockStunIndex)
-                //console.log('NEW_OLD_ROCKS:', newOldRocks)
-                rockArr.splice(rockStunIndex, 1)
-                spellMap.push('oldRocks')
-                spellMap.push('rocks')
-                let resXp = workArr[aimIndex].xp - 5
-                if(resXp > 0) {
-                  workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X, xp: resXp, stunned: 3}
-                } else { // RIP
-                  newOldPartner.push(workArr[aimIndex])  
-                  workArr.splice(aimIndex, 1)
-                  spellMap.push('oldPartner')
-                }
-              } else { // Stunk at me
-                let resPartnerXp = workArr[aimIndex].xp - 3
-                let resMyXp = meArr[meStunIndex].xp - 2
-                if(resPartnerXp > 0) { // survive
-                  workArr[aimIndex] = {...workArr[aimIndex], Y:sources.me[meStunIndex].Y, pY: workArr[aimIndex].Y, pX: workArr[aimIndex].X, xp: resPartnerXp, stunned: 2}
-                } else { //RIP OF ME
-                  newOldPartner.push(workArr[aimIndex])
-                  workArr.splice(aimIndex, 1)
-                  spellMap.push('oldPartner')
-                }
-                spellMap.push('me')
-                if(resMyXp > 0) { //RIP ME
-                  meArr[meStunIndex] = {...meArr[meStunIndex], xp: resMyXp, stunned: 1}
-                } else {
-                  newOldMe.push(meArr[meStunIndex])
-                  meArr.splice(meStunIndex, 1)
-                  spellMap.push('oldMe')
-                }
-                
+          func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => {
+            let gE = who === 'me';
+            let targetInd
+            let newMe = sources['me'].slice()
+            let newPartner = sources['partner'].slice()
+            let rockArr = sources.rocks.slice()
+            let newOldPartner = []
+            let newOldMe = []
+            let newOldRocks = []
+            let spellMap = [gE ? 'partner' : 'me']
+            let workArr = gE ? newPartner : newMe;
+            let attackArr = gE ? newMe : newPartner;
+            let attackArrPass = gE ? 'me' : 'partner'
+            let workDeadArr = gE ? newOldPartner : newOldMe;
+            let altWorkDeadArr = gE ? newOldMe : newOldPartner;
+            let workDeadPass = gE ? 'oldPartner' : 'oldMe';
+            let altWorkDeadPass = gE ? 'oldMe' : 'oldPartner'
+            workArr.forEach(({Y, X}, i) => {
+              if(Y === y && X === x) {
+                targetInd = i
               }
-              console.log("RES_CONTENT:", workArr)
-              return {
-                me: meArr,
-                partner: workArr,
-                rocks: rockArr,
-                oldMe: newOldMe,
-                oldPartner: newOldPartner,
-                oldRocks: newOldRocks,
-                fire: [],
-                venom: [],
-                lightRed: false,
-                inLightBySpell: [],
-                spellMap
-              } 
-            } else {
-
+            })
+            const {Y, X} = workArr[targetInd];
+            let newY = Y+5;
+            let rockStunIndex = null;
+            let stunOfAttacker = null;
+            let stunOfAlly = null;
+            sources.rocks.forEach(({Y:rY, X:rX},i) => {
+              if(rY === newY && rX === X) {
+                rockStunIndex = i
+              }
+            })
+            attackArr.forEach(({Y:mY, X:mX}, mi) => {
+              if(mY === newY && mX === X) {
+                stunOfAttacker = mi
+              }
+            })
+            workArr.forEach(({Y:pY, X:pX}, pi) => {
+              if(pY === newY && pX === X) {
+                stunOfAlly = pi
+              }
+            })
+            const deathFunc = (ind) => {
+              workDeadArr.push(workArr[ind])
+              workArr.splice(stunOfAlly, 1)
+              spellMap.push(workDeadPass)
             }
-          }   // Новые lightPos.. 
-        }     // Спелы противника это просто спел в другую сторону
+            if(rockStunIndex === null && stunOfAttacker === null && stunOfAlly === null) {
+              if(newY - X > 12 && X <= 4) {
+                newY = 12 + X
+                //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              } else if (newY - (17 - X) > 12 && X >= 13) {
+                newY = 12 + (17 - X)
+                //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              } else if (newY > 17 && X <= 12 && X >= 5) {
+                newY = 17
+                //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
+              } else {
+                console.log('NOTH1NG')
+              }
+              workArr[targetInd] = {...workArr[targetInd], Y: newY, pY: workArr[targetInd].Y, pX: workArr[targetInd].X}
+            } else if(rockStunIndex !== null) {
+              newY = rockArr[rockStunIndex].Y
+              newOldRocks.push(rockArr[rockStunIndex])
+              //console.log('ROCK_STUN_INDEX:', rockStunIndex)
+              //console.log('NEW_OLD_ROCKS:', newOldRocks)
+              rockArr.splice(rockStunIndex, 1)
+              spellMap.push('oldRocks')
+              spellMap.push('rocks')
+              let resXp = workArr[targetInd].xp - 5
+              if(resXp > 0) {
+                workArr[targetInd] = {...workArr[targetInd], Y: newY, pY: workArr[targetInd].Y, pX: workArr[targetInd].X, xp: resXp, stunned: 3}
+              } else { // RIP
+                deathFunc(targetInd)
+                // workDeadArr.push(workArr[targetInd])
+                // workArr.splice(targetInd, 1)
+                // spellMap.push(workDeadPass)
+              }
+            } else if(stunOfAlly === null) { // Stunk at me or part
+              let resSpellObjXp = workArr[targetInd].xp - 3 // spellPerson
+              let resAttackerXp = attackArr[stunOfAttacker].xp - 2 // attackerXp
+              if(resSpellObjXp > 0) { // survive
+                workArr[targetInd] = {...workArr[targetInd], Y:attackArr[stunOfAttacker].Y, pY: workArr[targetInd].Y, pX: workArr[targetInd].X, xp: resSpellObjXp, stunned: 2}
+              } else { //RIP OF ME
+                deathFunc(targetInd)
+                // workDeadArr.push(workArr[targetInd])
+                // //newOldPartner.push(workArr[aimIndex]) // to another func
+                // workArr.splice(targetInd, 1)
+                // spellMap.push(workDeadPass)
+              }
+              spellMap.push(attackArrPass)
+              if(resAttackerXp > 0) { //RIP ME
+                attackArr[stunOfAttacker] = {...attackArr[stunOfAttacker], xp: resAttackerXp, stunned: 1}
+              } else {
+                altWorkDeadArr.push(attackArr[stunOfAttacker])
+                attackArr.splice(stunOfAttacker, 1)
+                spellMap.push(altWorkDeadPass)
+              }
+            } else {
+              let newSpellObjXp = workArr[targetInd].xp - 3;
+              let allyXp = workArr[stunOfAlly].xp - 2;
+              if(newSpellObjXp > 0) {
+                workArr[targetInd] = {...workArr[targetInd], Y:workArr[stunOfAlly].Y, pY: workArr[targetInd].Y, pX: workArr[targetInd].X, xp: newSpellObjXp, stunned: 2}
+              } else {
+                deathFunc(targetInd)
+                // workDeadArr.push(workArr[targetInd])
+                // workArr.splice(targetInd, 1)
+                // spellMap.push(workDeadPass)
+              }
+              if(allyXp > 0) {
+                workArr[stunOfAlly] = {...workArr[stunOfAlly], xp: allyXp, stunned: 2}
+              } else {
+                deathFunc(stunOfAlly)
+                // workDeadArr.push(workArr[stunOfAlly])
+                // workArr.splice(stunOfAlly, 1)
+                // spellMap.push(workDeadPass)
+              }
+            }
+            console.log("RES_CONTENT:", workArr)
+            return {
+              me: newMe,
+              partner: newPartner,
+              rocks: rockArr,
+              oldMe: newOldMe,
+              oldPartner: newOldPartner,
+              oldRocks: newOldRocks,
+              fire: [],
+              myVenom: [],
+              partVenom: [],
+              lightRed: false,
+              inLightBySpell: [],
+              args: {
+                yPass: newY - y,
+                Y: y - inAir.X,
+                X: x - inAir.Y,
+                animeFunc: 'animeFunc',
+                hideKnight: !gE ? !sources['inLight'].some(({newY, newX}) => inAir.Y === newY && inAir.X === newX) : false
+              },
+              spellMap
+            }
+            
+          },   // Новые lightPos.. // Спелы противника это просто спел в другую сторону
+          animeFunc: (payloadShow) => ({particles, knight, args: {yPass, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
+            // для мастера подгод под конкретное число, inAir известен...
+            setTimeout(() => {
+              spellTo()
+            }, 3000);
+            //====================ATTACK_KNIGHT_PART==========================
+          }
+          //   const opacityRedWrapper = (baseStep, endStep) => {
+          //     return new Promise((resolve) => {
+          //       let progress = 0
+          //       let opacityRed = () => {
+          //         setTimeout(() => {
+          //           progress++
+          //           baseStep(progress)
+                    
+          //           if(progress <100) {
+          //             opacityRed()
+          //           } else {
+          //             endStep()
+          //             resolve()
+          //             //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
+          //           }
+          //         }, 10)
+          //       }
+          //       opacityRed()
+          //     })
+          //   }
+          //   if(hideKnight || payloadShow) {
+          //     opacityRedWrapper(
+          //       (progress) => knight.current.style.opacity = 1-progress/100+'',
+          //       () => {}
+          //     )
+          //     //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
+          //     //knight.current.style.opacity = 1-animU.progress/100;
+          //   }
+          //   //====================ATTACK_KNIGHT_PART_END======================
+
+          //   console.log('PARTICLES:', particles)
+          //   let contentArr = [
+          //     // {
+          //     //   xStart: 
+          //     // },
+              
+          //   ]
+          //   let workParticles = particles.slice(0, 3);
+
+          //   particles[0].current.style.display = 'block'; // 
+          //   particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
+          //   particles[0].current.style.width = '90px';
+          //   //particles[0].current.style.height = '30px';
+          //   console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
+            
+          //   anime({
+          //     targets: particles[0].current, //transition on timeline to zero in 60%
+          //     translateY: [0, tY], // from args (y-Y)*52
+          //     translateX: [0, tX], // from args (x-X)*52
+          //     duration: 450,
+          //     easing: 'easeInCirc',
+          //     complete: anim1 => {  // may take 90% event
+          //       if(anim1.completed) {  
+          //         console.log('ISTIME')
+          //         let resCheck = [];
+          //         particles[0].current.style.opacity = 0;
+          //         // применение изменений и конец анимаций через различные события
+          //         let directions = [
+          //           {ttY: 43, ttX: 43},
+          //           {ttY: 43, ttX: -43},
+          //           {ttY: -43, ttX: 43},
+          //           {ttY: -43, ttX: -43},
+          //         ]
+          //         let promisses = particles.slice(1).map(({current}, i) => {
+          //           let {ttY, ttX} = directions[i]
+          //           current.style.display = 'block';
+          //           current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
+          //           current.style.width = '75px';
+          //           return new Promise((resolve, reject) => {
+          //             anime({
+          //               targets: current,
+          //               translateY: [tY, tY-ttY], // 0 --- last position of fireboll    
+          //               translateX: [tX, tX-ttX],
+          //               //rotateX: 
+          //               duration: 500,
+          //               easing: 'easeInOutCirc', //'spring(1, 90, 12, 0)'
+          //               // update: anim => {
+          //               //   current.style.opacity = 1-anim.progress/100+''
+          //               //   console.log('UPDATE: ', anim.progress)
+          //               // },
+          //               complete: anim => {
+          //                 if(anim.completed) {
+          //                   resolve(true)
+          //                 }
+          //               }
+          //             })
+          //           })
+          //         })
+          //         Promise.all(promisses).then(() => {
+          //           spellTo()
+          //           opacityRedWrapper(
+          //             (progress) => particles.slice(1).forEach(({current}) => current.style.opacity = 1-progress/100+''),
+          //             () => {
+          //               particles.forEach(({current}) => {
+          //                 current.style.display = 'none';
+          //                 current.style.transform = 'translateY(0px) translateX(0px)';
+          //                 current.style.opacity = '1'
+          //               })
+          //             }
+          //           ).then(() => (hideKnight || payloadShow) && cleanAfterPartSpell())
+          //           //setTimeout(() => endSpell(), )
+          //           //setTimeout(() => endSpell(), 1000)
+          //         })
+          //         console.log('%c%s', 'color: green' ,"AFTER_SHAKE",resCheck)
+          //         // if(resCheck.length >= 4) {
+          //         //   
+          //         // }
+                  
+          //       }
+          //     },
+          //     update: anim => {
+                
+          //     }
+          //   });
+          // }  
+        }     
       ]
     },  //   17, 9
     {
@@ -688,7 +888,7 @@ const defaultState = {
             {xDir:0, yDir: -1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, ['partner'], ['me', 'rocks'], [], Y, X, []))
-          newVenome = newVenome.map(({...staff}) => ({...staff, time: 2, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
           console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: [],
@@ -873,7 +1073,7 @@ const defaultState = {
             {xDir:0, yDir:-1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, [], ['rocks'], [], Y, X, []))
-          newVenome = newVenome.map(({...staff}) => ({...staff, time: 2, postDmg: 9, color: {r: 95, g: 255, b: 202}, src: ''})) //(95, 255, 202)
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 95, g: 255, b: 202}, src: ''})) //(95, 255, 202)
           console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: newVenome,
@@ -913,8 +1113,8 @@ const defaultState = {
         ]
       },
       attack: {
-        dammage: 1,
-        type: 'magic', //range and magic
+        dammage: 9,
+        type: 'melee', //range and magic //mele
         dopDirs: [],
         blockDirs: ['me', 'rocks'],
         ignore: ['partner'],
@@ -998,8 +1198,8 @@ const defaultState = {
               let workArr = gE ? newPartner : newMe;
               let workArrPass = gE ? 'partner' : 'me';
               let workSpellMapPass = gE ? 'oldPartner' : 'oldMe';
-              let workDeadArr = gE ? newOldPartner : newOldMe
-              newFire.forEach(({newY, newX}, fi) => {
+              let workDeadArr = gE ? newOldPartner : newOldMe;
+              newFire.forEach(({newY, newX}, fi) => { 
                 workArr.forEach(({Y, X}, i) => {
                   if(newY === Y && newX === X) {
                     let newXp = workArr[i].xp - 6;
@@ -1052,7 +1252,7 @@ const defaultState = {
               return firebol_res
           },
 
-          animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {
+          animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
             const opacityRedWrapper = (baseStep, endStep) => {
               return new Promise((resolve) => {
@@ -1214,7 +1414,7 @@ const defaultState = {
   ], // F
   dispatchHistory: [], // F
   side: 'dark', // or light // FS
-
+  inLightBySpell: [],
   //spellAnimations???
 }
 
@@ -1285,9 +1485,9 @@ export default (state = defaultState, action) => {
     case 'KNIGHT:MOVE_TO':
       //console.log('PRE_GET_NEW_STAFF:', state.inAir)
       const newMe = getNewStaff(state.me, state.inAir, state.workPayload.payload)
-      let sources = {rocks: state.rocks, me: newMe, partner: state.partner}
-      let r = getDlsData({ sources, pathBuilder})
-      let allLightPos = getLightPosition(newMe, state.partner, state.rocks).concat(r.sumDlsLight)
+      //let sources = {rocks: state.rocks, me: newMe, partner: state.partner}
+      //let r = getDlsData({ sources, pathBuilder})
+      let allLightPos = getLightPosition(newMe, state.partner, state.rocks)
       //newPartner
       return updateBaseStep(
         updateVenomStep({ // // for what, i don't know 
@@ -1301,8 +1501,8 @@ export default (state = defaultState, action) => {
             newInLight: getNewInLight(state.inLight, allLightPos),
             oldInLight: getOldInLight(state.inLight, allLightPos), // точечная перерисовка, если траблы с опти
             animeMove: null, 
-            myVenom: state.myVenom.concat(r.sumDlsMyVenom),
-            partVenom: state.partVenom.concat(r.sumDlsPartVenom),
+            myVenom: state.myVenom,
+            partVenom: state.partVenom,
             updateSign: 'M'+Math.random(),
           },
           state
@@ -1377,27 +1577,57 @@ export default (state = defaultState, action) => {
         workPayload: {inAir: state.inAir, payload, me: true, cause: 'attack', spellInd: null},
         updateSign: 'D'+Math.random()
       }
+    case 'PARTNER:START_ATTACK': //def in up level
+    // const {id, aim: me } = payload aim === 'me'
+    let pAO;
+      state.partner.forEach(({id}, i) => {
+        if(id === payload.id) {
+          pAO = state.partner[i]
+        }
+      })
+      let showFlag = !state.inLight.some(({newX, newY}) => pAO.X === newX && pAO.Y === newY);
+      //console.log('%c%s', 'color: aquamarine; font-size: 22px;','THAT_PO:', pO)
+      //=== купить $taff ===//
+      //console.log('%c%s', 'color: aquamarine; font-size: 22px;','THAT_PSR:', pSR)
+      let pAP = {inAir: pAO, payload: {x: payload.x, y: payload.y, aim: payload.aim}, me: false, cause: 'move', spellInd: null}
+      return payload.withAnime ? {
+        ...state,
+          animeAttack: {id:pAO.id, y: payload.y, x: payload.x, type: pAO.attack.type},
+          showOnSecond: showFlag ? {fX: pAO.X, fY: pAO.Y} : null, //if show else dead
+          workPayload: pAP,
+          updateSign: 'H'+Math.random()
+        } : {
+        ...state,
+        workPayload: pAP
+      }
     case 'KNIGHT:ATTACK_TO': // будет вызываться нескольколько раЗ, если необходимо, АУЕ
-      let {y, x, aim} = state.workPayload; // refactory this
-      let partnerRes =  findAndKill(state.partner, y, x, aim, 'partner', state.inAir)
-      let rocksRes =  findAndKill(state.rocks, y, x, aim, 'rocks', state.inAir)
+      // const {who: 'me'/'partner'}  = payload
+      let {y, x, aim} = state.workPayload.payload; // refactory this
+      // aim сущест. для того что бы не делать лишнии фильтры и отсеивать аттаки в пустоту..
+      let partnerRes = !payload ? findAndKill(state.partner, y, x, aim, 'partner', state.inAir) : {res: state.partner, target: null};
+      let rocksRes = findAndKill(state.rocks, y, x, aim, 'rocks', !payload ? state.inAir : state.workPayload.inAir);
+      let meRes = payload ? findAndKill(state.me, y, x, aim, 'me', state.workPayload.inAir) : {res: state.me, target: null};
       // буст от аттаки inAir'а
-      const attackSources = {rocks: rocksRes.res, me: state.me, partner: partnerRes.res} // Эта длс для камня.. если кто - либо рипает преграду dls lightу
+      const attackSources = {rocks: rocksRes.res, me: meRes.res, partner: partnerRes.res} // Эта длс для камня.. если кто - либо рипает преграду dls lightу
       let attackR = getDlsData({ sources: attackSources, pathBuilder})
-      let allLightPosAfterMurder = getLightPosition(state.me, partnerRes.res, rocksRes.res).concat(attackR.sumDlsLight)
+      let allLightPosAfterMurder = getLightPosition(meRes.res, partnerRes.res, rocksRes.res).concat(attackR.sumDlsLight)
       return updateBaseStep(
         updateVenomStep({
         data: {
           ...state,
           partner: partnerRes.res,
           rocks: rocksRes.res,
+          me: meRes.res,
           oldPartner: partnerRes.target,
           oldRocks: rocksRes.target,
+          oldMe: meRes.target,
+          showOnSecond: null,
+          oldShowOnSecond: state.showOnSecond,
           // canAttack: [],
           // oldCanAttack: state.canAttack,
-          inLight: partnerRes.target || rocksRes.target ? allLightPosAfterMurder : state.inLight,
-          newInLight: partnerRes.target || rocksRes.target ? getNewInLight(state.inLight, allLightPosAfterMurder) : [],
-          //oldInLight: partnerRes.target || rocksRes.targetgetLigh ? state.newInLight : [],
+          inLight: allLightPosAfterMurder,
+          newInLight: getNewInLight(state.inLight, allLightPosAfterMurder),
+          oldInLight: getOldInLight(state.inLight, allLightPosAfterMurder),
           myVenom: state.myVenom.concat(attackR.sumDlsMyVenom),
           partVenom: state.partVenom.concat(attackR.sumDlsPartVenom),
           animeAttack: null,
@@ -1477,7 +1707,7 @@ export default (state = defaultState, action) => {
         { 
           inAir: state.inAir,
           payload, // {y, x}
-          sources: {me: state.me, partner: state.partner, rocks: state.rocks}, 
+          sources: {me: state.me, partner: state.partner, rocks: state.rocks, }, 
           target: spellObj.target, 
           who: 'me',
           pathBuilder
@@ -1505,10 +1735,12 @@ export default (state = defaultState, action) => {
       // сперва поджигает затем умирает, Урон, даже если чел убился об яд
       // эксперимент с передачей this и подключением к this функций
       let spellCashRes = state.spellCash
-      let spellSources = {rocks: spellCashRes.rocks, me: spellCashRes.me, partner: spellCashRes.partner}
-      let sDD = getDlsData({ sources: spellSources, pathBuilder})
-      let allLightPosAfterSpell = spellCashRes.inLightBySpell.concat(sDD.sumDlsLight); // абсолютный источник света
+      //let spellSources = {rocks: spellCashRes.rocks, me: spellCashRes.me, partner: spellCashRes.partner}
+      //let sDD = getDlsData({ sources: spellSources, pathBuilder})
+      // абсолютный источник света
       //console.log('%c%s','color: red; font-size: 24px;','DLS_DATA_VENOM:', sDD.sumDlsMyVenom)
+      //let newBaseLight = getLightPosition(spellCashRes.me, spellCashRes.partner, spellCashRes.rocks)
+      //console.log('%c%s', 'color:tomato; font-size: 33px;', 'NEW_BASE_LIGHT:',newBaseLight)
       return updateBaseStep(
         updateVenomStep({
         data: {
@@ -1522,12 +1754,12 @@ export default (state = defaultState, action) => {
           canSpell: [],
           oldCanSpell: state.canSpell,
           fire: state.fire.concat(spellCashRes.fire), //Just flash not real fire
-          myVenom: state.myVenom.concat(spellCashRes.myVenom).concat(sDD.sumDlsMyVenom),
-          partVenom: state.partVenom.concat(spellCashRes.partVenom).concat(sDD.sumDlsPartVenom),
+          myVenom: state.myVenom.concat(spellCashRes.myVenom),
+          partVenom: state.partVenom.concat(spellCashRes.partVenom),
           spellMap: spellCashRes.spellMap,
-          inLight: spellCashRes.lightRed ? allLightPosAfterSpell : state.inLight,
-          newInLight: spellCashRes.lightRed ? getNewInLight(state.inLight, allLightPosAfterSpell) : [],
-          oldInLight: spellCashRes.lightRed ? getOldInLight(state.inLight, allLightPosAfterSpell) : [],
+          inLightBySpell: spellCashRes.inLightBySpell,
+          //newInLight: spellCashRes.lightRed ? getNewInLight(state.inLight, allLightPosAfterSpell) : getNewInLight(state.inLight, newBaseLight),
+          //oldInLight: spellCashRes.lightRed ? getOldInLight(state.inLight, allLightPosAfterSpell) : getOldInLight(state.inLight, newBaseLight),
           updateSign: 'S'+Math.random(), // remuver
           spellCash: null,
           spellAnimations: null,
@@ -1562,14 +1794,26 @@ const getOldInLight = (state, newData) => {
 
 const updateVenomStep = ({data, state}) => {
     //console.log('DATA_PASS:', data)
-
-    const newMyVenom = updateSpells(data.myVenom ? data.myVenom : state.myVenom);
-    const newPartVenom = updateSpells(data.partVenom ? data.partVenom : state.partVenom);
-    const afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, newMyVenom.res);
-    const afterClickMe = updateGameStats(data.me ? data.me : state.me, newPartVenom.res);
-    const newFire = updateSpells(data.fire ? data.fire : state.fire);
-    
-    //console.log('NEW_FIRE:', newFire.res)
+    console.log('%c%s', 'color: red; font-size: 33px;', 'DEBAG_DATA:',data)
+    // только пришедшие // 2 getDlsData печалена..
+    const sDDB = getDlsData({sources: {rocks: data.rocks, me: data.me, partner: data.partner}, pathBuilder}),
+    survMyVenom = updateSpells(data.myVenom ? data.myVenom : state.myVenom),
+    survPartVenom = updateSpells((data.partVenom ? data.partVenom : state.partVenom)),
+    newPartVenom = survPartVenom.res.concat(sDDB.sumDlsPartVenom),
+    newMyVenom = survMyVenom.res.concat(sDDB.sumDlsMyVenom),
+    afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, newMyVenom),
+    afterClickMe = updateGameStats(data.me ? data.me : state.me, newPartVenom),
+    newFire = updateSpells(data.fire ? data.fire : state.fire);
+    // getDls ({ rocks, me, partner})
+    // console.log('NEW_FIRE:', newFire.res)
+    // target in deadboys
+    let sDD = getDlsData({ sources: {rocks: data.rocks, me: afterClickMe.res, partner: afterClickPartner.res}, pathBuilder});
+    let newInLight = getLightPosition(afterClickMe.res, afterClickPartner.res, data.rocks);
+    let dirtyLightSum = newInLight.concat(sDD.sumDlsLight).concat(data.inLightBySpell)
+    console.log('%c%s', 'color: green; font-size: 33px;', 'BEFORE_FILTER:', dirtyLightSum)
+    let cleanLightSum = dirtyLightSum; //lightFilter(dirtyLightSum);
+    let myDeadBoys = afterClickMe.dead; // they will die after 1.3 sec
+    let partDeadBoys = afterClickPartner.dead;
     let getNewSpellMap = () => {
       if(data.spellMap) {
         let newSpellMap = data.spellMap;
@@ -1589,16 +1833,16 @@ const updateVenomStep = ({data, state}) => {
             pushPass: 'oldFire',
             pass: 'dead'
           },
-          {
-            workArr: afterClickMe,
-            pushPass: 'oldMe',
-            pass: 'dead'
-          },
-          {
-            workArr: afterClickPartner,
-            pushPass: 'oldPartner',
-            pass: 'dead'
-          },
+          // {
+          //   workArr: afterClickMe,
+          //   pushPass: 'oldMe',
+          //   pass: 'dead'
+          // },
+          // {
+          //   workArr: afterClickPartner,
+          //   pushPass: 'oldPartner',
+          //   pass: 'dead'
+          // },
           {
             workArr: newMyVenom,
             pushPass: 'myVenom',
@@ -1632,11 +1876,16 @@ const updateVenomStep = ({data, state}) => {
     oldPartner:data.oldPartner ? data.oldPartner.concat(afterClickPartner.dead) : afterClickPartner.dead,
     oldMe:data.oldMe ? data.oldMe.concat(afterClickMe.dead) : afterClickMe.dead,
     oldFire: newFire.dead,
+    inLight: cleanLightSum,
+    newInLight: getNewInLight(state.inLight, cleanLightSum),
+    oldInLight: getOldInLight(state.inLight, cleanLightSum),
     fire: newFire.res,
-    oldMyVenom: newMyVenom.dead,
-    oldPartVenom: newPartVenom.dead,
-    partVenom: newPartVenom.res,
-    myVenom: newMyVenom.res,
+    oldMyVenom: survMyVenom.dead,
+    oldPartVenom: survPartVenom.dead,
+    partVenom: newPartVenom,
+    myVenom: newMyVenom,
+    myDeadBoys,
+    partDeadBoys,
     spellMap: getNewSpellMap()
   }
 }
@@ -1713,18 +1962,20 @@ const partnerMoveTo = (state) => {
 }
 
 const updateGameStats = (workArr, venomArr) => {
+  //debugger
   let res = workArr.slice()
   let dead = []
   console.log('UPDATE_GAME_STATE:VENOME:',venomArr)
   
     res.forEach(({Y, X, stunned}, i) => {
-      //console.log('STUNNED:',stunned)
+      console.log('RES:', res)
       venomArr.forEach(({newY, newX, postDmg}) => {
       if(newY === Y && newX === X) {
         let newXp = res[i].xp - postDmg
         if(newXp < 0) {
-          dead.push(res[i])
-          res.splice(i, 1)
+          dead.push(res[i]) // место что бы вешать на них крест.
+          res[i].xp = newXp
+          //res.splice(i, 1)
         } else {
           res[i].xp = newXp
           res[i].v = Math.random()

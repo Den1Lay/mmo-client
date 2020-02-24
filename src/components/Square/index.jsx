@@ -14,12 +14,15 @@ const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure
     useEffect(() => {
       if(underSpell.length > 0) {
         //console.log('%c%s','color: green; font-size: 22px;','GET_NEW_UNDER_SPELL:', underSpell)
-        mainRef.current.style['background'] = Color(underSpell[0].color) // think some-thing
-      } else {
+        if(isLight) {
+          mainRef.current.style['background'] = Color(underSpell[0].color)
+        } else {
+          mainRef.current.style['background'] = '';
+        } // think some-thing
+      } else { 
         mainRef.current.style['background'] = '';
       }
     })
-
   return (
     <div
       ref={mainRef}
@@ -37,7 +40,7 @@ const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure
         src={} // local..
         style={{position: 'absolute', width: '48px', zIndex: '-1', opacity: '0'}}
        /> */}
-
+      
       {
         children && !herePartner ? children // React.createElement is the best
         : moveFromShadow && herePartner ? children
@@ -79,7 +82,7 @@ const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure
   }
   const checkMoveFromShadow = (prevMove, nextMove) => {
     //console.log('%c%s', 'color: indigo; font-size:33px', 'THAT_MOVE:', move)
-    return !!prevMove === !!nextMove
+    return !!prevMove === !!nextMove // make complex check in future
   }
 
   let res = isLight === nextProps.isLight

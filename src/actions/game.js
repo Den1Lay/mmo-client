@@ -35,8 +35,14 @@ export const startAttack = ({y, x, aim}) => ({
   payload: {y, x, aim}
 })
 
-export const attackTo = () => ({
+export const partStartAttack = ({id, y, x, aim, withAnime}) => ({
+  type: 'PARTNER:START_ATTACK',
+  payload: {id, y, x, aim, withAnime}
+})
+
+export const attackTo = (partner) => ({
   type: 'KNIGHT:ATTACK_TO',
+  payload: partner
 })
 
 export const kamickAttack = ({me, partner, deadM, deadP}) => ({

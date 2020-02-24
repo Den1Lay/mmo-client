@@ -7,7 +7,7 @@ import Board from './Board'
 import { Button } from 'antd'
 
 import { makeSlide, overMakeSlide } from '@/actions/base'
-import { partnerAnimeMove, transformFunc, partnerStartSpell, spellTo } from '@/actions/game'
+import { partnerAnimeMove, transformFunc, partnerStartSpell, spellTo, partStartAttack } from '@/actions/game'
 import { dropData } from '@/actions/network'
 import { SpellBtn } from '@/components'
 import { socket } from '@/core'
@@ -26,7 +26,8 @@ const BoardHoc = (
     transformStaff, 
     me, dropData,
     act, actTick,
-    stateHistory
+    stateHistory,
+    partStartAttack
   }) => {
   const [boardHid, setBoardHid] = useState(true)
   const [exp, setExp] = useState(null)
@@ -77,6 +78,12 @@ const BoardHoc = (
         }}>
           $PELL
         </Button>
+        <hr />
+        <Button type='danger' onClick={() => {
+          partStartAttack({id: 'DKnight1', y: 3, x: 4, aim: null, withAnime: true})
+        }}>
+          ATTACK
+        </Button>
       </div>
       <Board />
       <div className='game__upLeftTab'>
@@ -92,4 +99,5 @@ const BoardHoc = (
   )
 }
 
-export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData, partnerStartSpell, spellTo})(BoardHoc)
+export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),
+{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData, partnerStartSpell, spellTo, partStartAttack})(BoardHoc)

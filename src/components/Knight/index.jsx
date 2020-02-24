@@ -4,6 +4,8 @@ import { connect, batch } from 'react-redux'
 import classNames from 'classnames'
 import anime from "animejs";
 
+import { opacityRedWrapper } from '@/utils'
+
 import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell} from '@/actions/game'
 import './Knight.scss'
 
@@ -32,7 +34,7 @@ const Knight = React.memo((
     spellAnimations,
     animeAttack,
     cleanAfterPartSpell,
-    //showOnSecond
+    showOnSecond
   }) => {
   //console.log('I_D_:',id)
   Y === 3 && X === 7 && console.log('%c%s', 'color: lightblue; font-size: 55px;', 'REEEE_RENDER__BECOUSE:', {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner})
@@ -171,6 +173,7 @@ const Knight = React.memo((
      console.log('%c%s', 'color: midnightblue; font-size: 33px;','ITS_HAPPENED')
      // console.log("%cExample %s", css, 'all code runs happy');
       //console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
+      
       anime({
         targets: mainRef.current, //transition on timeline to zero in 60%
         translateY: [0, (y-Y)*52],
@@ -229,6 +232,12 @@ const Knight = React.memo((
         workCurrent.style.display = 'block';
         workCurrent.src = 'data:image/png;base64,'+window.localStorage.mainSrc+'';
         workCurrent.style.width = '20px'
+        if(isPartner && showOnSecond) {
+          opacityRedWrapper(
+            (progress) => mainRef.current.style.opacity = 1-progress/100+'',
+            () => {}
+          )
+        }
         anime({
           targets: workCurrent, //transition on timeline to zero in 60%
           translateY: [0, (y-Y)*52],
@@ -238,7 +247,7 @@ const Knight = React.memo((
           complete: anim => {  // may take 90% event
             if(anim.completed) {
               console.log('ISTIME')
-              !isPartner ? attackTo() : partnerMoveTo({id, y, x})
+               attackTo(isPartner)
 
             }
           },
@@ -292,28 +301,32 @@ const Knight = React.memo((
   }
 
   return (
-    <div
-    onMouseEnter={() => mouseEvent(true)}
-    //onMouseOut={() => mouseEvent(false)}
-    onClick={!isPartner ? clickHandler : () => ({})}
-    ref={!isPartner ? drag : () => ({})}
-    className={
-      classNames('knight',
-        isPartner && 'knight__isPartner', // либо в сразу anime...
-        //showOnSecond && 'knight__goToShadow'
-    )}
-    >
-      <div ref={mainRef}>
+    <div ref={mainRef} style={{zIndex: '4'}}>
+      <div
+      onMouseEnter={() => mouseEvent(true)}
+      //onMouseOut={() => mouseEvent(false)}
+      onClick={!isPartner ? clickHandler : () => ({})}
+      ref={!isPartner ? drag : () => ({})}
+      className={
+        classNames('knight',
+          isPartner && 'knight__isPartner', // либо в сразу anime...
+          //showOnSecond && 'knight__goToShadow'
+      )}
+      >
+      <div >
       {simbol}
       </div>
       {particles}
       <div ref={heartRef} className={'heart'}>{xp}</div>
       {inAir && inAir.id == id ? <div className={classNames('buttleButton','buttleButton__attack' )} onClick={controlHandler}/> : null}
       {spells && inAir.id == id ? <div className='spellArea'>{spells}</div> : null}
+      </div>
     </div>
   )
-}, ({X, Y, me, partner, inAir, animeMove, canAttack, spellAnimations, animeAttack, moveFromShadow}, nextData) => {
+}, ({X, Y, me, partner, inAir, animeMove, canAttack, spellAnimations, animeAttack, moveFromShadow, showOnSecond}, nextData) => {
   const checkPass = (old, newPass) => {
+    console.log('%c%s', 'color: springgreen; font-size: 33px;',`X:${X}, Y:${Y}, THAT_NEXT_PASS:`, nextData)
+    console.log('%c%s', 'color: springgreen; font-size: 22px;', 'THat_old: ',old)
     if(old.length === newPass.length) {
       let res = false;
       old.forEach(({v}, i) => {
@@ -328,22 +341,30 @@ const Knight = React.memo((
   }
   //debugger
   let mainRes = true
-  if(checkPass(me, nextData.me)) {
+  if(X === undefined) {
     mainRes = false
-  } else if(checkPass(partner, nextData.partner)) { //
-    mainRes = false
-  } else if(!!inAir !== !!nextData.inAir) {
-    mainRes = false
-  } else if(inAir && nextData.inAir && (inAir.id !== nextData.inAir.id)) {
-    mainRes = false
-  } else if(!!animeMove !== !!nextData.animeMove) {
-    mainRes = false
-  } else if(animeMove && nextData.animeMove && (animeMove.id !== nextData.animeMove.id)) {
-    mainRes = false
-  } else if(!!spellAnimations !== !!nextData.spellAnimations) {
-    mainRes = false
-  } else if(!!moveFromShadow !== !!nextData.moveFromShadow) {
-    mainRes = false
+  } else {
+    if(checkPass(me, nextData.me)) {
+      mainRes = false
+    } else if(checkPass(partner, nextData.partner)) { //
+      mainRes = false
+    } else if(!!inAir !== !!nextData.inAir) {
+      mainRes = false
+    } else if(inAir && nextData.inAir && (inAir.id !== nextData.inAir.id)) {
+      mainRes = false
+    } else if(!!animeMove !== !!nextData.animeMove) {
+      mainRes = false
+    } else if(animeMove && nextData.animeMove && (animeMove.id !== nextData.animeMove.id)) {
+      mainRes = false
+    } else if(!!spellAnimations !== !!nextData.spellAnimations) {
+      mainRes = false
+    } else if(!!moveFromShadow !== !!nextData.moveFromShadow) {
+      mainRes = false
+    } else if(!!animeAttack !== !!nextData.animeAttack) {
+      mainRes = false
+    } else if (!!showOnSecond !== !!nextData.showOnSecond) {
+      mainRes = false
+    } 
   }
 
 //console.log("%c%s", 'color: crimson; font-size: 33px;', `X:${X}, Y: ${Y} THAT_RES:`, res)
@@ -351,5 +372,5 @@ const Knight = React.memo((
 
 })
 // слежение за собственным хп
-export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner}), 
+export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond}), 
 {addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell})(Knight)
