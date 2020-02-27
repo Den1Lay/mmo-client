@@ -54,6 +54,7 @@ const Knight = React.memo((
   const [animeTick, setAnimeTick] = useState(false)
   const [xp, setXp] = useState(null)
 
+  const wrapRef = useRef(null)
   const heartRef = useRef(null)
   const mainRef = useRef(null)
   const firstRef = useRef(null)
@@ -65,7 +66,7 @@ const Knight = React.memo((
   let refStorage = [firstRef, secondRef, thirdRef, fourthRef, fifthRef]
   let particles = [
     <img ref={firstRef} 
-      src={'https://sun9-40.userapi.com/c841028/v841028013/36cf8/LWcgCtaFt5A.jpg?ava=1'}
+      //src={'https://sun9-40.userapi.com/c841028/v841028013/36cf8/LWcgCtaFt5A.jpg?ava=1'}
       style={{display: 'none', position: 'absolute', width: '20px'}}
       onClick={(ev) => {
       ev.stopPropagation()
@@ -175,7 +176,7 @@ const Knight = React.memo((
       //console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
       
       anime({
-        targets: mainRef.current, //transition on timeline to zero in 60%
+        targets: wrapRef.current, //transition on timeline to zero in 60%
         translateY: [0, (y-Y)*52],
         translateX: [0, (x-X)*52],
         duration: 1200,
@@ -301,7 +302,7 @@ const Knight = React.memo((
   }
 
   return (
-    <div ref={mainRef} style={{zIndex: '4'}}>
+    <div ref={wrapRef} style={{zIndex: '4'}}>
       <div
       onMouseEnter={() => mouseEvent(true)}
       //onMouseOut={() => mouseEvent(false)}
@@ -313,7 +314,7 @@ const Knight = React.memo((
           //showOnSecond && 'knight__goToShadow'
       )}
       >
-      <div >
+      <div ref={mainRef}>
       {simbol}
       </div>
       {particles}

@@ -7,7 +7,7 @@ import Board from './Board'
 import { Button } from 'antd'
 
 import { makeSlide, overMakeSlide } from '@/actions/base'
-import { partnerAnimeMove, transformFunc, partnerStartSpell, spellTo, partStartAttack } from '@/actions/game'
+import { partnerAnimeMove, transformFunc, partnerStartSpell, spellTo, partStartAttack, deleteDeadBoys } from '@/actions/game'
 import { dropData } from '@/actions/network'
 import { SpellBtn } from '@/components'
 import { socket } from '@/core'
@@ -27,7 +27,9 @@ const BoardHoc = (
     me, dropData,
     act, actTick,
     stateHistory,
-    partStartAttack
+    partStartAttack, 
+    myDeadBoys, partDeadBoys,
+    deleteDeadBoys
   }) => {
   const [boardHid, setBoardHid] = useState(true)
   const [exp, setExp] = useState(null)
@@ -40,6 +42,9 @@ const BoardHoc = (
   useEffect(() => {
     console.log('ARROW:', arrow)
     console.log('ARROW1:', arrow1)
+    if(myDeadBoys.length > 0 || partDeadBoys.length > 0) {
+      setTimeout(deleteDeadBoys, 1300)
+    }
   })
 
   if(show) {
@@ -99,5 +104,5 @@ const BoardHoc = (
   )
 }
 
-export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory}}) => ({show, transformStaff, me, act, actTick, stateHistory}),
-{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData, partnerStartSpell, spellTo, partStartAttack})(BoardHoc)
+export default connect(({admin: {show}, game: {transformStaff, me, act, actTick, stateHistory, myDeadBoys, partDeadBoys}}) => ({show, transformStaff, me, act, actTick, stateHistory, myDeadBoys, partDeadBoys}),
+{ partnerAnimeMove, makeSlide, overMakeSlide, transformFunc, dropData, partnerStartSpell, spellTo, partStartAttack, deleteDeadBoys})(BoardHoc)

@@ -2,18 +2,20 @@ import store from '../index'
 import { getDlsData, lightFilter } from '@/utils'
 // ПЕРВАЯ ЗАПОВЕДЬ СПЕЛЛОВ: НЕЛЬЗЯ РЕДАЧИТЬ ГЕРОЯ, КОТОРЫЙ ДРОПНУЛ СПЕЛ ИЛИ КЛЕТКУ НА КОТОРОЙ СТОИТ ГЕРОЙ, ЕСЛИ У СПЕЛА ЕСТЬ АФТЕР ЭФФЕКТЫ. (можно)
 // СОБЫТИЕ: START_СОБЫТИЯ (createCash, wp) --> СОБЫТИЕ_TO
+// IGNORE_ARR: Блокирует возможность наступить,но не продолжение пути, если там не аргумент игнора
 // develop edition 
 let absThis = this
 const defaultState = {
   me: [
     {
-      id: 'WKnight1', 
-      Y: 17, X: 9, // after PP
-      pY: 17, pX: 9, // after PP
+      id: 'WRockMan1', 
+      Y: 12, X: 0, // after PP
+      pY: 12, pX: 0, // after PP
       xp: 20,
+      oldXp: 33,
       maxXp: 12,
       silensed: false,
-      buffs: [],
+      buffs: [],  
       stunned: 0,
       v: Math.random(),
       visibility: {
@@ -51,7 +53,7 @@ const defaultState = {
         ]
       }, // обзор
       move: {
-        effect: ({sources, Y, X, pathBuilder}) => {
+        effect: ({id, sources, Y, X, pathBuilder}) => {
           let workRocksArr = sources.rocks.slice()
           let dlsLight = [];
           let liveFlag = true;
@@ -127,8 +129,8 @@ const defaultState = {
           }
         },
         dopDirs: ['partner'],
-        blockDirs: ['me', 'rocks'],
-        ignore: [],
+        blockDirs: ['me'],
+        ignore: ['rocks'], 
         dirs: [
           {xDir:1, yDir:1, pathLenght:3},
           {xDir:1, yDir:-1, pathLenght:3},
@@ -188,7 +190,7 @@ const defaultState = {
           color: {r: 150, g: 0, b: 24},
           dopDirs: [],
           blockDirs: ['me'],
-          ignore: [],
+          ignore: ['rocks'],
           dirs: [
             {xDir:1, yDir:1, pathLenght:2},
             {xDir:1, yDir:-1, pathLenght:2},
@@ -294,33 +296,13 @@ const defaultState = {
                 },
                 spellMap
               }
-              console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
+              
+              //console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
               return firebol_res
           },  // Новые lightPos.. // Спелы противника это просто спел в другую сторону
           // Анимации делают, все тоже, что и reducer, maxSinx
-          animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {
+          animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
-            const opacityRedWrapper = (baseStep, endStep) => {
-              return new Promise((resolve) => {
-                let progress = 0
-                let opacityRed = () => {
-                  setTimeout(() => {
-                    progress++
-                    baseStep(progress)
-                    
-                    if(progress <100) {
-                      opacityRed()
-                    } else {
-                      endStep()
-                      resolve()
-                      //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
-                    }
-                  }, 10)
-                }
-                opacityRed()
-              })
-            }
-            
             console.log('PARTICLES:', particles)
             particles[0].current.style.display = 'block'; // 
             particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
@@ -328,12 +310,12 @@ const defaultState = {
             //particles[0].current.style.height = '30px';
             console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
             if(hideKnight || payloadShow) {
-              opacityRedWrapper(
-                (progress) => knight.current.style.opacity = 1-progress/100+'',
-                () => {}
-              )
-              //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
-              //knight.current.style.opacity = 1-animU.progress/100;
+              anime({
+                targets: knight.current,
+                opacity: [1, 0],
+                duration: 1600,
+                easing: 'easeInOutCirc'
+              })
             }
             anime({
               targets: particles[0].current, //transition on timeline to zero in 60%
@@ -366,10 +348,6 @@ const defaultState = {
                         //rotateX: 
                         duration: 500,
                         easing: 'easeInOutCirc', //'spring(1, 90, 12, 0)'
-                        // update: anim => {
-                        //   current.style.opacity = 1-anim.progress/100+''
-                        //   console.log('UPDATE: ', anim.progress)
-                        // },
                         complete: anim => {
                           if(anim.completed) {
                             resolve(true)
@@ -380,28 +358,34 @@ const defaultState = {
                   })
                   Promise.all(promisses).then(() => {
                     spellTo()
-                    opacityRedWrapper(
-                      (progress) => particles.slice(1).forEach(({current}) => current.style.opacity = 1-progress/100+''),
-                      () => {
-                        particles.forEach(({current}) => {
-                          current.style.display = 'none';
-                          current.style.transform = 'translateY(0px) translateX(0px)';
-                          current.style.opacity = '1'
+                    Promise.all(
+                      particles.slice(1).map(({current}) => {
+                        return new Promise(resolve => {
+                          anime({
+                            targets: current,
+                            opacity: [1, 0],
+                            duration: 777,
+                            easing: 'easeInOutCirc',
+                            complete: anim2 => {
+                              if(anim2.completed) {
+                                resolve(true)
+                              }
+                            }
+                          })
                         })
-                      }
-                    ).then(() => (hideKnight || payloadShow) && cleanAfterPartSpell())
-                    //setTimeout(() => endSpell(), )
-                    //setTimeout(() => endSpell(), 1000)
+                      })
+                    ).then(() => {
+                      //debugger
+                      particles.forEach(({current}) => {
+                        //console.log('%c%s','color: lightblue; font-size: 44px', 'INSIDE_ANIME_FUNC_CURRENT', typeof current.style.transform)
+                        current.style.display = 'none';
+                        current.style.transform = 'translateY(0px) translateX(0px)';
+                        current.style.opacity = '1'
+                      });
+                      (hideKnight || payloadShow) && cleanAfterPartSpell()
+                    })
                   })
-                  console.log('%c%s', 'color: green' ,"AFTER_SHAKE",resCheck)
-                  // if(resCheck.length >= 4) {
-                  //   
-                  // }
-                  
                 }
-              },
-              update: anim => {
-                
               }
             });
           }, // использование последовательностей
@@ -456,7 +440,7 @@ const defaultState = {
         ]
       }, // обзор
       move: {
-        effect: ({sources, Y, X, pathBuilder})  => {
+        effect: ({id, sources, Y, X, pathBuilder})  => {
           let newVenome = [];
           let direction = [
             {xDir:1, yDir:1, pathLenght:1},
@@ -469,7 +453,7 @@ const defaultState = {
             {xDir:0, yDir: -1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, ['partner'], ['me', 'rocks'], [], Y, X, []))
-          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 10, color: {r: 39, g: 202, b: 126}, src: ''}))
           console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: newVenome,
@@ -534,7 +518,7 @@ const defaultState = {
           color: {r: 25, g: 25, b: 112},
           dopDirs: [],
           blockDirs: ['me'],
-          ignore: [],
+          ignore: ['rocks'],
           dirs: [
             {xDir:1, yDir:1, pathLenght:2},
             {xDir:1, yDir:-1, pathLenght:2},
@@ -564,6 +548,9 @@ const defaultState = {
             {xDir:1, yDir: 2, pathLenght:1},
           ],
           func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => {
+            //what if click on nothing
+            //tp random ally to the point
+            //debugger 
             let gE = who === 'me';
             let targetInd
             let newMe = sources['me'].slice()
@@ -682,7 +669,7 @@ const defaultState = {
               }
             }
             console.log("RES_CONTENT:", workArr)
-            return {
+            let res = {
               me: newMe,
               partner: newPartner,
               rocks: rockArr,
@@ -696,60 +683,125 @@ const defaultState = {
               inLightBySpell: [],
               args: {
                 yPass: newY - y,
-                Y: y - inAir.X,
-                X: x - inAir.Y,
+                sY: y - inAir.Y,
+                sX: x - inAir.X,
                 animeFunc: 'animeFunc',
                 hideKnight: !gE ? !sources['inLight'].some(({newY, newX}) => inAir.Y === newY && inAir.X === newX) : false
               },
               spellMap
             }
+            //debugger
+            return res
             
           },   // Новые lightPos.. // Спелы противника это просто спел в другую сторону
-          animeFunc: (payloadShow) => ({particles, knight, args: {yPass, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
+          animeFunc: (payloadShow) => ({particles, knight, args: {yPass, sY, sX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
-            setTimeout(() => {
+            // setTimeout(() => {
+            //   spellTo()
+            // }, 3000);\
+            // toHideAttackHeroIfNeed
+            const opacityRedWrapper = (baseStep, endStep) => {
+              return new Promise((resolve) => {
+                let progress = 0
+                let opacityRed = () => {
+                  setTimeout(() => {
+                    progress++
+                    baseStep(progress)
+                    
+                    if(progress <100) {
+                      opacityRed()
+                    } else {
+                      endStep()
+                      resolve()
+                      //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
+                    }
+                  }, 10)
+                }
+                opacityRed()
+              })
+            }
+            if(hideKnight || payloadShow) {
+              opacityRedWrapper(
+                (progress) => knight.current.style.opacity = 1-progress/100+'',
+                () => {}
+              )
+              //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
+              //knight.current.style.opacity = 1-animU.progress/100;
+            }
+            //let workParticles = particles.slice(0, 3);
+            let previewPromisses = [];
+            let nextTickPromisses = [];
+            let contentArr = [
+              {
+                smesX: 0,
+                smesY: 1,
+              },
+              {
+                smesX: 0.834,
+                smesY: -0.5,
+              },
+              {
+                smesX: -0.834,
+                smesY: -0.5
+              }
+            ].forEach(({smesX, smesY}, i) => {
+              
+              particles[i].current.style.display = 'block'; 
+              particles[i].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
+              particles[i].current.style.width = '90px';
+              //particles[i].current.style.height = '90px';
+              //debugger
+              const natSx = sX * 52,
+              natSy = sY * 52,
+              natSmesX = smesX * 52*2,
+              natSmesY = smesY * 52*2;
+              
+              previewPromisses.push(
+                new Promise((fResolve) => {
+                anime({
+                  targets: particles[i].current,
+                  opacity: [0, 1],
+                  translateY: [natSy+natSmesY, natSy], // from args (y-Y)*52
+                  translateX: [natSx+natSmesX, natSx], // from args (x-X)*52
+                  duration: 700,
+                  easing: 'easeInOutQuad',
+                  complete: anim1 => {
+                    if(anim1.completed) {
+                      fResolve(true)
+                      // попутный opacityRed
+                      nextTickPromisses.push(
+                        new Promise((resolve) => {
+                          anime({
+                            targets: particles[i].current,
+                            opacity: [1, 0], // real good news
+                            translateY: [natSy+yPass*52, natSy+yPass*52+natSmesY],
+                            translateX: [natSx, natSx+natSmesX],
+                            duration: 700,
+                            easing: 'easeInOutQuad',
+                            complete: anim2 => {
+                              if(anim2.completed) {
+                                resolve(true)
+                              }
+                            }
+                          })
+                        })
+                      ) 
+                    }
+                  }
+                })
+              }))
+            })
+            Promise.all(previewPromisses).then(() => {
               spellTo()
-            }, 3000);
+            })
+            Promise.all(nextTickPromisses).then(() => {
+              //killParticls here
+              (hideKnight || payloadShow) && cleanAfterPartSpell()
+            })
+
             //====================ATTACK_KNIGHT_PART==========================
           }
-          //   const opacityRedWrapper = (baseStep, endStep) => {
-          //     return new Promise((resolve) => {
-          //       let progress = 0
-          //       let opacityRed = () => {
-          //         setTimeout(() => {
-          //           progress++
-          //           baseStep(progress)
-                    
-          //           if(progress <100) {
-          //             opacityRed()
-          //           } else {
-          //             endStep()
-          //             resolve()
-          //             //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
-          //           }
-          //         }, 10)
-          //       }
-          //       opacityRed()
-          //     })
-          //   }
-          //   if(hideKnight || payloadShow) {
-          //     opacityRedWrapper(
-          //       (progress) => knight.current.style.opacity = 1-progress/100+'',
-          //       () => {}
-          //     )
-          //     //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
-          //     //knight.current.style.opacity = 1-animU.progress/100;
-          //   }
           //   //====================ATTACK_KNIGHT_PART_END======================
-
-          //   console.log('PARTICLES:', particles)
-          //   let contentArr = [
-          //     // {
-          //     //   xStart: 
-          //     // },
-              
-          //   ]
-          //   let workParticles = particles.slice(0, 3);
 
           //   particles[0].current.style.display = 'block'; // 
           //   particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
@@ -875,7 +927,7 @@ const defaultState = {
         ]
       }, // обзор
       move: {
-        effect: ({sources, Y, X, pathBuilder})  => {
+        effect: ({id, sources, Y, X, pathBuilder})  => {
           let newVenome = [];
           let direction = [
             {xDir:1, yDir:1, pathLenght:1},
@@ -952,6 +1004,279 @@ const defaultState = {
           target: 'partner',
           color: {r: 58, g: 201, b: 211},
           dopDirs: [],
+          blockDirs: ['me'],
+          ignore: ['rocks'],
+          dirs: [
+            {xDir:1, yDir:1, pathLenght:2},
+            {xDir:1, yDir:-1, pathLenght:2},
+            {xDir:1, yDir: 0, pathLenght:3},
+            {xDir:-1, yDir:-1, pathLenght:2},
+            {xDir:-1, yDir:1, pathLenght:2},
+            {xDir:-1, yDir: 0, pathLenght:3},
+            {xDir:0, yDir: 1, pathLenght:3},
+            {xDir:0, yDir: -1, pathLenght:3},
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          missesDirs: [
+            {xDir:-2, yDir: -1, pathLenght:1},
+            {xDir:-2, yDir: 1, pathLenght:1},
+            {xDir: 2, yDir: -1, pathLenght:1},
+            {xDir: 2, yDir: 1, pathLenght:1},
+            {xDir:-1, yDir: -2, pathLenght:1},
+            {xDir:1, yDir: -2, pathLenght:1},
+            {xDir:-1, yDir: 2, pathLenght:1},
+            {xDir:1, yDir: 2, pathLenght:1},
+          ],
+          func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => { 
+            //inLight in source partInLight also
+            let gE = who === 'me', 
+            targetInd = null,
+            meArr = sources.me.slice(),
+            partArr = sources.partner.slice(),
+            rockArr = sources.rocks.slice(),
+            newOldPartner = [],
+            newOldMe = [],
+            newOldRocks = [],
+            spellMap = [],
+            workArr = gE ? partArr : meArr,
+            allyArr = gE ? meArr : partArr,
+            workLightArr = gE ? sources.inLight : sources.partInLight,
+            deadArr = gE ? newOldPartner : newOldMe,
+            animeFunc;
+            
+            let meInd;
+            allyArr.forEach(({id}, ind) => {
+              if(inAir.id === id) {
+                meInd = ind
+              }
+            })
+            
+            //debugger
+            workArr.forEach(({Y, X},i) => {
+              if (Y === y && X === x) {
+                targetInd = i
+              }
+            })
+            let clickOnLight = workLightArr.some(({newY, newX}) => newY === y && newX === x)
+            const makeBlink = () => {
+              allyArr[meInd] = {...inAir, Y: y, X: x, pX: inAir.X, pY: inAir.Y};
+            };
+     
+            if(targetInd !== null) {
+              if(!clickOnLight) {
+                // ultimateBlow
+                makeBlink();
+                deadArr.push(workArr[targetInd]);
+                workArr.splice(targetInd, 1);
+                spellMap = spellMap.concat(['me', gE ? 'oldPartner' : 'oldMe', 'partner']);
+                //animeFunc = 'mortalBlow';
+              } else {
+                allyArr[meInd] = {...inAir, xp: inAir.xp+5};
+                let resXp = workArr[targetInd].xp - 5;
+                spellMap = spellMap.concat(['me', 'partner']);
+                //debugger
+                if(resXp > 0) {
+                  workArr[targetInd] = {...workArr[targetInd], xp: resXp};
+                } else {
+                  spellMap = spellMap.push(gE ? 'oldPartner' : 'oldMe');
+                  deadArr.push(workArr[targetInd]);
+                  makeBlink();
+                }
+                // takeXp and may be kill
+              }
+            } else {
+              spellMap.push(gE ? 'me' : 'partner')
+              makeBlink()
+              // just blink
+            }
+            
+            console.log("RES_CONTENT:", workArr);
+            let res = {
+              me: meArr,
+              partner: partArr,
+              rocks: rockArr,
+              oldMe: newOldMe,
+              oldPartner: newOldPartner,
+              oldRocks: newOldRocks,
+              fire: [],
+              myVenom: [],
+              partVenom: [],
+              lightRed: false,
+              inLightBySpell: [],
+              args: {
+                //yPass: newY - y,
+                //sY: y - inAir.Y,
+                //sX: x - inAir.X,
+                animeFunc: 'animeFunc',
+                hideKnight: !gE ? !sources['inLight'].some(({newY, newX}) => inAir.Y === newY && inAir.X === newX) : false
+              },
+              spellMap
+            };
+            //debugger
+            return res;
+            
+          },   // Новые lightPos.. 
+          animeFunc: (payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {
+            setTimeout(spellTo, 1200)
+          }
+        }     // Спелы противника это просто спел в другую сторону
+      ]
+    },
+    {
+      id: 'WKnight4', 
+      Y: 15, X: 9,
+      pY: 15, pX: 9,
+      xp: 12,
+      maxXp: 12,
+      silensed: false,
+      stunned: 0,
+      buffs: [],
+      v: Math.random(),
+      visibility: {
+        dopDirs: ['partner'], // mustBe in future
+        blockDirs: ['me', 'rocks'],
+        ignore: [],
+        enlarge: [],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:2},
+          {xDir:1, yDir:-1, pathLenght:2},
+          {xDir:1, yDir: 0, pathLenght:3},
+          {xDir:-1, yDir:-1, pathLenght:2},
+          {xDir:-1, yDir:1, pathLenght:2},
+          {xDir:-1, yDir: 0, pathLenght:3},
+          {xDir:0, yDir: 1, pathLenght:3},
+          {xDir:0, yDir: -1, pathLenght:3},
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          {xDir:-2, yDir: -1, pathLenght:1},
+          {xDir:-2, yDir: 1, pathLenght:1},
+          {xDir: 2, yDir: -1, pathLenght:1},
+          {xDir: 2, yDir: 1, pathLenght:1},
+          {xDir:-1, yDir: -2, pathLenght:1},
+          {xDir:1, yDir: -2, pathLenght:1},
+          {xDir:-1, yDir: 2, pathLenght:1},
+          {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      }, // обзор
+      move: {
+        effect: ({id, sources, Y, X, pathBuilder}) => {
+          // sources = {me, part, rocks, fire}
+          
+          const {fire, partner} = sources;
+          let sumLight = [];
+          // ===============LIGHT_DATA_FOR_BUILDER===================
+          const dopDirs = ['partner'], // mustBe in future
+          blockDirs = ['me', 'rocks'],
+          ignore = [],
+          dirs = [
+            {xDir:1, yDir: 0, pathLenght:1},
+            {xDir:-1, yDir: 0, pathLenght:1},
+            {xDir:0, yDir: 1, pathLenght:1},
+            {xDir:0, yDir: -1, pathLenght:1},
+          ];
+          // ===============LIGHT_DATA_FOR_BUILDER====================
+          fire.forEach(burn => {
+            if(!!burn.dls) {
+              const {newY, newX} = burn;
+              let {name, owner} = burn.dls;
+              if(owner === id) {
+                let realPath = [{newY, newX}];
+                dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, realPath, sources, dopDirs, blockDirs,ignore, newY, newX, []));
+                sumLight = sumLight.concat(realPath)
+              }
+            }
+          })
+          partner.forEach(({Y, X, buffs}) => {
+            let buffInd = null;
+            buffs.forEach(({owner}, b) => {
+              if(owner === id) {
+                buffInd = b;
+              }
+            })
+            if(buffInd !== null) {
+              let partRealPath = [{newY: Y, newX: X}];
+              dirs.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, partRealPath, sources, dopDirs, blockDirs,ignore, Y, X, []));
+              sumLight = sumLight.concat(partRealPath)
+            }
+          })
+          debugger
+          return {
+            dlsVenome: [],
+            dlsLight: sumLight,
+          }   
+        },
+        dopDirs: ['partner'],
+        blockDirs: ['me', 'rocks'],
+        ignore: [],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:7},
+          {xDir:1, yDir:-1, pathLenght:7},
+          //{xDir:1, yDir: 0, pathLenght:4},
+          {xDir:-1, yDir:-1, pathLenght:7},
+          {xDir:-1, yDir:1, pathLenght:7},
+          //{xDir:-1, yDir: 0, pathLenght:4},
+          //{xDir:0, yDir: 1, pathLenght:4},
+          //{xDir:0, yDir: -1, pathLenght:4},
+          // {xDir:-2, yDir: -1, pathLenght:1},
+          // {xDir:-2, yDir: 1, pathLenght:1},
+          // {xDir: 2, yDir: -1, pathLenght:1},
+          // {xDir: 2, yDir: 1, pathLenght:1},
+          // {xDir:-1, yDir: -2, pathLenght:1},
+          // {xDir:1, yDir: -2, pathLenght:1},
+          // {xDir:-1, yDir: 2, pathLenght:1},
+          // {xDir:1, yDir: 2, pathLenght:1},
+        ],
+        missesDirs: [
+          // {xDir:-2, yDir: -1, pathLenght:1},
+          // {xDir:-2, yDir: 1, pathLenght:1},
+          // {xDir: 2, yDir: -1, pathLenght:1},
+          // {xDir: 2, yDir: 1, pathLenght:1},
+          // {xDir:-1, yDir: -2, pathLenght:1},
+          // {xDir:1, yDir: -2, pathLenght:1},
+          // {xDir:-1, yDir: 2, pathLenght:1},
+          // {xDir:1, yDir: 2, pathLenght:1},
+        ]
+      },
+      attack: {
+        dammage: 3,
+        type: 'melee', //range and magic
+        dopDirs: ['partner', 'rocks'],
+        blockDirs: ['me'],
+        ignore: [],
+        dirs: [
+          {xDir:1, yDir:1, pathLenght:1},
+          {xDir:1, yDir:-1, pathLenght:1},
+          {xDir:1, yDir: 0, pathLenght:1},
+          {xDir:-1, yDir:-1, pathLenght:1},
+          {xDir:-1, yDir:1, pathLenght:1},
+          {xDir:-1, yDir: 0, pathLenght:1},
+          {xDir:0, yDir: 1, pathLenght:1},
+          {xDir:0, yDir: -1, pathLenght:1},
+        ],
+        missesDirs: []
+      },
+      spells: [
+        {
+          id: 'DeathBlow',
+          icon: 'B',
+          target: 'partner',
+          color: {r: 58, g: 201, b: 211},
+          dopDirs: [],
           blockDirs: ['me', 'rocks'],
           ignore: [],
           dirs: [
@@ -982,35 +1307,101 @@ const defaultState = {
             {xDir:-1, yDir: 2, pathLenght:1},
             {xDir:1, yDir: 2, pathLenght:1},
           ],
-          func: ({payload: {y, x}, sources, target, who, pathBuilder}) => {
-            if(who === 'me') {
-              let aimIndex = null;
-              let workArr = sources[target].slice();
-              let rockArr = sources.rocks.slice();
-              let meArr = sources.me.slice();
-              let newOldPartner = [];
-              let newOldMe = [];
-              let newOldRocks = [];
-              let spellMap = ['partner']
-              
-              console.log("RES_CONTENT:", workArr)
+          func: ({inAir, payload: {y, x}, sources, target, who, pathBuilder}) => { 
+            //inLight in source partInLight also
+            // поставить вард??? если тап по 
+            let gE = who === 'me', 
+            targetInd = null,
+            meArr = sources.me.slice(),
+            partArr = sources.partner.slice(),
+            rockArr = sources.rocks.slice(),
+            newOldPartner = [],
+            newOldMe = [],
+            newOldRocks = [],
+            spellMap = [],
+            newFire = [], // гора id
+            workArr = gE ? partArr : meArr,
+            // allyArr = gE ? meArr : partArr,
+            // workLightArr = gE ? sources.inLight : sources.partInLight,
+            // deadArr = gE ? newOldPartner : newOldMe,
+            animeFunc;
+            
+            // let meInd;
+            // allyArr.forEach(({id}, ind) => {
+            //   if(inAir.id === id) {
+            //     meInd = ind
+            //   }
+            // })
+            const getReduceVisibility = (baseVisib) => {
+              // makeMoreComplex in future
+              //let workPass = baseVisib.slice()
+              let newDirs = baseVisib.dirs.map(({xDir, yDir, pathLenght}) => {
+                let modX = Math.abs(xDir);
+                let modY = Math.abs(yDir);
+                let gC = (modX + modY) <= 2;
+                return {xDir, yDir, pathLenght: gC ? pathLenght-1 : pathLenght}
+              })
               return {
-                me: meArr,
-                partner: workArr,
-                rocks: rockArr,
-                oldMe: newOldMe,
-                oldPartner: newOldPartner,
-                oldRocks: newOldRocks,
-                fire: [],
-                venom: [],
-                lightRed: false,
-                inLightBySpell: [],
-                spellMap
-              } 
+                ...baseVisib,
+                dirs: newDirs
+              }
+            };
+            // //debugger
+            workArr.forEach(({Y, X},i) => {
+              if (Y === y && X === x) {
+                targetInd = i
+              }
+            })
+            if(targetInd !== null) {
+              // buff partner
+              spellMap.push(gE ? 'partner' : 'me');
+              workArr[targetInd] = {...workArr[targetInd], 
+                visibility: getReduceVisibility(workArr[targetInd].visibility),
+                buffs: workArr[targetInd].buffs.concat(
+                  {name: 'stickyEyes', time: 5, owner: inAir.id, 
+                  changed: {visibility: workArr[targetInd].visibility}}) 
+              }
             } else {
-
+              // setUp vard
+              spellMap.push('fire')
+              newFire.push({newX: x, newY: y, time: 3,
+                color: {r: 244,g: 164,b: 96},
+                src: 'vardSrc',
+                dls: {
+                name: 'realVard',
+                owner: inAir.id,
+              }}) // vards throw move, 
             }
-          }   // Новые lightPos.. 
+            
+            console.log("RES_CONTENT:", workArr);
+            let res = {
+              me: meArr,
+              partner: partArr,
+              rocks: rockArr,
+              oldMe: newOldMe,
+              oldPartner: newOldPartner,
+              oldRocks: newOldRocks,
+              fire: newFire,
+              myVenom: [],
+              partVenom: [],
+              lightRed: false,
+              inLightBySpell: [],
+              args: {
+                //yPass: newY - y,
+                //sY: y - inAir.Y,
+                //sX: x - inAir.X,
+                animeFunc: 'animeFunc',
+                hideKnight: !gE ? !sources['inLight'].some(({newY, newX}) => inAir.Y === newY && inAir.X === newX) : false
+              },
+              spellMap
+            };
+            //debugger
+            return res;
+            
+          },   // Новые lightPos.. 
+          animeFunc: (payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {
+            setTimeout(spellTo, 1200)
+          }
         }     // Спелы противника это просто спел в другую сторону
       ]
     }
@@ -1176,6 +1567,7 @@ const defaultState = {
             // то как будут рисоваться спелы зависит от клик позиции, а не от площади спела
             // очень важный момент... решение о том, будет вижен и какой он будет принимаются в функции... ибо индивид... котл, килл
             // как будет строится анимация зависит от выхода
+            //debugger
             let hero = inAir;
               let newPartner = sources['partner'].slice()
               let newMe = sources['me'].slice()
@@ -1254,27 +1646,6 @@ const defaultState = {
 
           animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
-            const opacityRedWrapper = (baseStep, endStep) => {
-              return new Promise((resolve) => {
-                let progress = 0
-                let opacityRed = () => {
-                  setTimeout(() => {
-                    progress++
-                    baseStep(progress)
-                    
-                    if(progress <100) {
-                      opacityRed()
-                    } else {
-                      endStep()
-                      resolve()
-                      //display: block; position: absolute; width: 90px; transform: translateY(-104px) translateX(104px); opacity: 0;
-                    }
-                  }, 10)
-                }
-                opacityRed()
-              })
-            }
-            
             console.log('PARTICLES:', particles)
             particles[0].current.style.display = 'block'; // 
             particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
@@ -1282,12 +1653,12 @@ const defaultState = {
             //particles[0].current.style.height = '30px';
             console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
             if(hideKnight || payloadShow) {
-              opacityRedWrapper(
-                (progress) => knight.current.style.opacity = 1-progress/100+'',
-                () => {}
-              )
-              //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`,animU.progress)
-              //knight.current.style.opacity = 1-animU.progress/100;
+              anime({
+                targets: knight.current,
+                opacity: [1, 0],
+                duration: 1600,
+                easing: 'easeInOutCirc'
+              })
             }
             anime({
               targets: particles[0].current, //transition on timeline to zero in 60%
@@ -1320,10 +1691,6 @@ const defaultState = {
                         //rotateX: 
                         duration: 500,
                         easing: 'easeInOutCirc', //'spring(1, 90, 12, 0)'
-                        // update: anim => {
-                        //   current.style.opacity = 1-anim.progress/100+''
-                        //   console.log('UPDATE: ', anim.progress)
-                        // },
                         complete: anim => {
                           if(anim.completed) {
                             resolve(true)
@@ -1334,28 +1701,34 @@ const defaultState = {
                   })
                   Promise.all(promisses).then(() => {
                     spellTo()
-                    opacityRedWrapper(
-                      (progress) => particles.slice(1).forEach(({current}) => current.style.opacity = 1-progress/100+''),
-                      () => {
-                        particles.forEach(({current}) => {
-                          current.style.display = 'none';
-                          current.style.transform = 'translateY(0px) translateX(0px)';
-                          current.style.opacity = '1'
+                    Promise.all(
+                      particles.slice(1).map(({current}) => {
+                        return new Promise(resolve => {
+                          anime({
+                            targets: current,
+                            opacity: [1, 0],
+                            duration: 777,
+                            easing: 'easeInOutCirc',
+                            complete: anim2 => {
+                              if(anim2.completed) {
+                                resolve(true)
+                              }
+                            }
+                          })
                         })
-                      }
-                    ).then(() => (hideKnight || payloadShow) && cleanAfterPartSpell())
-                    //setTimeout(() => endSpell(), )
-                    //setTimeout(() => endSpell(), 1000)
+                      })
+                    ).then(() => {
+                      //debugger
+                      particles.forEach(({current}) => {
+                        //console.log('%c%s','color: lightblue; font-size: 44px', 'INSIDE_ANIME_FUNC_CURRENT', typeof current.style.transform)
+                        current.style.display = 'none';
+                        current.style.transform = 'translateY(0px) translateX(0px)';
+                        current.style.opacity = '1'
+                      });
+                      (hideKnight || payloadShow) && cleanAfterPartSpell();
+                    })
                   })
-                  console.log('%c%s', 'color: green' ,"AFTER_SHAKE",resCheck)
-                  // if(resCheck.length >= 4) {
-                  //   
-                  // }
-                  
                 }
-              },
-              update: anim => {
-                
               }
             });
           }
@@ -1415,6 +1788,9 @@ const defaultState = {
   dispatchHistory: [], // F
   side: 'dark', // or light // FS
   inLightBySpell: [],
+  myDeadBoys: [],
+  partDeadBoys: [],
+  partInLight: [],
   //spellAnimations???
 }
 
@@ -1476,6 +1852,25 @@ export default (state = defaultState, action) => {
         oldCanSpell: state.canSpell.length !== 0 ? state.canSpell : [],
         updateSign: 'D'+Math.random()
       }
+    case 'DELETE_DEAD_BOYS': 
+      //const mADDB = state.me.filter(({id}) => !myDeadBoys.some(({id: ID}) => id === ID)),
+      //pADDB = state.part.filter(({id}) => !partDeadBoys.some(({id: ID}) => id === ID))
+      //lADDB = getLightPosition(mADDB, pADDB, state.rocks)
+      return {
+        ...state,
+        me: state.meWDB,
+        partner: state.partWDB,
+        inLight: state.inLightWDB,
+        newInLight: getNewInLight(state.inLight, state.inLightWDB),
+        oldInLight: getOldInLight(state.inLight, state.inLightWDB),
+        myDeadBoys: [],
+        partDeadBoys: [],
+        partWDB: [],
+        meWDB: [],
+        oldMe: state.myDeadBoys,
+        oldPartner: state.partDeadBoys,
+        updateSign: 'F'+Math.random()
+      }
     case 'PARTNER:ANIME_MOVE':
       //check from what 
       return preparePartnerAnimeMove(payload, state.inLight, state)
@@ -1487,7 +1882,7 @@ export default (state = defaultState, action) => {
       const newMe = getNewStaff(state.me, state.inAir, state.workPayload.payload)
       //let sources = {rocks: state.rocks, me: newMe, partner: state.partner}
       //let r = getDlsData({ sources, pathBuilder})
-      let allLightPos = getLightPosition(newMe, state.partner, state.rocks)
+      //let allLightPos = getLightPosition(newMe, state.partner, state.rocks)
       //newPartner
       return updateBaseStep(
         updateVenomStep({ // // for what, i don't know 
@@ -1497,9 +1892,9 @@ export default (state = defaultState, action) => {
             inAir: null,
             canMove: [],
             oldCanMove: state.canMove,
-            inLight: allLightPos,
-            newInLight: getNewInLight(state.inLight, allLightPos),
-            oldInLight: getOldInLight(state.inLight, allLightPos), // точечная перерисовка, если траблы с опти
+            //inLight: allLightPos,
+            //newInLight: getNewInLight(state.inLight, allLightPos),
+            //oldInLight: getOldInLight(state.inLight, allLightPos), // точечная перерисовка, если траблы с опти
             animeMove: null, 
             myVenom: state.myVenom,
             partVenom: state.partVenom,
@@ -1519,7 +1914,8 @@ export default (state = defaultState, action) => {
       }
     case 'KNIGHT:LAST_PREPARATION':
       //console.log('LOO0000000000000000K_AT_THIS_STATE:', state)
-      let previewLight = getLightPosition(state.me, state.partner, state.rocks)
+      let previewLight = getLightPosition(state.me, state.partner, state.rocks, 'me')
+      // prepare partner positions
       return {
         ...state,
         inLight: previewLight,
@@ -1602,15 +1998,18 @@ export default (state = defaultState, action) => {
       }
     case 'KNIGHT:ATTACK_TO': // будет вызываться нескольколько раЗ, если необходимо, АУЕ
       // const {who: 'me'/'partner'}  = payload
+      //debugger
+      console.log(payload)
       let {y, x, aim} = state.workPayload.payload; // refactory this
       // aim сущест. для того что бы не делать лишнии фильтры и отсеивать аттаки в пустоту..
-      let partnerRes = !payload ? findAndKill(state.partner, y, x, aim, 'partner', state.inAir) : {res: state.partner, target: null};
+      let partnerRes = !payload ? findAndKill(state.partner, y, x, aim, 'partner', state.inAir) : {res: state.partner, target: []};
       let rocksRes = findAndKill(state.rocks, y, x, aim, 'rocks', !payload ? state.inAir : state.workPayload.inAir);
-      let meRes = payload ? findAndKill(state.me, y, x, aim, 'me', state.workPayload.inAir) : {res: state.me, target: null};
+      let meRes = payload ? findAndKill(state.me, y, x, aim, 'me', state.workPayload.inAir) : {res: state.me, target: []};
       // буст от аттаки inAir'а
-      const attackSources = {rocks: rocksRes.res, me: meRes.res, partner: partnerRes.res} // Эта длс для камня.. если кто - либо рипает преграду dls lightу
-      let attackR = getDlsData({ sources: attackSources, pathBuilder})
-      let allLightPosAfterMurder = getLightPosition(meRes.res, partnerRes.res, rocksRes.res).concat(attackR.sumDlsLight)
+      //const attackSources = {rocks: rocksRes.res, me: meRes.res, partner: partnerRes.res} // Эта длс для камня.. если кто - либо рипает преграду dls lightу
+      //let attackR = getDlsData({ sources: attackSources, pathBuilder})
+      //let allLightPosAfterMurder = getLightPosition(meRes.res, partnerRes.res, rocksRes.res).concat(attackR.sumDlsLight)
+      //debugger
       return updateBaseStep(
         updateVenomStep({
         data: {
@@ -1623,13 +2022,14 @@ export default (state = defaultState, action) => {
           oldMe: meRes.target,
           showOnSecond: null,
           oldShowOnSecond: state.showOnSecond,
+          attackDls: [], // person effect after attack
           // canAttack: [],
           // oldCanAttack: state.canAttack,
-          inLight: allLightPosAfterMurder,
-          newInLight: getNewInLight(state.inLight, allLightPosAfterMurder),
-          oldInLight: getOldInLight(state.inLight, allLightPosAfterMurder),
-          myVenom: state.myVenom.concat(attackR.sumDlsMyVenom),
-          partVenom: state.partVenom.concat(attackR.sumDlsPartVenom),
+          //inLight: allLightPosAfterMurder,
+          //newInLight: getNewInLight(state.inLight, allLightPosAfterMurder),
+          //oldInLight: getOldInLight(state.inLight, allLightPosAfterMurder),
+          //myVenom: state.myVenom,
+          //partVenom: state.partVenom,
           animeAttack: null,
           updateSign: 'A'+Math.random(),
         },
@@ -1644,7 +2044,7 @@ export default (state = defaultState, action) => {
       let kamikSource = {rocks: state.rocks, me: updatedMe, partner: updatedPartner}
       let kamikR = getDlsData({ sources: kamikSource, pathBuilder})
       
-      let allLightPosAfterKamick = getLightPosition(updatedMe, updatedPartner, state.rocks).concat(kamikR.sumDlsLight)
+      let allLightPosAfterKamick = getLightPosition(updatedMe, updatedPartner, state.rocks, "me").concat(kamikR.sumDlsLight)
       return {
         ...state,
         me: updatedMe,
@@ -1678,7 +2078,7 @@ export default (state = defaultState, action) => {
       let pSR = pSO.func({
         inAir: pO,
         payload: {x: payload.x, y: payload.y},
-        sources: {me: state.me, partner: state.partner, rocks: state.rocks, inLight: state.inLight},
+        sources: {me: state.me, partner: state.partner, rocks: state.rocks, inLight: state.inLight, partInLight: state.partInLight},
         target: pSO.target,
         who: 'part',
         pathBuilder,
@@ -1707,7 +2107,7 @@ export default (state = defaultState, action) => {
         { 
           inAir: state.inAir,
           payload, // {y, x}
-          sources: {me: state.me, partner: state.partner, rocks: state.rocks, }, 
+          sources: {me: state.me, partner: state.partner, rocks: state.rocks, inLight: state.inLight, partInLight: state.partInLight}, 
           target: spellObj.target, 
           who: 'me',
           pathBuilder
@@ -1717,7 +2117,7 @@ export default (state = defaultState, action) => {
         spellAnimations: {
           animeFunc: spellObj.animeFunc(false), 
           animeArg: spellRes.args,
-          //particles: spellObj.particles,
+          // particles: spellObj.particles,
           personId: state.inAir.id
         },
         spellCash: spellRes,
@@ -1796,7 +2196,7 @@ const updateVenomStep = ({data, state}) => {
     //console.log('DATA_PASS:', data)
     console.log('%c%s', 'color: red; font-size: 33px;', 'DEBAG_DATA:',data)
     // только пришедшие // 2 getDlsData печалена..
-    const sDDB = getDlsData({sources: {rocks: data.rocks, me: data.me, partner: data.partner}, pathBuilder}),
+    const sDDB = getDlsData({sources: {rocks: data.rocks, me: data.me, partner: data.partner, fire: data.fire}, pathBuilder}),
     survMyVenom = updateSpells(data.myVenom ? data.myVenom : state.myVenom),
     survPartVenom = updateSpells((data.partVenom ? data.partVenom : state.partVenom)),
     newPartVenom = survPartVenom.res.concat(sDDB.sumDlsPartVenom),
@@ -1804,27 +2204,43 @@ const updateVenomStep = ({data, state}) => {
     afterClickPartner = updateGameStats(data.partner ? data.partner : state.partner, newMyVenom),
     afterClickMe = updateGameStats(data.me ? data.me : state.me, newPartVenom),
     newFire = updateSpells(data.fire ? data.fire : state.fire);
+    //debugger
     // getDls ({ rocks, me, partner})
     // console.log('NEW_FIRE:', newFire.res)
     // target in deadboys
-    let sDD = getDlsData({ sources: {rocks: data.rocks, me: afterClickMe.res, partner: afterClickPartner.res}, pathBuilder});
-    let newInLight = getLightPosition(afterClickMe.res, afterClickPartner.res, data.rocks);
+    // ==============LIGHT_PART_WITH_DEADBOYS===================================
+    let sDD = getDlsData({sources: {rocks: data.rocks, me: afterClickMe.res, partner: afterClickPartner.res, fire: newFire.res}, pathBuilder})
+    let newInLight = getLightPosition(afterClickMe.res, afterClickPartner.res, data.rocks, 'me')
     let dirtyLightSum = newInLight.concat(sDD.sumDlsLight).concat(data.inLightBySpell)
-    console.log('%c%s', 'color: green; font-size: 33px;', 'BEFORE_FILTER:', dirtyLightSum)
+    //console.log('%c%s', 'color: green; font-size: 33px;', 'BEFORE_FILTER:', dirtyLightSum)
     let cleanLightSum = dirtyLightSum; //lightFilter(dirtyLightSum);
+    // ==============LIGHT_PART_WITH_DEADBOYS===================================
     let myDeadBoys = afterClickMe.dead; // they will die after 1.3 sec
     let partDeadBoys = afterClickPartner.dead;
+    // ==============LIGHT_PART_WITHOUT_DEADBOYS=================================
+    let meWDB = afterClickMe.res.filter(({id}) => !myDeadBoys.some(({id: ID}) => id === ID))
+    let partWDB = afterClickPartner.res.filter(({id}) => !partDeadBoys.some(({id: ID}) => id === ID))
+    let sDDWDB = getDlsData({sources: {rocks: data.rocks, me: meWDB, partner: partWDB, fire: newFire.res}, pathBuilder})
+    let newInLightWDB = getLightPosition(meWDB, partWDB, data.rocks, 'me')
+    let dirtyLightSumWDB = newInLightWDB.concat(sDDWDB.sumDlsLight).concat(data.inLightBySpell)
+    let cleanLightSumWDB = dirtyLightSumWDB
+    // ==============PARTNER_PART================================================
+    let newPartInLight = getLightPosition(meWDB, partWDB, data.rocks, 'partner').concat(sDDWDB.sumDlsPartLight) // .concat(data.inLightBySpell)
+    //!!!IMPORTANT: check workPayload.inAir and side ===> concat inLightBySpell or not
+    //debugger
+    // ==============LIGHT_PART_WITHOUT_DEADBOYS=================================
     let getNewSpellMap = () => {
+      //debugger
       if(data.spellMap) {
         let newSpellMap = data.spellMap;
         [
           {
-            workArr: newMyVenom,
+            workArr: survMyVenom,
             pushPass: 'oldMyVenom',
             pass: 'dead'
           },
           {
-            workArr: newPartVenom,
+            workArr: survPartVenom,
             pushPass: 'oldPartVenom',
             pass: 'dead'
           },
@@ -1844,12 +2260,12 @@ const updateVenomStep = ({data, state}) => {
           //   pass: 'dead'
           // },
           {
-            workArr: newMyVenom,
+            workArr: survMyVenom,
             pushPass: 'myVenom',
             pass: 'res'
           },
           {
-            workArr: newPartVenom,
+            workArr: survPartVenom,
             pushPass: 'partVenom',
             pass: 'res'
           },
@@ -1869,16 +2285,18 @@ const updateVenomStep = ({data, state}) => {
         return []
       }
     }
+    
   return {
     ...data,
     partner: afterClickPartner.res, 
     me: afterClickMe.res,
-    oldPartner:data.oldPartner ? data.oldPartner.concat(afterClickPartner.dead) : afterClickPartner.dead,
-    oldMe:data.oldMe ? data.oldMe.concat(afterClickMe.dead) : afterClickMe.dead,
+    //oldPartner:data.oldPartner,
+    //oldMe:data.oldMe,
     oldFire: newFire.dead,
     inLight: cleanLightSum,
     newInLight: getNewInLight(state.inLight, cleanLightSum),
     oldInLight: getOldInLight(state.inLight, cleanLightSum),
+    partInLight: newPartInLight,
     fire: newFire.res,
     oldMyVenom: survMyVenom.dead,
     oldPartVenom: survPartVenom.dead,
@@ -1886,6 +2304,9 @@ const updateVenomStep = ({data, state}) => {
     myVenom: newMyVenom,
     myDeadBoys,
     partDeadBoys,
+    inLightWDB: cleanLightSumWDB,
+    partWDB,
+    meWDB,
     spellMap: getNewSpellMap()
   }
 }
@@ -1936,9 +2357,9 @@ const partnerMoveTo = (state) => {
   let {y, x} = state.workPayload.payload
   let {id} = state.workPayload.inAir
   const newPartner = getNewStaff(state.partner, {id}, {y, x})
-  let partMoveSource = {rocks: state.rocks, me: state.me, partner: newPartner}
-  let partMoveR = getDlsData({ sources: partMoveSource, pathBuilder})
-  const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks).concat(partMoveR.sumDlsLight)
+  //let partMoveSource = {rocks: state.rocks, me: state.me, partner: newPartner}
+  //let partMoveR = getDlsData({ sources: partMoveSource, pathBuilder})
+  //const lightPosAfterPartnerMove = getLightPosition(state.me, newPartner, state.rocks, 'me').concat(partMoveR.sumDlsLight)
   //console.log('LIGHT_POS_AFTER_PARTNER_MOVE:',lightPosAfterPartnerMove)
   
   return updateBaseStep(
@@ -1947,11 +2368,11 @@ const partnerMoveTo = (state) => {
       {
         ...state,
         partner: newPartner, 
-        inLight: lightPosAfterPartnerMove,
-        myVenom: state.myVenom.concat(partMoveR.sumDlsMyVenom),
-        partVenom: state.partVenom.concat(partMoveR.sumDlsPartVenom),
-        newInLight: getNewInLight(state.inLight, lightPosAfterPartnerMove),
-        oldInLight: getOldInLight(state.inLight, lightPosAfterPartnerMove),
+        //inLight: lightPosAfterPartnerMove,
+        //myVenom: state.myVenom,
+        //partVenom: state.partVenom,
+        //newInLight: getNewInLight(state.inLight, lightPosAfterPartnerMove),
+        //oldInLight: getOldInLight(state.inLight, lightPosAfterPartnerMove),
         animeMove: null,
         moveFromShadow: null,
         oldMoveFromShadow: state.moveFromShadow,
@@ -1967,14 +2388,30 @@ const updateGameStats = (workArr, venomArr) => {
   let dead = []
   console.log('UPDATE_GAME_STATE:VENOME:',venomArr)
   
-    res.forEach(({Y, X, stunned}, i) => {
+    res.forEach(({Y, X, stunned, buffs}, i) => {
+      //=========BUFFS_PART==========
+      if(buffs.length > 0) {
+        buffs.forEach(({time, changed}, b) => {
+          let newBuffTime = time-1;
+          if(newBuffTime > 0) {
+            res[i].buffs[b].time = newBuffTime;
+          } else {
+            //let changeObj = res[i].buffs[b].changed
+            for(let prop in changed) {
+              res[i][prop] = changed[prop]
+            }
+            res[i].buffs.splice(b, 1);
+          }
+        })
+      }
+      //=========BUFFS_PART==========
       console.log('RES:', res)
       venomArr.forEach(({newY, newX, postDmg}) => {
       if(newY === Y && newX === X) {
         let newXp = res[i].xp - postDmg
         if(newXp < 0) {
           dead.push(res[i]) // место что бы вешать на них крест.
-          res[i].xp = newXp
+          res[i].xp = newXp // flat for css filter to stay gray
           //res.splice(i, 1)
         } else {
           res[i].xp = newXp
@@ -2107,6 +2544,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, i
   let counter = pathLenght
   let ripFlag = true;
   let newPlace = {newY: Y, newX: X}
+  let ignoreHaveRocks = ignore.some(name => name === 'rocks')
   const rockInclude = ({y, x}) => mainSource['rocks'].some(({Y, X}) => y === Y && x === X)
   const pusher = (newPlace) => {
     let modYDir = Math.abs(yDir);
@@ -2115,45 +2553,18 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, i
     const passFunc = () => modYDir+modXDir <=2 ? realPath.push(newPlace) : misses.push(newPlace)
     const checkPaths = (workArr, permit, igno, enlarge) => {
       workArr.forEach((name) => {
-        if(modYDir === modXDir
+        if(modYDir === modXDir && !ignoreHaveRocks
             && rockInclude({y:newPlace.newY-yDir, x:newPlace.newX}) 
                 && rockInclude({y:newPlace.newY, x:newPlace.newX-xDir})) { // check on diagon
                   ripFlag = false
                   isEmptyPlace[0] = false
                 
-                
-          // if() {
-          //     ripFlag = false
-          //     isEmptyPlace[0] = false
-          // } 
-          // else {
-          //   if(!igno) {
-          //     ripFlag = false
-          //   }
-          //   permit && passFunc()
-          //   isEmptyPlace[0] = false
-          // }
-              // if(enlarge) {
-              //   console.log('%c%s', 'font: 1.3rem/2 Georgia; color: indigo', 'ALTER_BRANCH:', newPlace)
-              //   console.log('%c%s', 'font: 1.3rem/2 Georgia; color: indigo', 'ALTER_BRANCH:COUNTER:', counter)
-              //   passFunc()
-              //   counter++
-              // } else {
-              //    // check on body
-              // }
-              
-        } else {
+      
+        } else { // встреча с чем то..
           if(mainSource[name].some(({Y, X}) => Y === newPlace.newY && X === newPlace.newX)) {
             if(!igno) {
               ripFlag = false
             }
-            // if(enlarge) {
-            //   console.log('%c%s', 'font: 1.3rem/2 Georgia; color: indigo', 'ALIVE:', newPlace)
-            //   counter++
-            // }
-            // if(enlarge || (enlarge && modYDir === modXDir)) {
-            //   console.log('INCREASE:', newPlace)
-            // }
             permit && passFunc() // add dop dist for attack 
             isEmptyPlace[0] = false
           }
@@ -2163,7 +2574,7 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, i
     //console.log('DEEEEEEEEEEEEEEEEEEEEBBBBBBBBBAAAG 2222:', block)
     checkPaths(dop, true, false)
     checkPaths(block, false, false)
-    checkPaths(ignore, true, true)
+    checkPaths(ignore, false, true)
     //checkPaths(enlarge, true, true, true)
     //yDir === -1 && xDir === 1 && console.log('%c%s', 'font: 1.3rem/1 Georgia bold; color: gold', `ENLARGE_HANDL: COUNT: ${counter} and flag: ${ripFlag}, isEmpty: ${isEmptyPlace[0]}`, newPlace )
     isEmptyPlace[0] && passFunc()
@@ -2174,22 +2585,30 @@ const pathBuilder = (yDir, xDir, pathLenght, realPath, mainSource, dop, block, i
   // }
   while(ripFlag && counter) {
     //console.log('do THIS', counter)
-    counter--  // Здесь обитает баг, если counter больше 4, то можем уйти на пративоположную сторону, где происходят ужасные вещи...
+    counter--;  // Здесь обитает баг, если counter больше 4, то можем уйти на пративоположную сторону, где происходят ужасные вещи...
     newPlace = {newY: newPlace.newY + yDir, newX: newPlace.newX + xDir}
-    if(newPlace.newY <= 17 && newPlace.newX > -1 && newPlace.newY > -1 && newPlace.newX <= 17) {
+
+    if(newPlace.newY <= 17 && newPlace.newX >= 0 && newPlace.newY >= 0 && newPlace.newX <= 17) {
       //console.log('Alive')
-      if(Y <= 8 && X <= 8 && Math.abs(newPlace.newY + newPlace.newX) >= 5) {
-        pusher(newPlace)
-      } else if(Y >= 9 && X <= 8 && Math.abs(newPlace.newY - newPlace.newX) <= 12) {
-        //console.log('SRABOTAL')
-        pusher(newPlace)
-      } else if(Y >= 9 && X >= 9 && Math.abs(newPlace.newY + newPlace.newX) <= 29) {
-        //console.log('Insa Alive')
-        pusher(newPlace)  
-      } else if(Y <= 8 && X >= 9 && Math.abs(newPlace.newX - newPlace.newY) <= 12) {
-        pusher(newPlace)
+      let checkX = newPlace.newX;
+      let checkY = newPlace.newY;
+      const checkTab = (x, y, left) => {
+        let workX = left ? x : (17-x)
+        let maxY = 12+workX;
+        let minY = 5-workX;
+        return y <= maxY && y >= minY;
+      }
+      // const rightTabCheck = (x, y) => {
+      //   let maxY = 12+(17-x);
+      //   let minY = 5-(17-x);
+      // }
+
+      if(checkX >= 0 && checkX <= 4) {
+        checkTab(checkX, checkY, true) && pusher(newPlace);
+      } else if(checkX >= 13 && checkX <= 17) {
+        checkTab(checkX, checkY, false) && pusher(newPlace);
       } else {
-        ripFlag = false
+        pusher(newPlace) // or ripFlag?
       }
     } else {
       ripFlag = false
@@ -2219,7 +2638,7 @@ const checkMove = (me, partner, rocks, {id, Y, X, move}) => { // через Path
   return realPath
 }
 
-const fillTheGaps = (yDir, xDir, realPath, Y, X, misses) => {
+const fillTheGaps = (yDir, xDir, realPath, Y, X, misses) => { // changeThat
   
   let res = {newY: Y+yDir, newX: X+xDir}
   let incY = realPath.some(({newY, newX}) => newY === Y+yDir && newX === X);
@@ -2235,11 +2654,12 @@ const fillTheGaps = (yDir, xDir, realPath, Y, X, misses) => {
   }
 }
 
-const getLightPosition = (me, partner, rocks) => {
+const getLightPosition = (me, partner, rocks, who) => {
   let realPath = []
   let misses = []
   let mainSource = {me, partner, rocks}  // можно сыграть от последовательности...
-  me.forEach(({Y, X, visibility}, i) => {
+  let workArr = who === 'me' ? me : partner;
+  workArr.forEach(({Y, X, visibility}, i) => {
     //console.log('VISIBILITY', visibility)
     realPath.push([])
     realPath[i].push({newY:Y, newX:X})

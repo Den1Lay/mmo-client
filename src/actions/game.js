@@ -87,6 +87,9 @@ export const transformFunc = () => ({
   type: 'TRANSFORM_FUNC'
 })
 
+export const deleteDeadBoys = () => ({
+  type: 'DELETE_DEAD_BOYS'
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

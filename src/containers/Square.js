@@ -14,7 +14,9 @@ import {
 import './timeScss.scss'
 
 const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure, isAttacked, canSpell, spellAnime, moveFromShadow, showOnSecond}) {
-  
+  // if(y === 2 && x === 9) {
+  //   debugger
+  // }
   if(spellAnime) { 
     const {color, src} = spellAnime
     //console.log("SPELL_ANIME:", spellAnime)
@@ -36,7 +38,9 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       //canDrop: monitor.canDrop()
     })
   })
-
+  // if(y === 2 && x === 9) {
+  //   debugger
+  // }
   let backColor = canSpell
   ? canSpell : isAttacked
   ? {r: 180, g:0, b:0} : isOver && !canDrop
@@ -47,6 +51,9 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   const [first, setFirst] = useState(null)
   const [cash, setCash] = useState({me: null, partner: null, First: null})
   const [place, setPlace] = useState(null)
+  // if(y === 2 && x === 9) {
+  //   debugger
+  // }
   // const [workSquare, setWorkSquare] = useState({id: null, payload: null, relictProps: {
   //   moveFromShadow: null,  // may be bag
   //   isLight: null,
@@ -64,6 +71,10 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   let herePartner = false;
   let hereMe = false;
   let flyUnit = null;
+
+  // if(y === 2 && x === 9) {
+  //   debugger
+  // }
   //console.log('ME',me) // КАК РАБОТАЮТ СПЕЛЫ???? ()
   // const checkSpells = (fromRelict, newSpell) => {
   //   console.log('%c%s', 'color: orange; font-size: 10px', `INSIDE_CHECK: ${newSpell} and NEW: relict: `,fromRelict )
@@ -183,6 +194,10 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
   if(cash.First && !(hereMe || herePartner)) {
     setCash({me, partner, First: null})
   }
+  if(flyUnit && (!herePartner || !hereMe)) {
+    //debugger
+    setCash({me, partner, First: React.cloneElement(flyUnit, {mouseEvent: (pass) => mouseHereHandl(pass)})});
+  }
   if(herePartner && hereMe) {
     //logic
     const {Y, X, pY, pX, id, xp, maxXp} = hereMe
@@ -298,7 +313,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
     //console.log('WORK_SQUARE:', workSquare)
     ripFlag = true
     // console.log(opct) rip logic
-    let aim = place ? 'partner' : isRock ? 'rocks' : null;
+    let aim = cash.First ? 'partner' : isRock ? 'rocks' : null;
     if( canMove ) { 
       if(isTreasure) {
         store.dispatch(animeMoveHandler({y, x, isDrag: false})) // объединение 2 событий???

@@ -113,6 +113,7 @@ function Board (
         })
       }
       const cleaner = () => {
+        //debugger
         //console.log('INNNNNNNNNN WOOOOOOOOOORK,', oldCanMove)
         oldCanMove.forEach(({newY, newX}) => { //cleaner вот оно
           let deathIndex = []
@@ -164,7 +165,9 @@ function Board (
           //     checkIndex = i
           //   } 
           // })
-          indexFinder(checkIndex, newY, newX)
+          indexFinder(checkIndex, newY, newX);
+          //let gebagCheck = cloneMainMemoPlant[newY][checkIndex[0];
+          //debugger;
           //console.log('Do your work')
           cloneMainMemoPlant[newY][checkIndex[0]] = setState(cloneMainMemoPlant[newY][checkIndex[0]], {me, canMove: true})
           //checkIndex.pop()
@@ -313,6 +316,7 @@ function Board (
           
           break
         case 'C':
+          //debugger
           setter()
           break
         case 'D':
@@ -358,6 +362,7 @@ function Board (
           //optional time update
           //greatUpdater(['me', 'oldMe', 'fire', 'oldFire', 'venom', 'oldVenom'])
           //oldMe.length > 0 && updateDefState(me, true)
+          //debugger
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
           oldFire.length > 0 && spellAnimeSetter(fire, null)
           oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
@@ -404,6 +409,9 @@ function Board (
                 cleanProps(partner, false)
                 updateDefState(partner, false)
                 break
+              case 'oldPartner':
+                oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)  
+                break
               case 'me':
                 cleanProps(me, true)
                 updateDefState(me, true)
@@ -415,9 +423,7 @@ function Board (
                 console.log('%c%s', 'color: cadetblue; font-size:44px;','WORK_TRIGGER:',oldMe)
                 persenSetter(oldMe, 'me', me, partner)
                 break
-              case 'oldPartner':
-                oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)  
-                break
+              
               case 'fire':
                 spellAnimeSetter(fire, true)
                 break
@@ -449,6 +455,7 @@ function Board (
         case 'W':
           //console.log('W_DEBAG:PARTNER:',partner)
           oldInLight.length > 0 && lightSetter(oldInLight, false)
+          newInLight.length > 0 && lightSetter(newInLight, true)
           console.log('%c%s','color: darkblue; font-size: 33px', 'OLD_MOVE_FROM_SHADOW:', oldMoveFromShadow)
           oldMoveFromShadow && moveFromShadowSetter(oldMoveFromShadow, {moveFromShadow: null})
           cleanProps(partner, false)
@@ -470,6 +477,13 @@ function Board (
           break
         case 'Z':
           oldShowOnSecond && moveFromShadowSetter(oldShowOnSecond, {showOnSecond: null}) 
+          break
+        case 'F': 
+          //debugger
+          oldPartner.length > 0 && persenSetter(oldPartner, 'partner', me, partner)
+          oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
+          oldInLight.length > 0 && lightSetter(oldInLight, false)
+          newInLight.length > 0 && lightSetter(newInLight, true)
           break
         default:
           console.log('START') // do something with this...
