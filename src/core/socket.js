@@ -1,6 +1,23 @@
-import io from 'socket.io-client'
-import store from '@/store'
+import io from 'socket.io-client';
+import store from '@/store';
 //import store from '@/store/game'
+let moveTimer = void '';
+
+store.subscribe((ev) => {
+  let {game} = store.getState();
+  if(game.whoseMove !== 'my' && moveTimer !== undefined) {
+    clearTimeout(moveTimer)
+  }
+  if(game.whoseMove === 'my' && moveTimer === undefined) { //superTimer
+    moveTimer = setTimeout(() => {
+      console.info('%c%s', 'color: royalblue; font-size: 44px;', 'ROYAL_END_TURN' )
+      store.dispatch({type: 'END_TURN'});
+      //endTurnEvent
+      //socket.to(...).emit('END_TURN', {payload: {who, ...}})
+      moveTimer = void 'over';
+    }, 20*1000)
+  }
+})
 
 const socket = io('http://localhost:8080') // window.location.origin
 
@@ -30,6 +47,14 @@ socket.on('GAME:PARTNER_SPELL', ({payload}) => {
     //  dispatch({withAnime(true)})
     //}
   }
+})
+
+socket.on('GAME:START', ({payload: {}}) => {
+
+})
+
+socket.on('GAME:PARTNER_OVER_MOVE', ({payload}) => { //payload={energy}
+  store.dispatch({type: 'START_MY_TURN', payload})
 })
 
 export default socket

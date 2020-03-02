@@ -8,7 +8,7 @@ import darkPlace from '@/img/DarkPlace.png'
 import './Square.scss'
                                                                       // underSpell will src
 const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure, underSpell, herePartner, mouseEvent, moveFromShadow, showOnSecond}) => {
-  console.log('%c%s','color: navy; font-size: 22px;',`X: ${x}, Y: ${y}, REAL_RE_RENDER:`, underSpell)
+  //console.log('%c%s','color: navy; font-size: 22px;',`X: ${x}, Y: ${y}, REAL_RE_RENDER:`, underSpell)
   const mainRef = useRef(null)
 
     useEffect(() => {
@@ -55,10 +55,6 @@ const Square = React.memo(({x, y, children, overlay, isLight, isRock, isTreasure
   //console.log('%c%s', 'color: indigo; font-size:22px', 'THAT_NEXT_PROPS:', nextProps)
 
   const checkUnderSpell = (prevUnder, nextUnder) => {
-    if(y=== 1 && x===8) {
-      console.log('%c%s', 'color: gold; font-size:22px', 'THAT_PREV', prevUnder)
-      console.log('%c%s', 'color: gold; font-size:22px', 'THAT_NEXT', nextUnder)
-    }
     if(prevUnder.length === nextUnder.length) {
       let res = true
       prevUnder.forEach(({src},i) => {

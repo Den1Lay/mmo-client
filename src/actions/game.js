@@ -90,6 +90,11 @@ export const transformFunc = () => ({
 export const deleteDeadBoys = () => ({
   type: 'DELETE_DEAD_BOYS'
 })
+
+export const updateOldXp = ({isPartner, knightInd}) => ({
+  type: 'KNIGHT:UPDATE_OLD_XP',
+  payload: {isPartner, knightInd}
+})
 // export const moveToUseClick = ({}) => ({ ///DAAVVAAY
 //   type: 'KNIGHT:MOVE_TO_USE_CLICK'
 // })

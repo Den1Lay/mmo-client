@@ -1,8 +1,10 @@
 import store from '../index'
-import { getDlsData, lightFilter } from '@/utils'
+import { getDlsData, lightFilter, updateOldXp } from '@/utils'
+//import { updateOldXp } from '../../actions/game'
 // ПЕРВАЯ ЗАПОВЕДЬ СПЕЛЛОВ: НЕЛЬЗЯ РЕДАЧИТЬ ГЕРОЯ, КОТОРЫЙ ДРОПНУЛ СПЕЛ ИЛИ КЛЕТКУ НА КОТОРОЙ СТОИТ ГЕРОЙ, ЕСЛИ У СПЕЛА ЕСТЬ АФТЕР ЭФФЕКТЫ. (можно)
 // СОБЫТИЕ: START_СОБЫТИЯ (createCash, wp) --> СОБЫТИЕ_TO
 // IGNORE_ARR: Блокирует возможность наступить,но не продолжение пути, если там не аргумент игнора
+// Check energy_cost and my_energy before startSpell, if else just showEnergy
 // develop edition 
 let absThis = this
 const defaultState = {
@@ -12,7 +14,7 @@ const defaultState = {
       Y: 12, X: 0, // after PP
       pY: 12, pX: 0, // after PP
       xp: 20,
-      oldXp: 33,
+      oldXp: 20,
       maxXp: 12,
       silensed: false,
       buffs: [],  
@@ -53,6 +55,8 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        cost: 2,
+        src: 'https://images.freeimages.com/images/large-previews/bb2/bottle-beer-detail-1-1193177.jpg',
         effect: ({id, sources, Y, X, pathBuilder}) => {
           let workRocksArr = sources.rocks.slice()
           let dlsLight = [];
@@ -77,9 +81,7 @@ const defaultState = {
           }
           findRocksFrom(Y, X)
           while(liveFlag) {
-            console.log('LOGIN_DODO')
             liveFlag = false
-            console.log('WORK_ROCKS:', workRocks)
             workRocks.forEach(({Y, X}) => findRocksFrom(Y, X))
           }
           const rocksVisibility = {
@@ -161,6 +163,8 @@ const defaultState = {
         ]
       },
       attack: {
+        cost: 3,
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Red_Army_flag.svg/1200px-Red_Army_flag.svg.png',
         dammage: 1,
         type: 'magic', //range and magic
         dopDirs: [],
@@ -187,7 +191,9 @@ const defaultState = {
           id: 'Fireball',
           icon: 'F',
           target: 'partner',
+          src: 'https://images.freeimages.com/images/large-previews/b2d/kiwi-fruit-macros-1313905.jpg',
           color: {r: 150, g: 0, b: 24},
+          cost: 4,
           dopDirs: [],
           blockDirs: ['me'],
           ignore: ['rocks'],
@@ -252,14 +258,13 @@ const defaultState = {
                   if(newY === Y && newX === X) {
                     let newXp = workArr[i].xp - 6;
                     if(newXp > 0) {
-                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT:',);
                       workArr[i].xp = newXp
                       workArr[i].v = Math.random()
                       if(!spellMap.some(name => name === workArrPass)) {
                         spellMap.push(workArrPass)
                       }
                     } else {
-                      console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
+                      //console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
                       workDeadArr.push(workArr[i]);
                       workArr.splice(i, 1);
                       //workArr[i].v = Math.random()
@@ -303,12 +308,11 @@ const defaultState = {
           // Анимации делают, все тоже, что и reducer, maxSinx
           animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
-            console.log('PARTICLES:', particles)
             particles[0].current.style.display = 'block'; // 
             particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
             particles[0].current.style.width = '90px';
             //particles[0].current.style.height = '30px';
-            console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
+            //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
             if(hideKnight || payloadShow) {
               anime({
                 targets: knight.current,
@@ -325,7 +329,7 @@ const defaultState = {
               easing: 'easeInCirc',
               complete: anim1 => {  // may take 90% event
                 if(anim1.completed) {  
-                  console.log('ISTIME')
+          
                   let resCheck = [];
                   particles[0].current.style.opacity = 0;
                   // применение изменений и конец анимаций через различные события
@@ -400,6 +404,7 @@ const defaultState = {
       Y: 1, X: 7,
       pY: 1, pX: 7,
       xp: 26,
+      oldXp: 26,
       maxXp: 12,
       silensed: false,
       stunned: 0,
@@ -440,6 +445,8 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        cost: 2,
+        src: 'https://images.freeimages.com/images/large-previews/bb2/bottle-beer-detail-1-1193177.jpg',
         effect: ({id, sources, Y, X, pathBuilder})  => {
           let newVenome = [];
           let direction = [
@@ -453,8 +460,7 @@ const defaultState = {
             {xDir:0, yDir: -1, pathLenght:1}
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, ['partner'], ['me', 'rocks'], [], Y, X, []))
-          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 10, color: {r: 39, g: 202, b: 126}, src: ''}))
-          console.log("INSIDE_VENOME_FUNC:",newVenome)
+          newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 5, color: {r: 39, g: 202, b: 126}, src: ''}))
           return {
             dlsVenome: newVenome,
             dlsLight: []
@@ -493,6 +499,8 @@ const defaultState = {
         ]
       },
       attack: {
+        cost: 3,
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Red_Army_flag.svg/1200px-Red_Army_flag.svg.png',
         dammage: 3,
         type: 'melee', //range and magic
         dopDirs: ['partner', 'rocks'],
@@ -514,8 +522,10 @@ const defaultState = {
         {
           id: 'Teleport',
           icon: 'T',
+          src: 'https://images.freeimages.com/images/large-previews/754/details-of-a-tulip-2-1375972.jpg',
           target: 'partner',
           color: {r: 25, g: 25, b: 112},
+          cost: 4,
           dopDirs: [],
           blockDirs: ['me'],
           ignore: ['rocks'],
@@ -608,7 +618,7 @@ const defaultState = {
                 newY = 17
                 //workArr[aimIndex] = {...workArr[aimIndex], Y: newY, pY: workArr[aimIndex].Y}
               } else {
-                console.log('NOTH1NG')
+                //console.log('NOTH1NG')
               }
               workArr[targetInd] = {...workArr[targetInd], Y: newY, pY: workArr[targetInd].Y, pX: workArr[targetInd].X}
             } else if(rockStunIndex !== null) {
@@ -668,7 +678,6 @@ const defaultState = {
                 // spellMap.push(workDeadPass)
               }
             }
-            console.log("RES_CONTENT:", workArr)
             let res = {
               me: newMe,
               partner: newPartner,
@@ -887,6 +896,7 @@ const defaultState = {
       Y: 1, X: 9,
       pY: 1, pX: 9,
       xp: 12,
+      oldXp: 12,
       maxXp: 12,
       silensed: false,
       stunned: 0,
@@ -927,6 +937,8 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        cost: 4,
+        src: 'https://images.freeimages.com/images/large-previews/bb2/bottle-beer-detail-1-1193177.jpg',
         effect: ({id, sources, Y, X, pathBuilder})  => {
           let newVenome = [];
           let direction = [
@@ -941,7 +953,6 @@ const defaultState = {
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, ['partner'], ['me', 'rocks'], [], Y, X, []))
           newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 39, g: 202, b: 126}, src: ''}))
-          console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: [],
             dlsLight: []
@@ -980,7 +991,9 @@ const defaultState = {
         ]
       },
       attack: {
+        cost: 3,
         dammage: 3,
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Red_Army_flag.svg/1200px-Red_Army_flag.svg.png',
         type: 'melee', //range and magic
         dopDirs: ['partner', 'rocks'],
         blockDirs: ['me'],
@@ -1003,6 +1016,8 @@ const defaultState = {
           icon: 'B',
           target: 'partner',
           color: {r: 58, g: 201, b: 211},
+          src: 'https://media.gettyimages.com/photos/agave-leaves-in-trendy-pastel-neon-colors-picture-id909651510?b=1&k=6&m=909651510&s=170x170&h=XAF-ICpH7Ub5-cxOhv5d8jZXA_DXor9oROviyMJ6wKk=',
+          cost: 4,
           dopDirs: [],
           blockDirs: ['me'],
           ignore: ['rocks'],
@@ -1097,7 +1112,6 @@ const defaultState = {
               // just blink
             }
             
-            console.log("RES_CONTENT:", workArr);
             let res = {
               me: meArr,
               partner: partArr,
@@ -1134,6 +1148,7 @@ const defaultState = {
       Y: 15, X: 9,
       pY: 15, pX: 9,
       xp: 12,
+      oldXp: 12,
       maxXp: 12,
       silensed: false,
       stunned: 0,
@@ -1174,6 +1189,8 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        cost: 2,
+        src: 'https://images.freeimages.com/images/large-previews/bb2/bottle-beer-detail-1-1193177.jpg',
         effect: ({id, sources, Y, X, pathBuilder}) => {
           // sources = {me, part, rocks, fire}
           
@@ -1214,7 +1231,7 @@ const defaultState = {
               sumLight = sumLight.concat(partRealPath)
             }
           })
-          debugger
+         // debugger
           return {
             dlsVenome: [],
             dlsLight: sumLight,
@@ -1253,6 +1270,8 @@ const defaultState = {
         ]
       },
       attack: {
+        cost: 2, 
+        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Red_Army_flag.svg/1200px-Red_Army_flag.svg.png',
         dammage: 3,
         type: 'melee', //range and magic
         dopDirs: ['partner', 'rocks'],
@@ -1272,10 +1291,12 @@ const defaultState = {
       },
       spells: [
         {
-          id: 'DeathBlow',
-          icon: 'B',
+          id: 'StickyEyes',
+          icon: 'E',
           target: 'partner',
+          src: 'https://lh3.googleusercontent.com/proxy/NqMKquCP2I_RFId3v0kpdI-HPKAzdiP4kD0oIMr1OmTjiCdH0n95YTQ9u9G59IAAqc7t0q7d9H-GVnh2CUpt0bfUPW5VYgKzw5MjXwU6DQ',
           color: {r: 58, g: 201, b: 211},
+          cost: 3,
           dopDirs: [],
           blockDirs: ['me', 'rocks'],
           ignore: [],
@@ -1372,8 +1393,6 @@ const defaultState = {
                 owner: inAir.id,
               }}) // vards throw move, 
             }
-            
-            console.log("RES_CONTENT:", workArr);
             let res = {
               me: meArr,
               partner: partArr,
@@ -1405,13 +1424,14 @@ const defaultState = {
         }     // Спелы противника это просто спел в другую сторону
       ]
     }
-  ], // after reduc func
+  ], // after reduc func ++
   partner: [
     {
       id: 'DKnight1',
       Y:2, X:9,
       pY: 2, pX: 9,
-      xp: 14,
+      xp: 12,
+      oldXp: 12,
       maxXp: 12,
       silensed: false,
       stunned: 0,
@@ -1451,6 +1471,7 @@ const defaultState = {
         ]
       }, // обзор
       move: {
+        cost: 3,
         effect: ({sources, Y, X, pathBuilder})  => {
           let newVenome = [{newX: X, newY: Y}];
           let direction = [
@@ -1465,7 +1486,6 @@ const defaultState = {
           ];
           direction.forEach(({yDir, xDir, pathLenght}) => pathBuilder(yDir, xDir, pathLenght, newVenome, sources, [], ['rocks'], [], Y, X, []))
           newVenome = newVenome.map(({...staff}) => ({...staff, time: 1, postDmg: 9, color: {r: 95, g: 255, b: 202}, src: ''})) //(95, 255, 202)
-          console.log("INSIDE_VENOME_FUNC:",newVenome)
           return {
             dlsVenome: newVenome,
             dlsLight: []
@@ -1504,6 +1524,7 @@ const defaultState = {
         ]
       },
       attack: {
+        cost: 3,
         dammage: 9,
         type: 'melee', //range and magic //mele
         dopDirs: [],
@@ -1531,6 +1552,7 @@ const defaultState = {
           icon: 'F',
           target: 'partner',
           color: {r: 150, g: 0, b: 24},
+          cost: 3,
           dopDirs: [],
           blockDirs: ['me'],
           ignore: [],
@@ -1596,14 +1618,13 @@ const defaultState = {
                   if(newY === Y && newX === X) {
                     let newXp = workArr[i].xp - 6;
                     if(newXp > 0) {
-                      console.log('TAAAAAAAAAAAAAAAAKE ITTTTT:',);
                       workArr[i].xp = newXp
                       workArr[i].v = Math.random()
                       if(!spellMap.some(name => name === workArrPass)) {
                         spellMap.push(workArrPass)
                       }
                     } else {
-                      console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
+                      //console.log('%c%s', 'color: darkgreen; font-size: 33px', 'DEAD_ELEMENT:',workArr[i])
                       workDeadArr.push(workArr[i]);
                       workArr.splice(i, 1);
                       //workArr[i].v = Math.random()
@@ -1640,18 +1661,17 @@ const defaultState = {
                 },
                 spellMap
               }
-              console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
+              //console.log('%c%s', 'color: red; font-size: 50', 'FIREBOLL_RES:', firebol_res)
               return firebol_res
           },
 
           animeFunc:(payloadShow) => ({particles, knight, args: {tY, tX, hideKnight}, anime, spellTo, cleanAfterPartSpell}) => {  
             // для мастера подгод под конкретное число, inAir известен...
-            console.log('PARTICLES:', particles)
             particles[0].current.style.display = 'block'; // 
             particles[0].current.src = 'data:image/png;base64,'+window.localStorage.Fireboll+'';
             particles[0].current.style.width = '90px';
             //particles[0].current.style.height = '30px';
-            console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
+            //console.log('%c%s', 'color: chocolate; font-size: 33px;', `INSIDE_UPDATE: hide:${hideKnight}`)
             if(hideKnight || payloadShow) {
               anime({
                 targets: knight.current,
@@ -1668,7 +1688,6 @@ const defaultState = {
               easing: 'easeInCirc',
               complete: anim1 => {  // may take 90% event
                 if(anim1.completed) {  
-                  console.log('ISTIME')
                   let resCheck = [];
                   particles[0].current.style.opacity = 0;
                   // применение изменений и конец анимаций через различные события
@@ -1734,7 +1753,7 @@ const defaultState = {
           }
         }
     ]
-  }], // FS
+  }], // AM
   oldMe: [],
   oldPartner: [], // массив если будут ауе спелы
   inAir: null,
@@ -1791,6 +1810,11 @@ const defaultState = {
   myDeadBoys: [],
   partDeadBoys: [],
   partInLight: [],
+  energy: 10,
+  oldEnergy: 10,
+  whoseMove: 'my', 
+  greatStore: [], //allHeroes without modify, get his with socket request; // FS
+  myHeroList: [0, 1, 2, 3], //FS
   //spellAnimations???
 }
 
@@ -1827,6 +1851,20 @@ export default (state = defaultState, action) => {
       return {
         ...state,
         unit: payload
+      }
+    }
+    case 'END_TURN': {
+      return {
+        ...state, // workWithEnergy
+        whoseMove: 'partner',
+        energy: state.energy < 0 ? 0 : state.energy,
+      }
+    }
+    case 'START_MY_TURN': {
+      return {
+        ...state,
+        energy: state.energy+payload.energy,
+        whoseMove: 'me'
       }
     }
     case 'KNIGHT:MOVE_TO_AIR':
@@ -1871,6 +1909,12 @@ export default (state = defaultState, action) => {
         oldPartner: state.partDeadBoys,
         updateSign: 'F'+Math.random()
       }
+    case 'KNIGHT:UPDATE_OLD_XP': 
+      return {
+        ...state,
+        me: payload.isPartner ? state.me : updateOldXp(state.me, payload.knightInd),
+        partner: payload.isPartner ? updateOldXp(state.partner, payload.knightInd) : state.partner,
+      }
     case 'PARTNER:ANIME_MOVE':
       //check from what 
       return preparePartnerAnimeMove(payload, state.inLight, state)
@@ -1903,13 +1947,15 @@ export default (state = defaultState, action) => {
           state
         }))
     case 'KNIGHT:ANIME_MOVE':
-      //payload = {x, y, isDrag}
+      // payload = {x, y, isDrag}
+      // cost from state.inAir
+      // inAir is fullVolums
       return {
         ...state,
         canMove: [],
         oldCanMove: state.canMove.length !== 0 ? state.canMove : [],
         animeMove: !payload.isDrag ? {id:state.inAir.id, y: payload.y, x: payload.x} : null,
-        workPayload: {inAir: state.inAir, payload, me: true, cause: 'move', spellInd: null},
+        workPayload: {inAir: state.inAir, payload, me: true, cause: 'move', spellInd: null },
         updateSign: 'D'+Math.random()
       }
     case 'KNIGHT:LAST_PREPARATION':
@@ -1948,8 +1994,8 @@ export default (state = defaultState, action) => {
       }
     case 'KNIGHT:PREPARE_TO':
       let {pass, dls} = payload
-      //console.log(`BIIIIIIIIIIIIIIIG PREPARE DLS: ${dls} PASS:`, pass)
-      //console.log(state.canSpell.length === 0 && pass === 'SPELL')
+      // console.log(`BIIIIIIIIIIIIIIIG PREPARE DLS: ${dls} PASS:`, pass)
+      // console.log(state.canSpell.length === 0 && pass === 'SPELL')
       return {
         ...state,
         canMove: state.canMove.length === 0 && pass === 'MOVE' ? checkMove(state.me, state.partner, state.rocks, state.inAir) : [],
@@ -1963,8 +2009,8 @@ export default (state = defaultState, action) => {
       } 
       // destuct attack soon to anim
     case 'KNIGHT:START_ATTACK': 
-      console.log('TAKE_SIGNAL')
       // payload = {y, x, aim(rock/partner)}
+      //cost from state.inAir.attack.cost 
       return {
         ...state,
         canAttack: [],
@@ -1975,7 +2021,7 @@ export default (state = defaultState, action) => {
       }
     case 'PARTNER:START_ATTACK': //def in up level
     // const {id, aim: me } = payload aim === 'me'
-    let pAO;
+    let pAO; //cost from state.inAir.attack.cost 
       state.partner.forEach(({id}, i) => {
         if(id === payload.id) {
           pAO = state.partner[i]
@@ -1999,7 +2045,7 @@ export default (state = defaultState, action) => {
     case 'KNIGHT:ATTACK_TO': // будет вызываться нескольколько раЗ, если необходимо, АУЕ
       // const {who: 'me'/'partner'}  = payload
       //debugger
-      console.log(payload)
+
       let {y, x, aim} = state.workPayload.payload; // refactory this
       // aim сущест. для того что бы не делать лишнии фильтры и отсеивать аттаки в пустоту..
       let partnerRes = !payload ? findAndKill(state.partner, y, x, aim, 'partner', state.inAir) : {res: state.partner, target: []};
@@ -2041,7 +2087,7 @@ export default (state = defaultState, action) => {
       let updatedMe = deadM ? state.me.filter(({id}) => id !== deadM.id) : getNewStaffAfterKamick(state.me, me)
       let updatedPartner = deadP ? state.partner.filter(({id}) => id !== deadP.id) : getNewStaffAfterKamick(state.partner, partner)
       // if knok on stone... handle
-      let kamikSource = {rocks: state.rocks, me: updatedMe, partner: updatedPartner}
+      let kamikSource = {rocks: state.rocks, me: updatedMe, partner: updatedPartner, fire: state.fire}
       let kamikR = getDlsData({ sources: kamikSource, pathBuilder})
       
       let allLightPosAfterKamick = getLightPosition(updatedMe, updatedPartner, state.rocks, "me").concat(kamikR.sumDlsLight)
@@ -2074,7 +2120,7 @@ export default (state = defaultState, action) => {
         }
       })
       //console.log('%c%s', 'color: aquamarine; font-size: 22px;','THAT_PO:', pO)
-      let pSO = pO.spells[payload.spellInd]
+      let pSO = pO.spells[payload.spellInd] //and from here
       let pSR = pSO.func({
         inAir: pO,
         payload: {x: payload.x, y: payload.y},
@@ -2102,7 +2148,7 @@ export default (state = defaultState, action) => {
       }
     case 'KNIGHT:START_SPELL':
       // state.spellInd state.inAir
-      let spellObj = state.inAir.spells[state.spellInd]
+      let spellObj = state.inAir.spells[state.spellInd]; //take cost from here
       let spellRes = spellObj.func( // modify this... using call..
         { 
           inAir: state.inAir,
@@ -2194,7 +2240,6 @@ const getOldInLight = (state, newData) => {
 
 const updateVenomStep = ({data, state}) => {
     //console.log('DATA_PASS:', data)
-    console.log('%c%s', 'color: red; font-size: 33px;', 'DEBAG_DATA:',data)
     // только пришедшие // 2 getDlsData печалена..
     const sDDB = getDlsData({sources: {rocks: data.rocks, me: data.me, partner: data.partner, fire: data.fire}, pathBuilder}),
     survMyVenom = updateSpells(data.myVenom ? data.myVenom : state.myVenom),
@@ -2312,6 +2357,7 @@ const updateVenomStep = ({data, state}) => {
 }
 // вызывается если есть совпадения 
 const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
+  //debugger
   let res = {} //fY and fX may take from state[id]
   let workPartner = {}
     state.partner.forEach(({id:pID}, i) => {
@@ -2320,9 +2366,7 @@ const preparePartnerAnimeMove = ({id, y, x, fY, fX}, inLight, state) => {
       }
     })
   //const { fY, fX } = workPartner
-  console.log('%c%s', 'color: red;', 'WORK_PARTNER_PASS:',workPartner)
-  console.log('inLight: ', inLight)
-  let workPayload = {inAir: {id, fY, fX}, payload: {y, x}, me: false, cause: 'move', spellInd: null}
+  let workPayload = {inAir: workPartner, payload: {y, x}, me: false, cause: 'move', spellInd: null}
   if(!inLight.some(({newY, newX}) => {
     return newY === workPartner.pY && newX === workPartner.pX
   })) { // выход из тени
@@ -2386,7 +2430,7 @@ const updateGameStats = (workArr, venomArr) => {
   //debugger
   let res = workArr.slice()
   let dead = []
-  console.log('UPDATE_GAME_STATE:VENOME:',venomArr)
+  //console.log('UPDATE_GAME_STATE:VENOME:',venomArr)
   
     res.forEach(({Y, X, stunned, buffs}, i) => {
       //=========BUFFS_PART==========
@@ -2405,7 +2449,6 @@ const updateGameStats = (workArr, venomArr) => {
         })
       }
       //=========BUFFS_PART==========
-      console.log('RES:', res)
       venomArr.forEach(({newY, newX, postDmg}) => {
       if(newY === Y && newX === X) {
         let newXp = res[i].xp - postDmg
@@ -2423,7 +2466,7 @@ const updateGameStats = (workArr, venomArr) => {
   return {res, dead}
 }
 
-const updateBaseStep = (data) => {
+const updateBaseStep = (data) => { // me is boolean
   const { workPayload: {inAir, payload, me, cause, spellInd} } = data;
   const stunUpdater = (workArr) => {
     let res = workArr.slice();
@@ -2436,34 +2479,34 @@ const updateBaseStep = (data) => {
   }
   // after baff 
   let meAfterStun = stunUpdater(data.me);
-  let partnerAfterStun = stunUpdater(data.partner)
+  let partnerAfterStun = stunUpdater(data.partner);
   let newStateHistory = [].concat(data.stateHistory); // допушиваем старый stateHistory и делаем новый view
 
   let newAct = data.act;
-  let newTick = data.actTick+1;
+  let newEnergy = data.energy - (cause !== 'spell' ? inAir[cause].cost : inAir.spells[spellInd].cost);
+  //let newTick = data.actTick+1;
   let lastHistory = newStateHistory.length - 1;
-
-  let actionsPass = {me, inAir, type: cause, payload, spellInd}
-  if(newTick > data.maxTick - 1) {
-    newTick = 0;
-    newAct = newAct+1;
-    newStateHistory[lastHistory].actions.push(actionsPass)
-    newStateHistory.push({
-      me: meAfterStun,
-      partner: partnerAfterStun,
-      rocks: data.rocks,
-      fire: data.fire, // just flash
-      myVenom: data.myVenom,
-      partVenom: data.partVenom,
-      inLight: data.inLight,
-      treasures: data.treasures,
-      myTreasures: data.myTreasures,
-      actions: []
-    })
-    //push newAct
-  } else {
-    newStateHistory[lastHistory].actions.push(actionsPass)
-  }
+  let actionsPass = {me, inAir, type: cause, payload, spellInd};
+  // if(newTick > data.maxTick - 1) { // TO ANOTHER EVENT THAT AFTER TURN END
+  //   //newTick = 0;
+  //   newAct = newAct+1;
+  //   newStateHistory[lastHistory].actions.push(actionsPass)
+  //   newStateHistory.push({
+  //     me: meAfterStun,
+  //     partner: partnerAfterStun,
+  //     rocks: data.rocks,
+  //     fire: data.fire, // just flash
+  //     myVenom: data.myVenom,
+  //     partVenom: data.partVenom,
+  //     inLight: data.inLight,
+  //     treasures: data.treasures,
+  //     myTreasures: data.myTreasures,
+  //     actions: []
+  //   })
+  //   //push newAct
+  // } else {
+  newStateHistory[lastHistory].actions.push(actionsPass)
+  
 
   let res = {
     ...data,
@@ -2471,14 +2514,15 @@ const updateBaseStep = (data) => {
     partner: partnerAfterStun,
     stateHistory: newStateHistory,
     act: newAct,
-    actTick: newTick,
+    //actTick: newTick,
+    energy: newEnergy
   }
-  console.log('UPDATE_BASE_STEP:', res)
+  //console.log('UPDATE_BASE_STEP:', res)
   return res
 }
 
 const updateSpells = workArr => {
-  console.log('UPDATE_SPELLS:',workArr)
+  //console.log('UPDATE_SPELLS:',workArr)
   let res = workArr.map(({time, ...another}) => ({time: time-=1, ...another}))
   let dead = res.filter(({time}) => time <= 0)
   res = res.filter(({time}) => time >= 1)
@@ -2678,7 +2722,7 @@ const getNewStaff = (staff, {id}, {y, x}) => {
       index = a
     }
   })
-  console.log(`REDUCER INNNNNNNNNNNNNNSA THAT_TRY_FIND: ${id} _index: ${index}, Staff:`,staff)
+  //console.log(`REDUCER INNNNNNNNNNNNNNSA THAT_TRY_FIND: ${id} _index: ${index}, Staff:`,staff)
   staff[index] = {...staff[index], id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X, v: Math.random()}
   //console.log({id, Y:y, X:x, pY:staff[index].Y, pX: staff[index].X})
   //console.log(staff)

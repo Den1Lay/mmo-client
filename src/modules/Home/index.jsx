@@ -16,11 +16,11 @@ const HomeHoc = ({makeSlide, overMakeSlide, show, nowIsReg, registControl, fetch
   const [homeHid, setHomeHid] = useState(false)
   const homeRef = useRef(null)
 
-  useEffect(() => {
-    if(!window.localStorage['heroes']) {
-      fetchHeroes()
-    }
-  })
+  // useEffect(() => {
+  //   if(!window.localStorage['heroes']) {
+  //     fetchHeroes()
+  //   }
+  // })
   if(show) {
     const pass = show === 'game'
     anime({

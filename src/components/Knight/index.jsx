@@ -6,7 +6,7 @@ import anime from "animejs";
 
 import { opacityRedWrapper } from '@/utils'
 
-import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell} from '@/actions/game'
+import { addToAir, deleteFromAir, animeMoveHandler, moveTo, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell, updateOldXp} from '@/actions/game'
 import './Knight.scss'
 
 const Knight = React.memo((
@@ -34,10 +34,10 @@ const Knight = React.memo((
     spellAnimations,
     animeAttack,
     cleanAfterPartSpell,
-    showOnSecond
+    showOnSecond,
+    updateOldXp, energy
   }) => {
   //console.log('I_D_:',id)
-  Y === 3 && X === 7 && console.log('%c%s', 'color: lightblue; font-size: 55px;', 'REEEE_RENDER__BECOUSE:', {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner})
  
 
   if(moveFromShadow) {
@@ -52,9 +52,10 @@ const Knight = React.memo((
   //const [action, setAction] = useState(true)
   const [spellReady, setSpellReady] = useState(false)
   const [animeTick, setAnimeTick] = useState(false)
-  const [xp, setXp] = useState(null)
+  //const [xp, setXp] = useState(null)
 
   const wrapRef = useRef(null)
+  const deadHeart = useRef(null)
   const heartRef = useRef(null)
   const mainRef = useRef(null)
   const firstRef = useRef(null)
@@ -71,7 +72,6 @@ const Knight = React.memo((
       onClick={(ev) => {
       ev.stopPropagation()
       firstRef.current.src = ''
-      console.log('GREAT_DIR:', firstRef.current.src )
     }}/>,
     <img ref={secondRef} 
       style={{display: 'none', position: 'absolute'}}/>,
@@ -122,7 +122,7 @@ const Knight = React.memo((
       isDragging: monitor.isDragging()
     })
   })
-
+ 
   useEffect(() => {
     // if(showOnSecond && !shadow) { // go throug ref....... 
     //   shadow = true // go throung setTimeout..
@@ -130,49 +130,109 @@ const Knight = React.memo((
     //   //spell here
 
     // }
-    if(isPartner) {
-    } else {
-      //debugger
-      let meObj
-      me.forEach(({id: ID}, i) => {
-        if(id === ID) {
-          meObj = me[i]
+    let knightObj;
+    let knightInd;
+    let workArr = isPartner ? partner : me;
+
+    workArr.forEach(({id: ID}, i) => { // value 
+      if(id === ID) {
+        knightObj = workArr[i];
+        knightInd = i;
+      }
+    })
+    let checkRef = heartRef.current.style 
+    //debugger
+    // if(isPartner) {
+    //   debugger
+    // }
+    
+    //deadHeart.current.
+    //altDirection
+    // if(knightObj.id === 'WKnight2') {
+    //   debugger  
+    // }
+    heartRef.current.textContent = knightObj.xp+'';
+    let xpCheck = knightObj.xp > 0;
+    if(knightObj.xp !== knightObj.oldXp) {
+      heartRef.current.style.opacity = '0';
+      deadHeart.current.style.opacity = '1';
+      deadHeart.current.textContent = knightObj.oldXp+'';
+      // if(knightObj.id === 'WKnight2') {
+      //   debugger  
+      // }
+      anime({
+        targets: deadHeart.current, 
+        translateY: [-12, 55],
+        opacity: [1, 0],
+        //textContent: ,
+        //value: [knightObj.oldXp, knightObj.xp],
+        easing: 'easeInOutCirc',
+        duration: xpCheck ? 444 : 222,
+        update: animU => {
+          if( animU.progress > 55 && xpCheck) {
+            // if(knightObj.id === 'WKnight2') {
+            //   debugger  
+            // }
+            if(heartRef.current){
+              heartRef.current.textContent = knightObj.xp+'';
+              anime(({
+                targets: heartRef.current,
+                opacity: [0, 1],
+                easing: 'linear',
+                duration: 333,
+  
+              }))
+              updateOldXp({isPartner, knightInd});
+            } 
+            
+            
+          }
+        },
+        complete: anim1 => {
+          if(anim1.completed && deadHeart.current) {
+            deadHeart.current.style.opacity = '0';
+          }
         }
       })
-  
-      console.log('%c%s', 'color: gold; font-size: 44px;', `X:${X}, Y: ${Y} ID: ${id}__ ME_OBJ:`,meObj)
-      if(xp === null) {
-        setXp(meObj.xp)
-      } else if(meObj && xp > meObj.xp && !spellAnimations) { // nice obxod well well..
-        // let workCurrent = firstRef.current;
-        // workCurrent.style.opacity = 1;
-        // workCurrent.style.display = 'block';
-        // workCurrent.src = 'data:image/png;base64,'+window.localStorage.mainSrc+'';
-        // workCurrent.style.width = '20px'
-        
-        anime({
-          targets: heartRef.current, //transition on timeline to zero in 60%
-          translateY: [0, 400], // from args (y-Y)*52
-          //opacity: [1, 0],
-          //translateX: [0, -300], // from args (x-X)*52
-          duration: 1200,
-          //easing: 'spring(1, 90, 12, 0)',
-          complete: anim => {  // may take 90% event
-            if(anim.completed) {
-              setXp(meObj.xp)
-            }
-          }
-        });
-      }
     }
+
+
+    // if(isPartner) {
+    // } else {
+    //   //debugger
+    //   let meObj
+      
+  
+    //   //console.log('%c%s', 'color: gold; font-size: 44px;', `X:${X}, Y: ${Y} ID: ${id}__ ME_OBJ:`,meObj)
+    //   if(xp === null) {
+    //     setXp(meObj.xp)
+    //   } else if(meObj && xp > meObj.xp && !spellAnimations) { // nice obxod well well..
+    //     // let workCurrent = firstRef.current;
+    //     // workCurrent.style.opacity = 1;
+    //     // workCurrent.style.display = 'block';
+    //     // workCurrent.src = 'data:image/png;base64,'+window.localStorage.mainSrc+'';
+    //     // workCurrent.style.width = '20px'
+        
+    //     anime({
+    //       targets: heartRef.current, //transition on timeline to zero in 60%
+    //       translateY: [0, 400], // from args (y-Y)*52
+    //       //opacity: [1, 0],
+    //       //translateX: [0, -300], // from args (x-X)*52
+    //       duration: 1200,
+    //       //easing: 'spring(1, 90, 12, 0)',
+    //       complete: anim => {  // may take 90% event
+    //         if(anim.completed) {
+    //           setXp(meObj.xp)
+    //         }
+    //       }
+    //     });
+    //   }
+    // }
     //takeIt && takeTreasure({y:Y, x:X})
-    console.log('CHECK_REFS:', firstRef)
     if(moveFromShadow) { mainRef.current.style['opacity'] = '0' }
     if(animeMove && animeMove.id === id || moveFromShadow) {
       const {y, x, shadow} = animeMove || moveFromShadow
-      //console.log('IS HAPPENED')
-     console.log('%c%s', 'color: midnightblue; font-size: 33px;','ITS_HAPPENED')
-     // console.log("%cExample %s", css, 'all code runs happy');
+      //console.log('IS HAPPENED')    // console.log("%cExample %s", css, 'all code runs happy');
       //console.info('%c%s','color: red; font: 20px Verdana;','MAIN_ANIME_REF:',mainRef.current)
       
       anime({
@@ -183,7 +243,6 @@ const Knight = React.memo((
         easing: 'spring(1, 90, 12, 0)',
         complete: anim => {  // may take 90% event
           if(anim.completed) {
-            console.log('ISTIME')
             !isPartner ? moveTo({y, x}) : partnerMoveTo({id, y, x})
           }
         },
@@ -196,7 +255,6 @@ const Knight = React.memo((
     //console.log('%c%s', 'color: orange; font: 40px; ','ANIME_TiCK:', animeTick)
     //console.log('SPELL_ANIMATIONS', spellAnimations)
     if(spellAnimations && spellAnimations.personId === id ) {
-      console.log('SPELL_ANIMATIONS:INSIDE')
       if(particles.length === 0) {
         // let refs = [];
         // let elements = [];
@@ -220,7 +278,6 @@ const Knight = React.memo((
         //console.log('CHECK_REFS:', secondRef)
         
           // setAnimeTick(true)
-          console.log('%c%s', 'color: orange; font: 40px; ','ANIME_TICK_AFTER:', animeTick)
           spellAnimations.animeFunc({particles: refStorage, knight: mainRef, args: spellAnimations.animeArg, anime, spellTo, cleanAfterPartSpell})
         }
         
@@ -247,7 +304,6 @@ const Knight = React.memo((
           easing: 'spring(1, 90, 12, 0)',
           complete: anim => {  // may take 90% event
             if(anim.completed) {
-              console.log('ISTIME')
                attackTo(isPartner)
 
             }
@@ -263,11 +319,15 @@ const Knight = React.memo((
     // console.log('CLIIIIIIIIIIICK HANDLER');
     // console.log(inAir);
     // console.log(inAir && (inAir.id !== id));
-    if(inAir && (inAir.id !== id)) {
-      deleteFromAir()
-      setTimeout(() => addToAir({id, Y, X}), 0) //
-    } else {
-      inAir && inAir.id === id ? deleteFromAir() : addToAir({id, Y, X})
+    if(energy > 0) {
+      if(inAir && (inAir.id !== id) ) {
+        deleteFromAir()
+        setTimeout(() => addToAir({id, Y, X}), 0) //
+      } else {
+        inAir && inAir.id === id ? deleteFromAir() : addToAir({id, Y, X})
+      }
+    } else { 
+      //signal event what you'r energy is empty
     }
   }
 
@@ -318,7 +378,8 @@ const Knight = React.memo((
       {simbol}
       </div>
       {particles}
-      <div ref={heartRef} className={'heart'}>{xp}</div>
+      <div ref={heartRef} className={'heart'}></div> {/**hide and then show with newValue*/}
+      <div ref={deadHeart} className={'heart'} style={{opacity: 0}}></div> {/** stay visible, take oldValue and move to bottom */}
       {inAir && inAir.id == id ? <div className={classNames('buttleButton','buttleButton__attack' )} onClick={controlHandler}/> : null}
       {spells && inAir.id == id ? <div className='spellArea'>{spells}</div> : null}
       </div>
@@ -326,8 +387,6 @@ const Knight = React.memo((
   )
 }, ({X, Y, me, partner, inAir, animeMove, canAttack, spellAnimations, animeAttack, moveFromShadow, showOnSecond}, nextData) => {
   const checkPass = (old, newPass) => {
-    console.log('%c%s', 'color: springgreen; font-size: 33px;',`X:${X}, Y:${Y}, THAT_NEXT_PASS:`, nextData)
-    console.log('%c%s', 'color: springgreen; font-size: 22px;', 'THat_old: ',old)
     if(old.length === newPass.length) {
       let res = false;
       old.forEach(({v}, i) => {
@@ -373,5 +432,5 @@ const Knight = React.memo((
 
 })
 // слежение за собственным хп
-export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond}), 
-{addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell})(Knight)
+export default connect(({game: {inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond, energy}}) => ({inAir, animeMove, canAttack, spellAnimations, animeAttack, me, partner, showOnSecond, energy}), 
+{addToAir, deleteFromAir, moveTo, animeMoveHandler, takeTreasure, prepareTo, partnerMoveTo, spellTo, attackTo, cleanAfterPartSpell, updateOldXp})(Knight)

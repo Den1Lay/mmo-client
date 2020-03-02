@@ -49,26 +49,59 @@
   top: 8;
   right: 13;
 }
+//use hereMixin for Tabs = and +
+@mixin nook($fBoard, $fArg, $sBoard, $sArg, 
+$display: block, 
+$alignItems: center, 
+$flexDir: row, 
+$jC: center
+) {
+  z-index: 2;
+  position: absolute;
+  #{$fBoard}: $fArg;
+  #{$sBoard}: $sArg;
+  @if $display != block {
+    display: $display;
+    flex-direction: $flexDir;
+    align-items: $alignItems;
+    justify-content: $jC;
+  }
 
+}
 .game {
   position: relative;
   //margin-right: -100vw;
   width: 100vw;
   height: 100vh;
-  margin-right: -100%; //
+  margin-right: -100%;
   &__rightTab {
-    z-index: 2;
-    position: absolute;
-    bottom: 50;
-    right: 50;
+    @include nook(bottom, 50, right, 50, $display: flex, $flexDir: column);
+    .energyBar {
+      margin-bottom: 10px;
+      background-color: DarkCyan;
+      color: cyan;
+      font-size: 22px;
+      font-weight: 500;
+      padding: 10px 30px;
+      border-radius: 10px;
+    }
   }
   &__upLeftTab {
-    z-index: 2;
-    position: absolute;
-    top: 50;
-    left: 50; 
+    @include nook(top, 50, left, 50);
+  }
+  &__topRightTab {
+    @include nook(top, 50, right, 50);
+  }
+  &__bottomLeftTab {
+    @include nook(bottom, 50, left, 50);
   }
   // &__hidden {
     
   // }
+}
+
+.actionBar {
+  width: fit-content;
+  height: fit-content;
+  display: flex;
 }

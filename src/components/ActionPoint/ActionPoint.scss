@@ -1,0 +1,42 @@
+.actionPoint {
+  position: relative;
+  width: 65px;
+  height: 65px;
+  margin-right: 10px;
+  transition: 1s ease-in-out;
+  // background: cyan;//linear-gradient( 33deg, crimson, cyan);
+  // &:hover { 
+  //   background: crimson;//linear-gradient( 66deg, rgb(93, 8, 150), rgb(255, 238, 0))
+  // }
+  border: 1px solid silver;
+  & div, img {
+    position: absolute;
+    width: 65px;
+    height: 65px;
+    transition: 1.3s ease-in-out;
+    //background-color: silver;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+  }
+  & div:first-child {
+    background: linear-gradient(35deg, silver, #708090);
+    color: rgb(255, 255, 255);
+  }
+}
+.cost {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  color: rgb(50, 103, 219);
+  bottom: -33;
+  left: 20; 
+  font-size: 24px;
+  font-weight: 400;
+  width: 25px;
+  height: 25px;
+  //background: royalblue;
+}

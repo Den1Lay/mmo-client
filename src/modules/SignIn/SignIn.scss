@@ -9,9 +9,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  input {
+    min-width: 300px;
+    margin: 0 !important;
+  }
   &__workArea {
-    padding: 20px;
-    background-color: rgb(219, 255, 219);
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px grey;
+    background-color: rgb(255, 255, 255);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -19,5 +25,14 @@
     input {
       margin: 10px;
     }
+  }
+  &__header {
+    h2 {
+      color: royalblue;
+    }
+    p {
+      color: black;
+    }
+    margin-bottom: 20px;
   }
 }

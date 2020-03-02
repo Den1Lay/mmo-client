@@ -50,7 +50,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
 
   const [first, setFirst] = useState(null)
   const [cash, setCash] = useState({me: null, partner: null, First: null})
-  const [place, setPlace] = useState(null)
+  //const [place, setPlace] = useState(null)
   // if(y === 2 && x === 9) {
   //   debugger
   // }
@@ -144,7 +144,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         }
         if(cash[name] === null || !cash.First || checkEquality(array, name)) {
           if(cash.First && cash.First.props.id === id) {
-            if(y === 3 && x === 7) {console.log('%c%s', 'color:orchid; font-size: 44px;','FUUUUUUCKEN_UPDDDAATE@@!!!')}
+            //if(y === 3 && x === 7) {console.log('%c%s', 'color:orchid; font-size: 44px;','FUUUUUUCKEN_UPDDDAATE@@!!!')}
             setCash({me, partner, First: React.cloneElement(cash.First, {moveFromShadow, takeIt:isTreasure, isPartner})})
           }
           if(!cash.First) {
@@ -210,10 +210,6 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         ? -1
         : 0
     }
-    if(x === 0 && y === 8) {
-      console.log('PARTNEEEEEEEEEEEEEER: ',herePartner)
-      console.log('ME: ',hereMe)
-    }
     let firstIsP = cash.First.props.id.substr(0,1) === 'D'
 
       let dmg = firstIsP ? maxXp*0.25 : maxXpp*0.25
@@ -222,7 +218,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       //console.log(`RESSSSSSSSSSSSSSSSSSSSSSSOLT XXXXXXXXXXXP MY: ${myXpRes}, partner: ${partnerXpRes}`)
       if(partnerXpRes <= 0 && myXpRes > 0) {
         store.dispatch(kamickAttack({me: {id, xp: myXpRes, Y, X, pY, pX}, deadP: {id:idp, Y:Yp, X:Xp}, partner: null, deadM: null}))
-        if(firstIsP) {setCash({me, partner, First:flyUnit})} // уничтожил place = flyUnit; setFirst(id);
+        if(firstIsP) {setCash({me, partner, First: React.cloneElement(flyUnit, {mouseEvent: (pass) => mouseHereHandl(pass)}) })} // уничтожил place = flyUnit; setFirst(id);
         flyUnit = null
         
         //dispatch...
@@ -235,7 +231,6 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         let XDir = firstIsP ? getNewDir(X, pX) : getNewDir(Xp, pXp)
         let newY = firstIsP ? Y-YDir : Yp-YDir
         let newX = firstIsP ? X-XDir : Xp-XDir
-        console.log('%c%s', 'color: navy; font-size: 66px;', `newY: ${newY}, newX: ${newX} YDir: ${YDir} XDir: ${XDir}`, flyUnit)
         anime({
           targets: flyUnitRef.current, //transition on timeline to zero in 60%
           translateY: [0, -(YDir*52)],
@@ -246,7 +241,6 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
           complete: anim => {// may take 90% event
             if(anim.completed) {
               //flyUnit = null
-              console.log(`firstIsP: ${firstIsP}`, {id:idp, xp:partnerXpRes, Y:newY, X:newX, pY:Yp, pX:Xp})
               //console.log(`Y: ${y}, X: ${x} HERE PARTNER: ${herePartner}, HERE ME: ${hereMe}`)
               store.dispatch(kamickAttack({
                   me: firstIsP ? {id, xp: myXpRes, Y:newY, X:newX, pY: Y, pX: X} : {id, xp: myXpRes, Y, X, pY, pX}, 
@@ -268,7 +262,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
         //оба анигилировались
         store.dispatch(kamickAttack({deadM:{id, Y, X}, deadP: {id:idp, Y:pYp, X:pXp}, me: null, partner: null}))
         flyUnit = null
-        place = null
+        //place = null
       }
   }
   // if(x === 7 && y === 3) {
@@ -323,7 +317,7 @@ const Square = function({y, x, me, partner, canMove, isLight, isRock, isTreasure
       }
     }
     if( isAttacked ) { 
-      console.log('TRY_TO_ATTACK')
+      //console.log('TRY_TO_ATTACK')
       store.dispatch(startAttack({y, x, aim}));
      }
     if( canSpell ) {

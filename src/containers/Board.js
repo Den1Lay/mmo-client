@@ -43,7 +43,6 @@ function Board (
     //partnerAnimeMove,
     oldShowOnSecond,
   }) { // canMove: [{y, x}, {y, x}]
-  console.log('PAAAAARTNER', partner)
   const [mainRes, setMainRes] = useState([])
   const [resSchema, setResSchema] = useState([])
   const [mainMemoPlant, setMainMemoPlant] = useState([])
@@ -66,7 +65,6 @@ function Board (
         line = [];
       }
       let preBottomPart = topPart.slice().reverse();
-      console.log('PreBotPart', preBottomPart)
       let bottomPart = []
       let boost = 1;
       for(let i = 0; i < preBottomPart.length; i++) {
@@ -74,7 +72,6 @@ function Board (
         boost = boost + 2
       }
       let res = topPart.concat(bottomPart)
-      console.log('RES', res)
       setResSchema(res)
       // let mainRes = res.map((arr, i) => {
       //   return (
@@ -86,7 +83,6 @@ function Board (
       let mainMemoPlant = res.map((arr, a) => { // пересбор дерева с мемоизированными значения
         return arr.map(({y,x}) => <Square y={y} x={x} me={me} partner={partner} canMove={false} isLight={false} isRock={false} isTreasure={false} isAttacked={false} canSpell={false} spellAnime={[]} moveFromShadow={null} showOnSecond={null}/>)
       })
-      console.log('MAIN_MEMO:',mainMemoPlant)
       //setMainRes(mainRes)
       setMainMemoPlant(mainMemoPlant)
       let midMainRes = mainMemoPlant.map((arr, a) => {
@@ -97,7 +93,6 @@ function Board (
         )
       })
       setMainRes(midMainRes)
-      console.log('AFTER PREPARE EVENT, mainMemoPlant:', mainMemoPlant)
       lastPreparation()
     } else if(updateSign !== updateId) {
       //console.log('GREAT SIGN:',updateSign)
@@ -105,7 +100,7 @@ function Board (
       let cloneMainMemoPlant = mainMemoPlant.slice()
       setUpdateId(updateSign)
       const indexFinder = (workIndex, newY, newX) => {
-        console.log(`NEWY: ${newY}, NEWX: ${newX}`)
+        //console.log(`NEWY: ${newY}, NEWX: ${newX}`)
         resSchema[newY].forEach(({x}, i) => {
           if(newX === x) {
             workIndex[0] = i
@@ -222,24 +217,16 @@ function Board (
         })
       }
       const persenSetter = (person, who, me, partner) => {
-        console.log('PERSONSEETTTTTEEEEEEEEEER',person)
-        console.log('%c%s', 'color: darkmagenta; font-size: 35px;', `ME_PASS_INSIDE_PERS_SETTER:`, me)
-        console.log('WHO::', who)
         let checkIndex = []
         person.forEach(({Y, X}) => {
           indexFinder(checkIndex, Y, X)
           cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], who === 'me' ? {me} : {partner})
-          if(Y === 3 && X === 7) {
-            console.log('%c%s', 'color: deepskyblue; font-size: 33px', 'ELEMET X: 7, Y: 3', cloneMainMemoPlant[Y][checkIndex[0]])
-          }
         })
       }
       const updateDefState = (workArr, pass) => {
         let checkIndex = []
         workArr.forEach(({Y, X}) => {
-          console.log(`INSIDE UPDATEDEFSTATE: PASS:${pass}`, workArr)
           let res = pass ? {me: workArr} : {partner: workArr}
-          console.log('CONTINUE', res)
           indexFinder(checkIndex, Y, X)
           cloneMainMemoPlant[Y][checkIndex[0]] = setState(cloneMainMemoPlant[Y][checkIndex[0]], res)
         })
@@ -291,10 +278,6 @@ function Board (
         indexFinder(checkIndex, workObj.fY, workObj.fX)
         cloneMainMemoPlant[workObj.fY][checkIndex[0]] = setState(cloneMainMemoPlant[workObj.fY][checkIndex[0]], objPass)  
       }
-
-      console.log('THAT MOOOOOOOOOOOOOO0000000000VE:', updateSign)
-      console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_RES:', mainRes)
-      console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_MEMO_PLANT:', mainMemoPlant)
       switch(updateSign.substr(0,1)) {
         case 'M':
           //console.log()
@@ -320,7 +303,6 @@ function Board (
           setter()
           break
         case 'D':
-          console.log('ALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLIVE')
           oldCanMove.length > 0 && cleaner()
           oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
           oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
@@ -346,12 +328,11 @@ function Board (
             oldCanSpell.length > 0 && spellSetter(oldCanSpell, false)
             cleaner()
             oldCanAttack.length > 0 && attackSetter(oldCanAttack, false)
-            console.log('INSADE:',inAir.spells[spellInd])
             canSpell.length > 0 && spellSetter(canSpell, inAir.spells[spellInd].color)
           }
           break
         case 'A':
-          console.log('A HANDLERRRRRRRRRRRRRRRRRRR', oldPartner)
+
           oldRocks.length > 0 && rockSetter(oldRocks, false);
           attackSetter(oldCanAttack, false)
           newInLight.length > 0 && lightSetter(newInLight, true)
@@ -364,7 +345,8 @@ function Board (
           //oldMe.length > 0 && updateDefState(me, true)
           //debugger
           oldMe.length > 0 && persenSetter(oldMe, 'me', me, partner)
-          oldFire.length > 0 && spellAnimeSetter(fire, null)
+          //debugger
+          oldFire.length > 0 && spellAnimeSetter(oldFire, null)
           oldMyVenom.length > 0 && spellAnimeSetter(oldMyVenom, false)
           myVenom.length > 0 && spellAnimeSetter(myVenom, true)
           oldPartVenom.length > 0 && spellAnimeSetter(oldPartVenom, false)
@@ -372,7 +354,6 @@ function Board (
           oldShowOnSecond && moveFromShadowSetter(oldShowOnSecond, {showOnSecond: null}) 
           break
         case 'K': 
-          console.log('K-FIIIIIIIIIIIIILTER:', me)
           cleanProps(me, true)
           cleanProps(partner, false)
           updateDefState(me, true)
@@ -397,8 +378,7 @@ function Board (
               newSpellMap.unshift(el)
             }
           })
-          console.log('%c%s', 'color: aqua; font-size: 44px;','NEW_SPELL_MAP:', newSpellMap)
-          console.log('FIRE_CHECK:', fire) // newLightPos??
+          
           
           oldInLight.length > 0 && lightSetter(oldInLight, false)
           newInLight.length > 0 && lightSetter(newInLight, true)
@@ -420,7 +400,6 @@ function Board (
                 rockSetter(oldRocks, false)
                 break
               case 'oldMe':
-                console.log('%c%s', 'color: cadetblue; font-size:44px;','WORK_TRIGGER:',oldMe)
                 persenSetter(oldMe, 'me', me, partner)
                 break
               
@@ -428,7 +407,7 @@ function Board (
                 spellAnimeSetter(fire, true)
                 break
               case 'oldFire':
-                console.log('ALIVE_OLD_FIRE')
+
                 oldFire.length > 0 && spellAnimeSetter(oldFire, false)
                 break
               case 'myVenom':
@@ -444,19 +423,19 @@ function Board (
                 spellAnimeSetter(oldPartVenom, false)
                 break
               default:
-                console.log('Some wrong things:', propsName)
+           
             }
           })
           break;
         case 'Q':
-          console.log('MOVE_FROM_SHADOW_PASS:', moveFromShadow)
+          //console.log('MOVE_FROM_SHADOW_PASS:', moveFromShadow)
           moveFromShadowSetter(moveFromShadow, {moveFromShadow})
           break
         case 'W':
           //console.log('W_DEBAG:PARTNER:',partner)
           oldInLight.length > 0 && lightSetter(oldInLight, false)
           newInLight.length > 0 && lightSetter(newInLight, true)
-          console.log('%c%s','color: darkblue; font-size: 33px', 'OLD_MOVE_FROM_SHADOW:', oldMoveFromShadow)
+          //console.log('%c%s','color: darkblue; font-size: 33px', 'OLD_MOVE_FROM_SHADOW:', oldMoveFromShadow)
           oldMoveFromShadow && moveFromShadowSetter(oldMoveFromShadow, {moveFromShadow: null})
           cleanProps(partner, false)
           updateDefState(partner, false)
@@ -486,7 +465,7 @@ function Board (
           newInLight.length > 0 && lightSetter(newInLight, true)
           break
         default:
-          console.log('START') // do something with this...
+          //console.log('START') // do something with this...
       }
       
       let midMainRes = cloneMainMemoPlant.map((arr, a) => {
@@ -499,7 +478,7 @@ function Board (
       setMainRes(midMainRes)
     }
   })
-  console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_RES:', mainRes)
+  //console.log('%c%s', 'color: blue; font-size: 44px;', 'MAIN_RES:', mainRes)
   return (
       <div className={classNames('board')}>
         {mainRes}

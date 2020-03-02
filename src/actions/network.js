@@ -1,6 +1,7 @@
 import { UserApi, HeroesApi } from '@/utils/api';
 import { registControl } from './base'
 
+//ALL serves isL: startSearching, getPartnerData, handlAll movesThrow
 export const fetchUserLogin = postData => dispatch => {
   UserApi.login(postData).then(({data, ...another}) => {
     const {status, user, token} = data
